@@ -1,0 +1,5 @@
+console icon by ~Softcode
+http://softcode.deviantart.com/art/Deep-Blue-Console-69538223
+
+twitter api :: Tweetsharp
+https://github.com/danielcrenna/tweetsharp
