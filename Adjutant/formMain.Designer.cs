@@ -41,6 +41,7 @@
             this.timerAutohide = new System.Windows.Forms.Timer(this.components);
             this.timerShowHide = new System.Windows.Forms.Timer(this.components);
             this.timerPin = new System.Windows.Forms.Timer(this.components);
+            this.timerMailCheck = new System.Windows.Forms.Timer(this.components);
             this.contextMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -105,6 +106,7 @@
             this.trayIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("trayIcon.Icon")));
             this.trayIcon.Text = "Adjutant";
             this.trayIcon.Visible = true;
+            this.trayIcon.DoubleClick += new System.EventHandler(this.trayIcon_DoubleClick);
             // 
             // timerAutohide
             // 
@@ -119,6 +121,10 @@
             // timerPin
             // 
             this.timerPin.Interval = 5000;
+            // 
+            // timerMailCheck
+            // 
+            this.timerMailCheck.Tick += new System.EventHandler(this.timerMailCheck_Tick);
             // 
             // formMain
             // 
@@ -168,6 +174,7 @@
         private System.Windows.Forms.Timer timerAutohide;
         private System.Windows.Forms.Timer timerShowHide;
         private System.Windows.Forms.Timer timerPin;
+        private System.Windows.Forms.Timer timerMailCheck;
     }
 }
 

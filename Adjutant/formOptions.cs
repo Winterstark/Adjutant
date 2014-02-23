@@ -16,6 +16,11 @@ namespace Adjutant
         public bool starting;
 
 
+        void checkForChanges(object sender, EventArgs e)
+        {
+            checkForChanges();   
+        }
+
         void checkForChanges()
         {
             if (starting)
@@ -66,6 +71,15 @@ namespace Adjutant
             changed |= compareValueToTag(picTwLinkColor);
             changed |= compareValueToTag(picTwTimestampColor);
             changed |= compareValueToTag(picTwCountColor);
+
+            changed |= compareValueToTag(txtUser);
+            changed |= compareValueToTag(txtPass);
+            changed |= compareValueToTag(checkMailCountOnFocus);
+            changed |= compareValueToTag(checkMailCountOnNewMail);
+            changed |= compareValueToTag(numMailCheckPeriod);
+            changed |= compareValueToTag(picMailCountColor);
+            changed |= compareValueToTag(picMailHeaderColor);
+            changed |= compareValueToTag(picMailSummaryColor);
 
             buttSave.Visible = changed;
         }
@@ -145,37 +159,7 @@ namespace Adjutant
         {
             fontPreview();
         }
-
-        private void numX_ValueChanged(object sender, EventArgs e)
-        {
-            checkForChanges();
-        }
-
-        private void numY_ValueChanged(object sender, EventArgs e)
-        {
-            checkForChanges();
-        }
-
-        private void numW_ValueChanged(object sender, EventArgs e)
-        {
-            checkForChanges();
-        }
-
-        private void numMinH_ValueChanged(object sender, EventArgs e)
-        {
-            checkForChanges();
-        }
-
-        private void numMaxH_ValueChanged(object sender, EventArgs e)
-        {
-            checkForChanges();
-        }
-
-        private void comboHideStyle_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            checkForChanges();
-        }
-
+        
         private void trackOpacityActive_Scroll(object sender, EventArgs e)
         {
             numOpacityActive.Value = trackOpacityActive.Value;
@@ -296,21 +280,6 @@ namespace Adjutant
                 main.UpdateOptions(this);
                 this.Close();
             }
-        }
-
-        private void checkTwCountOnNewTweet_CheckedChanged(object sender, EventArgs e)
-        {
-            checkForChanges();
-        }
-
-        private void checkTwCountOnFocus_CheckedChanged(object sender, EventArgs e)
-        {
-            checkForChanges();
-        }
-
-        private void numTwCountMinPeriod_ValueChanged(object sender, EventArgs e)
-        {
-            checkForChanges();
         }
 
         private void buttPickTwUsernameColor_Click(object sender, EventArgs e)
@@ -435,16 +404,6 @@ namespace Adjutant
                 checkForChanges();
         }
 
-        private void checkTodoHideDone_CheckedChanged(object sender, EventArgs e)
-        {
-            checkForChanges();
-        }
-
-        private void checkTodoAutoTransfer_CheckedChanged(object sender, EventArgs e)
-        {
-            checkForChanges();
-        }
-
         private void chkEcho_CheckedChanged(object sender, EventArgs e)
         {
             checkForChanges();
@@ -470,10 +429,26 @@ namespace Adjutant
                 checkForChanges();
             }
         }
-
-        private void numAutoHideDelay_ValueChanged(object sender, EventArgs e)
+        
+        private void buttPickMailCountColor_Click(object sender, EventArgs e)
         {
-            checkForChanges();
+            pickColor(picMailCountColor);
+        }
+
+        private void buttPickMailHeaderColor_Click(object sender, EventArgs e)
+        {
+            pickColor(picMailHeaderColor);
+        }
+
+        private void buttPickMailSummaryColor_Click(object sender, EventArgs e)
+        {
+            pickColor(picMailSummaryColor);
+        }
+
+        private void txtUser_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+                checkForChanges();
         }
     }
 }

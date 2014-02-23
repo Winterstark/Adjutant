@@ -79,7 +79,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="classAES.cs" />
     <Compile Include="classHotkey.cs" />
+    <Compile Include="classGmail.cs" />
     <Compile Include="formMain.cs">
       <SubType>Form</SubType>
     </Compile>

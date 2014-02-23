@@ -39,7 +39,7 @@ todo_done_color=-14436096
 //twitter module
 token=18160045-m6CI9FSXK5zhItM7QWJixujVJRR7aP0Io4v2hIGEg
 secret=7q763i5QxPn1oBE9OgNIqMrTJaqEjwASdcIdvT4Jj8
-last_tweet=425965763946893312
+last_tweet=437651950281043968
 update_on_new_tweet=True
 update_on_focus=True
 min_tweet_period=30
@@ -49,6 +49,14 @@ tw_tweet_color=-1
 tw_link_color=-16776961
 tw_time_color=-13382401
 tw_count_color=-16743244
+
+//mail
+mail_period=5
+mail_update_on_new_mail=True
+mail_update_on_focus=True
+mail_count_color=-2209475
+mail_header_color=-6017241
+mail_summary_color=-5526623
 
 //other
 user=Magistrate

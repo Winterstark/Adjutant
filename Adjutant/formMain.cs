@@ -209,6 +209,7 @@ namespace Adjutant
         enum HideStyle { Disappear, Fade, ScrollUp, ScrollDown, ScrollLeft, ScrollRight };
 
         HideStyle hideStyle;
+        Gmail gmail;
         TwitterService twitter;
         OAuthRequestToken requestToken;
         UserActivityHook actHook;
@@ -217,20 +218,51 @@ namespace Adjutant
         BufferedGraphicsContext context;
         BufferedGraphics grafx;
         Brush brush = Brushes.White;
-        Color echoColor, errorColor, todoMiscColor, todoItemColor, todoDoneColor, twUserColor, twMiscColor, twTweetColor, twLinkColor, twTimeColor, twCountColor;
+        Color echoColor, errorColor, todoMiscColor, todoItemColor, todoDoneColor, twUserColor, twMiscColor, twTweetColor, twLinkColor, twTimeColor, twCountColor, mailCountColor, mailHeaderColor, mailSummaryColor;
         DateTime autoHide, pauseEnd, lastTwCount;
         List<Tweet> tweets = new List<Tweet>();
         List<TextChunk> chunks = new List<TextChunk>();
         Dictionary<string, string> customCmds;
         List<string> history = new List<string>(), twURLs = new List<string>(), todo;
         string[] filteredPaths;
-        string python, user, dir, todoDir, inputMode, token, secret, link;
+        string python, user, dir, todoDir, inputMode, token, secret, link, mailUser, mailPass;
         double opacityPassive, opacityActive;
         long lastTweet;
-        int x, y, lineH, minH, maxH, prevH, maxLines, prevX, prevY, leftMargin, chunkOffset, lastChunk, lastChunkChar, printAtOnce, autoHideDelay, tabInd, historyInd, minTweetPeriod, hotkey;
-        bool initialized, activated, winKey, prompt, blankLine, echo, ctrlKey, drag, resizeW, resizeH, hiding, hidden, todoHideDone, todoAutoTransfer, twUpdateOnNewTweet, twUpdateOnFocus, twitterOutput, hotkeyCtrl, hotkeyAlt, hotkeyShift;
+        int x, y, lineH, minH, maxH, prevH, maxLines, prevX, prevY, leftMargin, chunkOffset, lastChunk, lastChunkChar, printAtOnce, autoHideDelay, tabInd, historyInd, minTweetPeriod, hotkey, newMailCount, prevNewMailCount;
+        bool initialized, activated, winKey, prompt, blankLine, echo, ctrlKey, drag, resizeW, resizeH, hiding, hidden, todoHideDone, todoAutoTransfer, twUpdateOnNewTweet, twUpdateOnFocus, twitterOutput, mailUpdateOnNewMail, mailUpdateOnFocus, hotkeyCtrl, hotkeyAlt, hotkeyShift;
         #endregion
 
+
+        void activateConsole() //or hide if already active
+        {   
+            if (hideStyle == HideStyle.Disappear)
+            {
+                this.Visible = !this.Visible;
+                hidden = !this.Visible;
+            }
+            else
+            {
+                if (timerShowHide.Enabled)
+                    hiding = !hiding;
+                else if (!hidden && !txtCMD.Focused)
+                    this.Opacity = opacityActive;
+                else
+                {
+                    if (!hidden)
+                        hiding = true;
+                    else
+                    {
+                        this.Visible = true;
+                        hiding = false;
+                    }
+
+                    timerShowHide.Enabled = true;
+                }
+            }
+
+            if (this.Visible && !hiding)
+                SetForegroundWindow(this.Handle);
+        }
 
         void draw(Graphics gfx)
         {
@@ -444,6 +476,24 @@ namespace Adjutant
                         case "tw_count_color":
                             twCountColor = Color.FromArgb(int.Parse(args[1]));
                             break;
+                        case "mail_period":
+                            timerMailCheck.Interval = int.Parse(args[1]) * 60000; //convert from minutes to miliseconds
+                            break;
+                        case "mail_update_on_new_mail":
+                            mailUpdateOnNewMail = bool.Parse(args[1]);
+                            break;
+                        case "mail_update_on_focus":
+                            mailUpdateOnFocus = bool.Parse(args[1]);
+                            break;
+                        case "mail_count_color":
+                            mailCountColor = Color.FromArgb(int.Parse(args[1]));
+                            break;
+                        case "mail_header_color":
+                            mailHeaderColor = Color.FromArgb(int.Parse(args[1]));
+                            break;
+                        case "mail_summary_color":
+                            mailSummaryColor = Color.FromArgb(int.Parse(args[1]));
+                            break;
                         case "user":
                             user = args[1];
                             break;
@@ -452,6 +502,20 @@ namespace Adjutant
             }
 
             file.Close();
+
+            //load mail username/password
+            if (File.Exists(Application.StartupPath + "\\mail_login.dat"))
+            {
+                AES alg = new AES();
+                alg.Decrypt(Application.StartupPath + "\\mail_login.dat", Application.StartupPath + "\\temp.dat");
+
+                StreamReader login = new StreamReader(Application.StartupPath + "\\temp.dat");
+                mailUser = login.ReadLine();
+                mailPass = login.ReadLine();
+                login.Close();
+
+                File.Delete(Application.StartupPath + "\\temp.dat");
+            }
         }
 
         void saveOptions()
@@ -515,10 +579,27 @@ namespace Adjutant
             file.WriteLine("tw_count_color=" + twCountColor.ToArgb());
             file.WriteLine();
 
+            file.WriteLine("//mail");
+            file.WriteLine("mail_period=" + (timerMailCheck.Interval / 60000)); //convert from miliseconds to minutes
+            file.WriteLine("mail_update_on_new_mail=" + mailUpdateOnNewMail);
+            file.WriteLine("mail_update_on_focus=" + mailUpdateOnFocus);
+            file.WriteLine("mail_count_color=" + mailCountColor.ToArgb());
+            file.WriteLine("mail_header_color=" + mailHeaderColor.ToArgb());
+            file.WriteLine("mail_summary_color=" + mailSummaryColor.ToArgb());
+            file.WriteLine();
+
             file.WriteLine("//other");
             file.WriteLine("user=" + user);
 
             file.Close();
+
+            //save mail username/password
+            StreamWriter login = new StreamWriter(Application.StartupPath + "\\mail_login.dat");
+            login.WriteLine(mailUser);
+            login.WriteLine(mailPass);
+            login.Close();
+
+            new AES().Encrypt(Application.StartupPath + "\\mail_login.dat", Application.StartupPath + "\\mail_login.dat");
         }
 
         void showOptions()
@@ -592,6 +673,15 @@ namespace Adjutant
                 options.picTwTimestampColor.Tag = twTimeColor;
                 options.picTwCountColor.Tag = twCountColor;
 
+                options.txtUser.Tag = mailUser;
+                options.txtPass.Tag = mailPass;
+                options.checkMailCountOnNewMail.Tag = mailUpdateOnNewMail;
+                options.checkMailCountOnFocus.Tag = mailUpdateOnFocus;
+                options.numMailCheckPeriod.Tag = timerMailCheck.Interval / 60000;
+                options.picMailCountColor.Tag = mailCountColor;
+                options.picMailHeaderColor.Tag = mailHeaderColor;
+                options.picMailSummaryColor.Tag = mailSummaryColor;
+
                 //set current values
                 options.numX.Value = x;
                 options.numY.Value = y;
@@ -636,6 +726,15 @@ namespace Adjutant
                 options.picTwLinkColor.BackColor = twLinkColor;
                 options.picTwTimestampColor.BackColor = twTimeColor;
                 options.picTwCountColor.BackColor = twCountColor;
+
+                options.txtUser.Text = mailUser;
+                options.txtPass.Text = mailPass;
+                options.checkMailCountOnNewMail.Checked = mailUpdateOnNewMail;
+                options.checkMailCountOnFocus.Checked = mailUpdateOnFocus;
+                options.numMailCheckPeriod.Value = timerMailCheck.Interval / 60000;
+                options.picMailCountColor.BackColor = mailCountColor;
+                options.picMailHeaderColor.BackColor = mailHeaderColor;
+                options.picMailSummaryColor.BackColor = mailSummaryColor;
 
                 options.starting = false;
 
@@ -710,6 +809,15 @@ namespace Adjutant
             twTimeColor = options.picTwTimestampColor.BackColor;
             twCountColor = options.picTwCountColor.BackColor;
 
+            mailUser = options.txtUser.Text;
+            mailPass = options.txtPass.Text;
+            mailUpdateOnNewMail = options.checkMailCountOnNewMail.Checked;
+            mailUpdateOnFocus = options.checkMailCountOnFocus.Checked;
+            timerMailCheck.Interval = (int)options.numMailCheckPeriod.Value * 60000;
+            mailCountColor = options.picMailCountColor.BackColor;
+            mailHeaderColor = options.picMailHeaderColor.BackColor;
+            mailSummaryColor = options.picMailSummaryColor.BackColor;
+
             //apply changes & save
             Hotkey.RegisterHotKey(this, hotkey, hotkeyCtrl, hotkeyAlt, hotkeyShift);
 
@@ -718,6 +826,8 @@ namespace Adjutant
 
             windowAutosize();
             setPrompt();
+
+            gmail.ChangeLogin(mailUser, mailPass);
 
             saveOptions();
         }
@@ -963,6 +1073,9 @@ namespace Adjutant
                             case "tw":
                                 cmdTwitter(cmd);
                                 break;
+                            case "mail":
+                                cmdMail(cmd);
+                                break;
                             case "":
                                 flush();
                                 break;
@@ -997,7 +1110,7 @@ namespace Adjutant
             if (cmd.Length == 1)
             {
                 print("List of Adjutant commands: " + Environment.NewLine);
-                foreach (string command in new string[] { "about", "calc", "cd", "cls", "custom", "date", "done", "exit", "help", "prompt", "time", "todo", "twitter" })
+                foreach (string command in new string[] { "about", "calc", "cd", "cls", "custom", "date", "done", "exit", "help", "mail", "prompt", "time", "todo", "twitter" })
                     print(command);
                 print("For more information on a specific command, type \"help <COMMAND>\"");
             }
@@ -1042,6 +1155,12 @@ namespace Adjutant
                     case "help":
                         print("H E L P C E P T I O N");
                         break;
+                    case "mail":
+                        print("The \"mail\" command allows you to check your Gmail account for new messages.");
+                        print("To setup your account, use the following command: \"mail /setup [username] [password]\".");
+                        //print("Calling the command will .");
+                        print("To change how often Adjutant checks for new mail, as well as other options, go to the Options menu.");
+                        break;
                     case "time":
                         print("Gets current time.");
                         break;
@@ -1076,6 +1195,7 @@ namespace Adjutant
                             print("Before using the Twitter service you will have to authorize Adjutant to view your tweets.");
                             print("The authorization should begin automatically; if not, enter the following command: \"twitter /init\"");
                             print("If you run into any problems with authorization, you can get more information by typing the following: \"help twitter /init\"");
+                            print("To change other settings, go to the Options menu.");
                         }
                         else
                         {
@@ -2082,10 +2202,17 @@ namespace Adjutant
                             options.SinceId = lastTweet;
                         options.Count = 1000;
 
-                        IEnumerable<TwitterStatus> tweetList = twitter.ListTweetsOnHomeTimeline(options);
-                        if (tweetList != null)
-                            foreach (var tweet in tweetList.Reverse<TwitterStatus>())
-                                tweets.Add(new Tweet(tweet.User.Name, tweet.User.ScreenName, Regex.Unescape(WebUtility.HtmlDecode(tweet.Text)), tweet.CreatedDate, tweet.Id));
+                        try
+                        {
+                            IEnumerable<TwitterStatus> tweetList = twitter.ListTweetsOnHomeTimeline(options);
+                            if (tweetList != null)
+                                foreach (var tweet in tweetList.Reverse<TwitterStatus>())
+                                    tweets.Add(new Tweet(tweet.User.Name, tweet.User.ScreenName, Regex.Unescape(WebUtility.HtmlDecode(tweet.Text)), tweet.CreatedDate, tweet.Id));
+                        }
+                        catch
+                        {
+                            print("Unidentified error with Twitter module.", errorColor);
+                        }
                     }
                 }
             }
@@ -2287,6 +2414,98 @@ namespace Adjutant
         }
         #endregion
 
+        #region Mail Module
+        void mailInit()
+        {
+            if (!string.IsNullOrEmpty(mailUser) && !string.IsNullOrEmpty(mailPass))
+            {
+                gmail = new Gmail(mailUser, mailPass);
+                getNewMailCount();
+
+                if (newMailCount != -1)
+                {
+                    displayNewMailCount();
+                    timerMailCheck.Enabled = true;
+                }
+            }
+        }
+
+        void getNewMailCount()
+        {
+            newMailCount = gmail.Check();
+        }
+
+        void displayNewMailCount()
+        {
+            if (newMailCount == prevNewMailCount)
+                return; //don't display mail count if it's already been displayed before
+
+            string output;
+
+            switch (newMailCount)
+            {
+                case -1:
+                    print("Could not check for new emails.", errorColor);
+                    print("Your Internet could be down, the mail server may be unresponsive, or the username and password that you entered previously were wrong..", errorColor);
+                    output = "error";
+                    break;
+                case 0:
+                    output = "No new mail.";
+                    break;
+                case 1:
+                    output = "1 new email.";
+                    break;
+                default:
+                    output = newMailCount + " new emails.";
+                    break;
+            }
+            
+            //check last outputted line to make sure it won't be repeated
+            if (output != "error" && chunks.Count > 0 && chunks[chunks.Count - 1].ToString() != output)
+                print(output, "https://mail.google.com/mail/ca/u/0/#inbox", mailCountColor);
+
+            prevNewMailCount = newMailCount;
+        }
+
+        void displayNewMail(bool verbose)
+        {
+            print("Gmail - Inbox for " + mailUser);
+
+            foreach (string[] email in gmail.emails)
+                if (!verbose)
+                    print(email[gmail.M_SENDER] + ": " + email[gmail.M_TITLE] + " - " + email[gmail.M_DATE], email[gmail.M_LINK], mailHeaderColor);
+                else
+                {
+                    print(email[gmail.M_SENDER] + ": " + email[gmail.M_TITLE] + " - " + email[gmail.M_DATE], email[gmail.M_LINK], mailHeaderColor);
+                    print(email[gmail.M_SUMMARY], mailSummaryColor);
+                }
+        }
+
+        void cmdMail(string[] cmd)
+        {
+            if (cmd.Length >= 4 && cmd[1].Contains("/s"))
+            {
+                //setup username/password
+                mailUser = cmd[2];
+                mailPass = cmd[3];
+
+                saveOptions();
+
+                print("Updated mail username/password.");
+            }
+            else if (string.IsNullOrEmpty(mailUser) || string.IsNullOrEmpty(mailPass))
+            {
+                print("You need to setup your mail account first.", errorColor);
+                print("Use the following command: \"mail /setup [username] [password]\".", errorColor);
+            }
+            else
+            {
+                bool verbose = cmd.Length > 1 && cmd[1].Contains("/v");
+                displayNewMail(verbose);
+            }
+        }
+        #endregion
+
 
         public formMain()
         {
@@ -2311,35 +2530,7 @@ namespace Adjutant
 
             //activation hotkey
             if (m.Msg == Hotkey.WM_HOTKEY)
-            {
-                if (hideStyle == HideStyle.Disappear)
-                {
-                    this.Visible = !this.Visible;
-                    hidden = !this.Visible;
-                }
-                else
-                {
-                    if (timerShowHide.Enabled)
-                        hiding = !hiding;
-                    else if (!hidden && !txtCMD.Focused)
-                        this.Opacity = opacityActive;
-                    else
-                    {
-                        if (!hidden)
-                            hiding = true;
-                        else
-                        {
-                            this.Visible = true;
-                            hiding = false;
-                        }
-
-                        timerShowHide.Enabled = true;
-                    }
-                }
-
-                if (this.Visible && !hiding)
-                    SetForegroundWindow(this.Handle);
-            }
+                activateConsole();
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -2433,6 +2624,9 @@ namespace Adjutant
 
             //twitter init
             twitterInit();
+
+            //mail init
+            mailInit();
         }
 
         private void formMain_Activated(object sender, EventArgs e)
@@ -2455,6 +2649,9 @@ namespace Adjutant
 
             if (tweets.Count > 0 && twUpdateOnFocus && DateTime.Now.Subtract(lastTwCount).TotalSeconds >= minTweetPeriod)
                 tweetCount();
+
+            if (mailUpdateOnFocus && newMailCount > 0)
+                displayNewMailCount();
         }
 
         private void formMain_Deactivate(object sender, EventArgs e)
@@ -2937,6 +3134,14 @@ namespace Adjutant
             }
         }
 
+        private void timerMailCheck_Tick(object sender, EventArgs e)
+        {
+            getNewMailCount();
+
+            if (mailUpdateOnNewMail)
+                displayNewMailCount();
+        }
+
         private void menuOptions_Click(object sender, EventArgs e)
         {
             showOptions();
@@ -2945,6 +3150,11 @@ namespace Adjutant
         private void menuExit_Click(object sender, EventArgs e)
         {
             Application.Exit();
+        }
+
+        private void trayIcon_DoubleClick(object sender, EventArgs e)
+        {
+            activateConsole();
         }
     }
 }
