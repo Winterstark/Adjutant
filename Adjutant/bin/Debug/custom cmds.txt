@@ -1,0 +1,2 @@
+add words="C:\dev\scripts\add words.vbs"
+python=c:\dev\python\python.exe -i
