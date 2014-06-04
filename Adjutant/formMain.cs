@@ -24,6 +24,7 @@ namespace Adjutant
 
         const int ZERO_DELAY = 60001;
 
+        private int SND_ASYNC = 0x0001;
 
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
@@ -33,6 +34,9 @@ namespace Adjutant
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+        [DllImport("WinMM.dll")]
+        static extern bool PlaySound(string fname, int Mod, int flag);
 
 
         public delegate void MyDelegate();
@@ -188,15 +192,15 @@ namespace Adjutant
                 return chunks;
             }
 
-            public bool JoinChunk(TextChunk nextChunk, int maxWidth, Font font, Func<string, int> MeasureWidth)
+            public bool JoinChunk(TextChunk nextChunk, int leftMargin, int maxWidth, Font font, Func<string, int> MeasureWidth)
             {
                 int newWidth = MeasureWidth(text + nextChunk.text);
 
-                if (!absNewline && newWidth <= maxWidth && brush.Color == nextChunk.brush.Color)
+                if (!absNewline && leftMargin + newWidth <= maxWidth && brush.Color == nextChunk.brush.Color)
                 {
                     text += nextChunk.text;
                     bounds.Width = newWidth;
-                    newline |= nextChunk.newline;
+                    newline &= nextChunk.newline;
                     absNewline |= nextChunk.absNewline;
 
                     return true;
@@ -223,12 +227,12 @@ namespace Adjutant
         List<Tweet> tweets = new List<Tweet>();
         List<TextChunk> chunks = new List<TextChunk>();
         Dictionary<string, string> customCmds;
-        List<string> history = new List<string>(), twURLs = new List<string>(), todo;
+        List<string> history = new List<string>(), twURLs = new List<string>(), twMentions = new List<string>(), todo;
         string[] filteredPaths;
-        string python, user, dir, todoDir, inputMode, token, secret, link, mailUser, mailPass;
+        string python, user, dir, todoDir, inputMode, token, secret, link, mailUser, mailPass, twUsername, twSound, mailSound;
         double opacityPassive, opacityActive;
         long lastTweet;
-        int x, y, lineH, minH, maxH, prevH, maxLines, prevX, prevY, leftMargin, chunkOffset, lastChunk, lastChunkChar, printAtOnce, autoHideDelay, tabInd, historyInd, minTweetPeriod, hotkey, newMailCount, prevNewMailCount;
+        int x, y, lineH, minH, maxH, prevH, maxLines, prevX, prevY, leftMargin, chunkOffset, lastChunk, lastChunkChar, printAtOnce, autoHideDelay, tabInd, historyInd, twInd, minTweetPeriod, twSoundThreshold, hotkey, newMailCount, prevNewMailCount, mailSoundThreshold;
         bool initialized, activated, winKey, prompt, blankLine, echo, ctrlKey, drag, resizeW, resizeH, hiding, hidden, todoHideDone, todoAutoTransfer, twUpdateOnNewTweet, twUpdateOnFocus, twitterOutput, mailUpdateOnNewMail, mailUpdateOnFocus, hotkeyCtrl, hotkeyAlt, hotkeyShift;
         #endregion
 
@@ -458,6 +462,12 @@ namespace Adjutant
                         case "min_tweet_period":
                             minTweetPeriod = int.Parse(args[1]);
                             break;
+                        case "tw_sound":
+                            twSound = args[1];
+                            break;
+                        case "tw_sound_threshold":
+                            twSoundThreshold = int.Parse(args[1]);
+                            break;
                         case "tw_user_color":
                             twUserColor = Color.FromArgb(int.Parse(args[1]));
                             break;
@@ -484,6 +494,12 @@ namespace Adjutant
                             break;
                         case "mail_update_on_focus":
                             mailUpdateOnFocus = bool.Parse(args[1]);
+                            break;
+                        case "mail_sound":
+                            mailSound = args[1];
+                            break;
+                        case "mail_sound_threshold":
+                            mailSoundThreshold = int.Parse(args[1]);
                             break;
                         case "mail_count_color":
                             mailCountColor = Color.FromArgb(int.Parse(args[1]));
@@ -571,6 +587,8 @@ namespace Adjutant
             file.WriteLine("update_on_new_tweet=" + twUpdateOnNewTweet);
             file.WriteLine("update_on_focus=" + twUpdateOnFocus);
             file.WriteLine("min_tweet_period=" + minTweetPeriod);
+            file.WriteLine("tw_sound=" + twSound);
+            file.WriteLine("tw_sound_threshold=" + twSoundThreshold);
             file.WriteLine("tw_user_color=" + twUserColor.ToArgb());
             file.WriteLine("tw_misc_color=" + twMiscColor.ToArgb());
             file.WriteLine("tw_tweet_color=" + twTweetColor.ToArgb());
@@ -583,6 +601,8 @@ namespace Adjutant
             file.WriteLine("mail_period=" + (timerMailCheck.Interval / 60000)); //convert from miliseconds to minutes
             file.WriteLine("mail_update_on_new_mail=" + mailUpdateOnNewMail);
             file.WriteLine("mail_update_on_focus=" + mailUpdateOnFocus);
+            file.WriteLine("mail_sound=" + mailSound);
+            file.WriteLine("mail_sound_threshold=" + mailSoundThreshold);
             file.WriteLine("mail_count_color=" + mailCountColor.ToArgb());
             file.WriteLine("mail_header_color=" + mailHeaderColor.ToArgb());
             file.WriteLine("mail_summary_color=" + mailSummaryColor.ToArgb());
@@ -666,6 +686,8 @@ namespace Adjutant
                 options.checkTwCountOnNewTweet.Tag = twUpdateOnNewTweet;
                 options.checkTwCountOnFocus.Tag = twUpdateOnFocus;
                 options.numTwCountMinPeriod.Tag = minTweetPeriod;
+                options.txtTwSound.Tag = twSound;
+                options.numTwSoundThreshold.Tag = twSoundThreshold;
                 options.picTwUsernameColor.Tag = twUserColor;
                 options.picTwMiscColor.Tag = twMiscColor;
                 options.picTwTweetColor.Tag = twTweetColor;
@@ -678,6 +700,8 @@ namespace Adjutant
                 options.checkMailCountOnNewMail.Tag = mailUpdateOnNewMail;
                 options.checkMailCountOnFocus.Tag = mailUpdateOnFocus;
                 options.numMailCheckPeriod.Tag = timerMailCheck.Interval / 60000;
+                options.txtMailSound.Tag = mailSound;
+                options.numMailSoundThreshold.Tag = mailSoundThreshold;
                 options.picMailCountColor.Tag = mailCountColor;
                 options.picMailHeaderColor.Tag = mailHeaderColor;
                 options.picMailSummaryColor.Tag = mailSummaryColor;
@@ -720,6 +744,8 @@ namespace Adjutant
                 options.checkTwCountOnNewTweet.Checked = twUpdateOnNewTweet;
                 options.checkTwCountOnFocus.Checked = twUpdateOnFocus;
                 options.numTwCountMinPeriod.Value = minTweetPeriod;
+                options.txtTwSound.Text = twSound;
+                options.numTwSoundThreshold.Value = twSoundThreshold;
                 options.picTwUsernameColor.BackColor = twUserColor;
                 options.picTwMiscColor.BackColor = twMiscColor;
                 options.picTwTweetColor.BackColor = twTweetColor;
@@ -732,6 +758,8 @@ namespace Adjutant
                 options.checkMailCountOnNewMail.Checked = mailUpdateOnNewMail;
                 options.checkMailCountOnFocus.Checked = mailUpdateOnFocus;
                 options.numMailCheckPeriod.Value = timerMailCheck.Interval / 60000;
+                options.txtMailSound.Text = mailSound;
+                options.numMailSoundThreshold.Value = mailSoundThreshold;
                 options.picMailCountColor.BackColor = mailCountColor;
                 options.picMailHeaderColor.BackColor = mailHeaderColor;
                 options.picMailSummaryColor.BackColor = mailSummaryColor;
@@ -802,6 +830,8 @@ namespace Adjutant
             twUpdateOnNewTweet = options.checkTwCountOnNewTweet.Checked;
             twUpdateOnFocus = options.checkTwCountOnFocus.Checked;
             minTweetPeriod = (int)options.numTwCountMinPeriod.Value;
+            twSound = options.txtTwSound.Text;
+            twSoundThreshold = (int)options.numTwSoundThreshold.Value;
             twUserColor = options.picTwUsernameColor.BackColor;
             twMiscColor = options.picTwMiscColor.BackColor;
             twTweetColor = options.picTwTweetColor.BackColor;
@@ -814,6 +844,8 @@ namespace Adjutant
             mailUpdateOnNewMail = options.checkMailCountOnNewMail.Checked;
             mailUpdateOnFocus = options.checkMailCountOnFocus.Checked;
             timerMailCheck.Interval = (int)options.numMailCheckPeriod.Value * 60000;
+            mailSound = options.txtMailSound.Text;
+            mailSoundThreshold = (int)options.numMailSoundThreshold.Value;
             mailCountColor = options.picMailCountColor.BackColor;
             mailHeaderColor = options.picMailHeaderColor.BackColor;
             mailSummaryColor = options.picMailSummaryColor.BackColor;
@@ -892,6 +924,8 @@ namespace Adjutant
                     lblPrompt.Text = "Twitter>";
                 else if (inputMode == "twitter pin")
                     lblPrompt.Text = "Twitter PIN:";
+                else if (inputMode == "user")
+                    lblPrompt.Text = "Username: ";
                 else
                     lblPrompt.Text = dir + ">";
 
@@ -940,14 +974,25 @@ namespace Adjutant
             switch (inputMode)
             {
                 case "user":
+                    bool firstRun = user == "first_run";
+
                     user = txtCMD.Text;
                     saveOptions();
 
-                    //continue with first time intro
-                    greeting();
-                    print("This seems to be the first time you are running Adjutant. Would you like to run the tutorial/setup? (y/n)");
+                    if (firstRun)
+                    {
+                        //continue with first time intro
+                        greeting();
+                        print("This seems to be the first time you are running Adjutant. Would you like to run the tutorial/setup? (y/n)");
 
-                    inputMode = "tutorial";
+                        inputMode = "tutorial";
+                    }
+                    else
+                    {
+                        inputMode = "default";
+                        setPrompt();
+                    }
+
                     txtCMD.Text = "";
                     break;
                 case "twitter pin":
@@ -1076,6 +1121,12 @@ namespace Adjutant
                             case "mail":
                                 cmdMail(cmd);
                                 break;
+                            case "user":
+                                print("Your current username: " + user);
+                                print("Enter new username: ");
+                                inputMode = "user";
+                                setPrompt();
+                                break;
                             case "":
                                 flush();
                                 break;
@@ -1110,7 +1161,7 @@ namespace Adjutant
             if (cmd.Length == 1)
             {
                 print("List of Adjutant commands: " + Environment.NewLine);
-                foreach (string command in new string[] { "about", "calc", "cd", "cls", "custom", "date", "done", "exit", "help", "mail", "prompt", "time", "todo", "twitter" })
+                foreach (string command in new string[] { "about", "calc", "cd", "cls", "custom", "date", "done", "exit", "help", "mail", "prompt", "time", "todo", "tutorial", "twitter", "user" })
                     print(command);
                 print("For more information on a specific command, type \"help <COMMAND>\"");
             }
@@ -1137,7 +1188,7 @@ namespace Adjutant
                         print("To delete a custom command use this syntax: \"custom /del [command_name]\".");
                         break;
                     case "date":
-                        print("Gets current date.");
+                        print("Gets the current date.");
                         break;
                     case "done":
                         print("Use \"done\" to mark tasks in your todo lists as completed.");
@@ -1147,6 +1198,8 @@ namespace Adjutant
                         print("You can specify more than one index at a time by separating them with commas.");
                         print("To specify a sequential range of numbers separate the bounds with a hyphen.");
                         print("For example: \"done 4,8,15-16,23,42,100-108\"");
+                        print("Use the \"/undo\" switch to make a done item \"todo\" again. You can only undo one item at a time.");
+                        print("Use the \"/erase\" switch to remove todo items instead of marking them as read. This action is permanent and can only be done one item at a time.");
                         print("To add new tasks or view task lists use the \"todo\" command.");
                         break;
                     case "exit":
@@ -1158,11 +1211,13 @@ namespace Adjutant
                     case "mail":
                         print("The \"mail\" command allows you to check your Gmail account for new messages.");
                         print("To setup your account, use the following command: \"mail /setup [username] [password]\".");
-                        //print("Calling the command will .");
+                        print("Calling the command will display the list of new mail.");
+                        print("Calling the command with the \"\\verbose\" switch will display the list of new mail, as well as the first segment of each mail.");
+                        print("Use \"mail \\refresh\" to manually check for new mail.");
                         print("To change how often Adjutant checks for new mail, as well as other options, go to the Options menu.");
                         break;
                     case "time":
-                        print("Gets current time.");
+                        print("Gets the current time.");
                         break;
                     case "todo":
                         print("The \"todo\" command implements a simple todo list manager.");
@@ -1185,8 +1240,13 @@ namespace Adjutant
                             print("You can also use the shorter keyword \"tw\".");
                             print("");
                             print("Calling the command will display a tweet (if there are any) and will lock input into Adjutant.");
-                            print("Press the 'o' button to open all URLs in the tweet (You can also click them with the mouse).");
+                            print("Press the 'o' button to open all URLs in the tweet.");
+                            print("Press the 'm' button to open all mentions and hashtags in the tweet.");
+                            print("Press the 'u' button to open the user's profile.");
+                            print("Note that you can also click on usernames, URLs, hashtags, etc, to open them in your browser.");
+                            print("");
                             print("Press the 'j' button to read the next tweet.");
+                            print("Press the 'k' button to go back to the previous tweet.");
                             print("Press the 'a' button to print all tweets at once.");
                             print("Press the 'Escape' button to exit Twitter mode and enable standard input again.");
                             print("");
@@ -1211,6 +1271,15 @@ namespace Adjutant
                         break;
                     case "prompt":
                         print("Toggles prompt.");
+                        break;
+                    case "user":
+                        print("Change your username with this command.");
+                        print("Currently, your username is only used when Adjutant starts and displays the welcome message.");
+                        break;
+                    case "tutorial":
+                        print("Learn how to use Adjutant.");
+                        print("This command has not yet been implemented.");
+                        print("");
                         break;
                     default:
                         print("Unrecognized command.", errorColor);
@@ -1854,6 +1923,17 @@ namespace Adjutant
                     return todoDir + "todo_" + DateTime.Today.ToString("yyyy-MM-dd") + ".txt";
                 case "tomorrow":
                     return todoDir + "todo_" + DateTime.Today.AddDays(1).ToString("yyyy-MM-dd") + ".txt";
+                case "previous":
+                    List<string> todos = Directory.GetFiles(todoDir, "todo_*-*-*.txt").ToList();
+
+                    int todaysTodo = todos.IndexOf(todoFile("today"));
+                    if (todaysTodo == -1)
+                        todaysTodo = todos.Count;
+
+                    if (todaysTodo >= 1)
+                        return todos[todaysTodo - 1];
+                    else
+                        return "";
                 default:
                     return todoDir + "todo_" + when + ".txt";
             }
@@ -1900,15 +1980,12 @@ namespace Adjutant
                 if (todaysTodo == -1)
                     todaysTodo = todos.Count;
 
-                if (todaysTodo >= 1)
-                {
-                    todo.AddRange(tasklist(todos[todaysTodo - 1]).FindAll(item => !item.Contains("__DONE__") && !todo.Contains(item) && !todo.Contains("__DONE__" + item)));
+                todo.AddRange(tasklist(todoFile("previous")).FindAll(item => !item.Contains("__DONE__") && !todo.Contains(item) && !todo.Contains("__DONE__" + item)));
 
-                    StreamWriter file = new StreamWriter(todoFile("today"));
-                    foreach (string item in todo)
-                        file.WriteLine(item);
-                    file.Close();
-                }
+                StreamWriter file = new StreamWriter(todoFile("today"));
+                foreach (string item in todo)
+                    file.WriteLine(item);
+                file.Close();
             }
 
             todoShow();
@@ -2042,13 +2119,19 @@ namespace Adjutant
 
         void cmdDone(string[] cmd)
         {
+            //separate task index (or indices) from switches (if any)
             string task = txtCMD.Text.Substring(txtCMD.Text.IndexOf(' ') + 1);
-
-            //load target todo list
             string date = "today";
+            bool erase = false, undo = false;
 
             if (task.Contains('/'))
             {
+                //make note of switches
+                if (task.Contains("/e"))
+                    erase = true;
+                else if (task.Contains("/u"))
+                    undo = true;
+                
                 if (task.Contains("/t"))
                     date = "tomorrow";
                 else if (task.Contains("/d"))
@@ -2057,104 +2140,187 @@ namespace Adjutant
 
                     if (lb != -1)
                     {
-                        date = task.Substring(lb + 1);
-                        task = task.Substring(0, task.IndexOf('/'));
+                        lb++;
+
+                        int ub = task.IndexOf(" ", lb);
+                        if (ub == -1)
+                            ub = task.Length;
+
+                        date = task.Substring(lb, ub - lb);
                     }
                 }
 
-                task = task.Substring(0, task.IndexOf('/'));
+                //cleanup switches
+                while (task.Contains('/'))
+                {
+                    int lb = task.IndexOf('/');
+                    int ub = task.IndexOf(' ', lb + 2);
+                    if (ub == -1)
+                        ub = task.Length;
+
+                    task = cleanupString(task.Remove(lb, ub - lb));
+                }
             }
 
-            List<string> tasks = tasklist(todoFile(date));
+            List<string> tasks = tasklist(todoFile(date)); //load target todo list
 
-            //get indices of all items that need to be marked as done
-            List<int> done = new List<int>();
-
-            foreach (string tsk in task.Split(','))
-                if (tsk.Contains('-'))
+            if (undo)
+            {
+                //make a done item be "todo" again
+                int taskInd;
+                if (!int.TryParse(task, out taskInd))
                 {
-                    //represents range
-                    string[] bounds = tsk.Split('-');
-                    for (int i = int.Parse(bounds[0]); i <= int.Parse(bounds[1]); i++)
-                        done.Add(i);
+                    print("Invalid argument. Expected integer (index of todo item).", errorColor);
+                    print("You can only undo one todo item at a time.", errorColor);
                 }
                 else
-                    //single task
-                    done.Add(int.Parse(tsk));
-
-            if (todoHideDone)
-                //ignore items that are already marked as done, as well as items that don't exist
-                for (int i = 0; i < done.Count; i++)
                 {
-                    //get actual index of item (which means ignore done items)
-                    int actualIndex = 0, j = 0;
+                    taskInd--;
 
-                    while (true)
+                    if (taskInd < 0 || taskInd >= tasks.Count) //check if item index exists in list
+                        print("Task no. " + taskInd + " doesn't exist in that todo file.", errorColor);
+                    else if (!tasks[taskInd].Contains("__DONE__")) //check if item's status is done
+                        print("Task no. " + taskInd + " is not done. You can only undo done items.", errorColor);
+                    else
                     {
-                        //skip done items
-                        while (actualIndex < tasks.Count && tasks[actualIndex].Contains("__DONE__"))
-                            actualIndex++;
-
-                        if (actualIndex == tasks.Count)
-                            break; //index out of bounds
-
-                        if (j == done[i] - 1)
-                            break; //loop exit condition
-
-                        j++;
-                        actualIndex++;
+                        print("Undo task: " + tasks[taskInd]);
+                        tasks[taskInd] = tasks[taskInd].Replace("__DONE__", "");
                     }
+                }
+            }
+            else if (erase)
+            {
+                //delete todo item
+                int taskInd;
+                if (!int.TryParse(task, out taskInd))
+                {
+                    print("Invalid argument. Expected integer (index of todo item).", errorColor);
+                    print("You can only delete one todo item at a time.", errorColor);
+                }
+                else
+                {
+                    taskInd--;
 
                     //check if item index exists in list
-                    if (actualIndex < 0 || actualIndex >= tasks.Count)
+                    if (taskInd < 0 || taskInd >= tasks.Count)
+                        print("Task no. " + taskInd + " doesn't exist in that todo file.", errorColor);
+                    else
                     {
-                        print("Task no. " + done[i] + " doesn't exist in that todo file.", errorColor);
-                        done.RemoveAt(i--);
+                        print("Deleted task: " + tasks[taskInd]);
+
+                        //if target todolist is today, also delete from yesterday's list (otherwise the item will return)
+                        if (date == "today")
+                        {
+                            List<string> prevTodo = tasklist(todoFile("previous"));
+
+                            if (prevTodo.Contains(tasks[taskInd]))
+                            {
+                                prevTodo.Remove(tasks[taskInd]);
+
+                                StreamWriter file = new StreamWriter(todoFile("previous"));
+                                foreach (string item in prevTodo)
+                                    file.WriteLine(item);
+                                file.Close();
+                            }
+                        }
+
+                        //delete from target todolist
+                        tasks.RemoveAt(taskInd);
+                    }
+                }
+            }
+            else
+            {
+                //mark todo item as done
+                //get indices of all items that need to be marked as done
+                List<int> done = new List<int>();
+
+                foreach (string tsk in task.Split(','))
+                    if (tsk.Contains('-'))
+                    {
+                        //represents range
+                        string[] bounds = tsk.Split('-');
+                        for (int i = int.Parse(bounds[0]); i <= int.Parse(bounds[1]); i++)
+                            done.Add(i);
                     }
                     else
-                        done[i] = actualIndex;
-                }
-            else
-                for (int i = 0; i < done.Count; i++)
-                {
-                    done[i]--; //adjust item indices from 1-based to 0-based
+                        //single task
+                        done.Add(int.Parse(tsk));
 
-                    //check if item indices exist in list
-                    if (done[i] < 0 || done[i] >= tasks.Count)
+                if (todoHideDone)
+                    //ignore items that are already marked as done, as well as items that don't exist
+                    for (int i = 0; i < done.Count; i++)
                     {
-                        print("Task no. " + (done[i] + 1) + " doesn't exist in that todo file.", errorColor);
-                        done.RemoveAt(i--);
+                        //get actual index of item (which means ignore done items)
+                        int actualIndex = 0, j = 0;
+
+                        while (true)
+                        {
+                            //skip done and erased items
+                            while (actualIndex < tasks.Count && (tasks[actualIndex].Contains("__DONE__")))
+                                actualIndex++;
+
+                            if (actualIndex == tasks.Count)
+                                break; //index out of bounds
+
+                            if (j == done[i] - 1)
+                                break; //loop exit condition
+
+                            j++;
+                            actualIndex++;
+                        }
+
+                        //check if item index exists in list
+                        if (actualIndex < 0 || actualIndex >= tasks.Count)
+                        {
+                            print("Task no. " + done[i] + " doesn't exist in that todo file.", errorColor);
+                            done.RemoveAt(i--);
+                        }
+                        else
+                            done[i] = actualIndex;
+                    }
+                else
+                    for (int i = 0; i < done.Count; i++)
+                    {
+                        done[i]--; //adjust item indices from 1-based to 0-based
+
+                        //check if item indices exist in list
+                        if (done[i] < 0 || done[i] >= tasks.Count)
+                        {
+                            print("Task no. " + (done[i] + 1) + " doesn't exist in that todo file.", errorColor);
+                            done.RemoveAt(i--);
+                        }
+
+                        //also check if item already marked as done
+                        if (tasks[done[i]].Contains("__DONE__"))
+                        {
+                            print("Task no. " + (done[i] + 1) + " is already marked as done.", errorColor);
+                            done.RemoveAt(i--);
+                        }
                     }
 
-                    //also check if item already marked as done
-                    if (tasks[done[i]].Contains("__DONE__"))
+                if (done.Count > 0)
+                {
+                    done.Sort();
+
+                    //mark items
+                    foreach (int dn in done)
                     {
-                        print("Task no. " + (done[i] + 1) + " is already marked as done.", errorColor);
-                        done.RemoveAt(i--);
+                        print(tasks[dn] + " DONE", todoDoneColor);
+                        tasks[dn] = "__DONE__" + tasks[dn];
                     }
                 }
-
-            if (done.Count > 0)
-            {
-                done.Sort();
-
-                //mark items
-                foreach (int dn in done)
-                {
-                    print(tasks[dn] + " DONE", todoDoneColor);
-                    tasks[dn] = "__DONE__" + tasks[dn];
-                }
-
-                //save updated list
-                StreamWriter fWrtr = new System.IO.StreamWriter(todoFile(date));
-                foreach (string tsk in tasks)
-                    fWrtr.WriteLine(tsk);
-                fWrtr.Close();
-
-                //reload today's todo list if needed
-                if (date == "today")
-                    todoLoad();
             }
+
+            //save updated list
+            StreamWriter fWrtr = new System.IO.StreamWriter(todoFile(date));
+            foreach (string tsk in tasks)
+                fWrtr.WriteLine(tsk);
+            fWrtr.Close();
+
+            //reload today's todo list if needed
+            if (date == "today")
+                todoLoad();
         }
         #endregion
 
@@ -2176,7 +2342,7 @@ namespace Adjutant
             setPrompt();
         }
 
-        void twitterInit()
+        void twitterInit()  
         {
             twitter = new TwitterService("bQp3ytw07Ld9bmEBU4RI4w", "IXS35cJodk8aUVQO26vTYUb61kYbIV6cznOYBd7k7AI");
 
@@ -2194,25 +2360,23 @@ namespace Adjutant
                 {
                     twitter.StreamUser(NewTweet);
 
+                    var options = new ListTweetsOnHomeTimelineOptions();
+
                     if (lastTweet != -1)
+                        options.SinceId = lastTweet;
+                    options.Count = 1000;
+
+                    try
                     {
-                        var options = new ListTweetsOnHomeTimelineOptions();
+                        IEnumerable<TwitterStatus> tweetList = twitter.ListTweetsOnHomeTimeline(options);
 
-                        if (lastTweet != 0)
-                            options.SinceId = lastTweet;
-                        options.Count = 1000;
-
-                        try
-                        {
-                            IEnumerable<TwitterStatus> tweetList = twitter.ListTweetsOnHomeTimeline(options);
-                            if (tweetList != null)
-                                foreach (var tweet in tweetList.Reverse<TwitterStatus>())
-                                    tweets.Add(new Tweet(tweet.User.Name, tweet.User.ScreenName, Regex.Unescape(WebUtility.HtmlDecode(tweet.Text)), tweet.CreatedDate, tweet.Id));
-                        }
-                        catch
-                        {
-                            print("Unidentified error with Twitter module.", errorColor);
-                        }
+                        if (tweetList != null)
+                            foreach (var tweet in tweetList.Reverse<TwitterStatus>())
+                                tweets.Add(new Tweet(tweet.User.Name, tweet.User.ScreenName, Regex.Unescape(WebUtility.HtmlDecode(tweet.Text)), tweet.CreatedDate, tweet.Id));
+                    }
+                    catch (Exception exc)
+                    {
+                        printError("Error while initiating Twitter module.", exc);
                     }
                 }
             }
@@ -2272,13 +2436,15 @@ namespace Adjutant
         {
             if (tweets.Count > 0)
             {
-                //print "<username> tweeted "
-                print(tweets[0].user, "https://twitter.com/" + tweets[0].actualUsername, false, twUserColor);
+                print(tweets[twInd].user, "https://twitter.com/" + tweets[twInd].actualUsername, false, twUserColor);
                 print(" tweeted ", false, twMiscColor);
 
+                twUsername = tweets[twInd].actualUsername;
+
                 //split tweet into chunks in order to color mentions and links
-                string tweet = tweets[0].text;
+                string tweet = tweets[twInd].text;
                 twURLs.Clear();
+                twMentions.Clear();
 
                 int urlInd, mentionInd;
 
@@ -2299,6 +2465,7 @@ namespace Adjutant
                     {
                         print(tweet.Substring(0, mentionInd), false, twTweetColor);
                         print(mention, "https://twitter.com/" + mention.Replace("@", ""), false, twUserColor);
+                        twMentions.Add(mention);
 
                         tweet = tweet.Remove(0, mentionInd + mention.Length);
                     }
@@ -2311,16 +2478,17 @@ namespace Adjutant
                     print(tweet, false, twTweetColor);
 
                 //print timestamp
-                print(" " + howLongAgo(tweets[0].created), "https://twitter.com/" + tweets[0].actualUsername + "/status/" + tweets[0].id, twTimeColor);
+                print(" " + howLongAgo(tweets[twInd].created), "https://twitter.com/" + tweets[twInd].actualUsername + "/status/" + tweets[twInd].id, twTimeColor);
 
-                lastTweet = tweets[0].id;
+                lastTweet = tweets[twInd].id;
 
-                //remove tweet
-                tweets.RemoveAt(0);
+                twitterOutput = twInd < tweets.Count - 1;
 
-                twitterOutput = tweets.Count > 0;
                 if (!twitterOutput)
+                {
                     print("No more tweets.");
+                    removeReadTweets();
+                }
 
                 setPrompt();
             }
@@ -2331,15 +2499,43 @@ namespace Adjutant
             if (!all)
                 twitterPrint();
             else
+            {
+                if (!twitterOutput)
+                    twInd = -1;
+
                 while (tweets.Count > 0)
+                {
+                    twInd++;
                     twitterPrint();
+                }
+            }
+        }
+
+        void removeReadTweets()
+        {
+            for (int i = 0; i <= twInd; i++)
+                tweets.RemoveAt(0);
         }
 
         void tweetCount()
         {
-            string tweetCount = tweets.Count + " new tweet" + (tweets.Count == 1 ? "." : "s.");
+            string tweetCount;
 
-            if (chunks.Count == 0 || chunks[chunks.Count - 1].ToString() != tweetCount)
+            switch (tweets.Count)
+            {
+                case 0:
+                    tweetCount = "No new tweets.";
+                    break;
+                case 1:
+                    tweetCount = "1 new tweet.";
+                    break;
+                default:
+                    tweetCount = tweets.Count + " new tweets.";
+                    break;
+            }
+
+            if ((chunks.Count == 0 || chunks[chunks.Count - 1].ToString() != tweetCount) //don't display new tweet count if it's already displayed
+                && !twitterOutput) //or if Adjutant is currently in Twitter mode
                 print(tweetCount, "http://www.twitter.com/", twCountColor);
 
             lastTwCount = DateTime.Now;
@@ -2361,7 +2557,7 @@ namespace Adjutant
 
             string user = getField(response.Response, "name");
             string actualUsername = getField(response.Response, "screen_name");
-            string tweet = " tweeted " + Regex.Unescape(WebUtility.HtmlDecode(getField(response.Response, "text")));
+            string tweet = Regex.Unescape(WebUtility.HtmlDecode(getField(response.Response, "text")));
 
             if (twUpdateOnNewTweet && DateTime.Now.Subtract(lastTwCount).TotalSeconds >= minTweetPeriod)
             {
@@ -2375,7 +2571,9 @@ namespace Adjutant
                     else
                     {
                         tweets.Add(new Tweet(user, actualUsername, tweet, time, id));
-                        tweetCount();
+
+                        if (!hidden)
+                            tweetCount();
                     }
                 }
                 else
@@ -2383,6 +2581,10 @@ namespace Adjutant
             }
             else
                 tweets.Add(new Tweet(user, actualUsername, tweet, time, id));
+
+            //play sound notification
+            if (twSoundThreshold != 0 && tweets.Count >= twSoundThreshold && File.Exists(twSound))
+                PlaySound(twSound, 0, SND_ASYNC);
         }
 
         void cmdTwitter(string[] cmd)
@@ -2404,7 +2606,10 @@ namespace Adjutant
                     tweetCount();
 
                     if (tweets.Count != 0)
+                    {
+                        twInd = 0;
                         twitterPrint();
+                    }
                 }
                 else if (cmd[1].ToLower().Contains("/a"))
                     twitterPrint(true);
@@ -2455,7 +2660,7 @@ namespace Adjutant
                 case 1:
                     output = "1 new email.";
                     break;
-                default:
+                default:    
                     output = newMailCount + " new emails.";
                     break;
             }
@@ -2465,20 +2670,29 @@ namespace Adjutant
                 print(output, "https://mail.google.com/mail/ca/u/0/#inbox", mailCountColor);
 
             prevNewMailCount = newMailCount;
+
+            //play sound notification
+            if (mailSoundThreshold != 0 && newMailCount >= mailSoundThreshold && File.Exists(mailSound))
+                PlaySound(mailSound, 0, SND_ASYNC);
         }
 
         void displayNewMail(bool verbose)
         {
-            print("Gmail - Inbox for " + mailUser);
+            if (gmail.emails.Count == 0)
+                print("No new mail.", "https://mail.google.com/mail/ca/u/0/#inbox", mailCountColor);
+            else
+            {
+                print("Gmail - Inbox for " + mailUser, "https://mail.google.com/mail/ca/u/0/#inbox", mailHeaderColor);
 
-            foreach (string[] email in gmail.emails)
-                if (!verbose)
-                    print(email[gmail.M_SENDER] + ": " + email[gmail.M_TITLE] + " - " + email[gmail.M_DATE], email[gmail.M_LINK], mailHeaderColor);
-                else
-                {
-                    print(email[gmail.M_SENDER] + ": " + email[gmail.M_TITLE] + " - " + email[gmail.M_DATE], email[gmail.M_LINK], mailHeaderColor);
-                    print(email[gmail.M_SUMMARY], mailSummaryColor);
-                }
+                foreach (string[] email in gmail.emails)
+                    if (!verbose)
+                        print(email[gmail.M_SENDER] + ": " + email[gmail.M_TITLE] + " - " + email[gmail.M_DATE], email[gmail.M_LINK], mailHeaderColor);
+                    else
+                    {
+                        print(email[gmail.M_SENDER] + ": " + email[gmail.M_TITLE] + " - " + email[gmail.M_DATE], email[gmail.M_LINK], mailHeaderColor);
+                        print(email[gmail.M_SUMMARY], mailSummaryColor);
+                    }
+            }
         }
 
         void cmdMail(string[] cmd)
@@ -2497,6 +2711,14 @@ namespace Adjutant
             {
                 print("You need to setup your mail account first.", errorColor);
                 print("Use the following command: \"mail /setup [username] [password]\".", errorColor);
+            }
+            else if (cmd.Length >= 2 && cmd[1].Contains("/r"))
+            {
+                //manual recheck
+                getNewMailCount();
+
+                prevNewMailCount = -1; //force the mail count to display even if it's zero
+                displayNewMailCount();
             }
             else
             {
@@ -2614,6 +2836,7 @@ namespace Adjutant
                 print("Welcome to Adjutant!<pause>");
                 print("What is your name?");
                 inputMode = "user";
+                setPrompt();
                 return;
             }
 
@@ -2668,7 +2891,7 @@ namespace Adjutant
             for (int i = 0; i < chunks.Count; i++)
             {
                 //can join with next chunk(s)?
-                while (i < chunks.Count - 1 && chunks[i].JoinChunk(chunks[i + 1], this.Width, txtCMD.Font, MeasureWidth))
+                while (i < chunks.Count - 1 && chunks[i].JoinChunk(chunks[i + 1], lMarg, this.Width, txtCMD.Font, MeasureWidth))
                     chunks.RemoveAt(i + 1);
 
                 //need to split chunk?
@@ -2862,8 +3085,17 @@ namespace Adjutant
                     case Keys.Enter:
                         flush();
                         break;
+                    case Keys.K:
+                        if (twInd > 0)
+                        {
+                            flush();
+                            twInd--;
+                            twitterPrint();
+                        }
+                        break;
                     case Keys.J:
                         flush();
+                        twInd++;
                         twitterPrint();
                         break;
                     case Keys.A:
@@ -2874,6 +3106,25 @@ namespace Adjutant
                             Process.Start(twURL);
 
                         if (txtCMD.Text.ToLower() == "o")
+                            txtCMD.Text = "";
+                        break;
+                    case Keys.M:
+                        foreach (string twMention in twMentions)
+                        {
+                            string user = twMention;
+                            if (user.Length > 1 && user[0] == '@')
+                                user = user.Substring(1);
+
+                            Process.Start("https://www.twitter.com/" + user);
+                        }
+
+                        if (txtCMD.Text.ToLower() == "m")
+                            txtCMD.Text = "";
+                        break;
+                    case Keys.U:
+                        Process.Start("https://www.twitter.com/" + twUsername);
+
+                        if (txtCMD.Text.ToLower() == "u")
                             txtCMD.Text = "";
                         break;
                     case Keys.Escape:
@@ -3060,6 +3311,7 @@ namespace Adjutant
                         if (this.Top >= y)
                         {
                             this.Top = y;
+                            this.Opacity = opacityActive;
                             timerShowHide.Enabled = false;
                             hidden = false;
                         }
@@ -3082,6 +3334,7 @@ namespace Adjutant
                         if (this.Top <= y)
                         {
                             this.Top = y;
+                            this.Opacity = opacityActive;
                             timerShowHide.Enabled = false;
                             hidden = false;
                         }
@@ -3104,6 +3357,7 @@ namespace Adjutant
                         if (this.Left >= x)
                         {
                             this.Left = x;
+                            this.Opacity = opacityActive;
                             timerShowHide.Enabled = false;
                             hidden = false;
                         }
@@ -3126,6 +3380,7 @@ namespace Adjutant
                         if (this.Left <= x)
                         {
                             this.Left = x;
+                            this.Opacity = opacityActive;
                             timerShowHide.Enabled = false;
                             hidden = false;
                         }

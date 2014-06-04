@@ -1,14 +1,14 @@
 //window
-x=165
+x=164
 y=0
-width=435
-min_height=122
-max_height=387
+width=467
+min_height=139
+max_height=294
 global_hotkey=À
 hide_delay=10
 hide_style=ScrollUp
 opacity_passive=0,33
-opacity_active=0,75
+opacity_active=0,8
 background_color=-16777216
 
 //font
@@ -39,10 +39,12 @@ todo_done_color=-14436096
 //twitter module
 token=18160045-m6CI9FSXK5zhItM7QWJixujVJRR7aP0Io4v2hIGEg
 secret=7q763i5QxPn1oBE9OgNIqMrTJaqEjwASdcIdvT4Jj8
-last_tweet=437665026976256000
+last_tweet=-1
 update_on_new_tweet=True
 update_on_focus=True
 min_tweet_period=30
+tw_sound=C:\dev\projex\Adjutant\Adjutant\bin\Debug\sounds\twitter.wav
+tw_sound_threshold=1
 tw_user_color=-16743244
 tw_misc_color=-7487269
 tw_tweet_color=-1
@@ -54,9 +56,11 @@ tw_count_color=-16743244
 mail_period=5
 mail_update_on_new_mail=True
 mail_update_on_focus=True
+mail_sound=C:\dev\projex\Adjutant\Adjutant\bin\Debug\sounds\mail.wav
+mail_sound_threshold=1
 mail_count_color=-2209475
 mail_header_color=-6017241
 mail_summary_color=-5526623
 
 //other
-user=Magistrate
+user=Winterstark

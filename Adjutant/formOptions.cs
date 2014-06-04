@@ -16,9 +16,15 @@ namespace Adjutant
         public bool starting;
 
 
-        void checkForChanges(object sender, EventArgs e)
+        private void checkForChanges(object sender, EventArgs e)
         {
             checkForChanges();   
+        }
+
+        private void txtBoxCheckForChanges(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+                checkForChanges();
         }
 
         void checkForChanges()
@@ -65,6 +71,8 @@ namespace Adjutant
             changed |= compareValueToTag(checkTwCountOnNewTweet);
             changed |= compareValueToTag(checkTwCountOnFocus);
             changed |= compareValueToTag(numTwCountMinPeriod);
+            changed |= compareValueToTag(txtTwSound);
+            changed |= compareValueToTag(numTwSoundThreshold);
             changed |= compareValueToTag(picTwUsernameColor);
             changed |= compareValueToTag(picTwMiscColor);
             changed |= compareValueToTag(picTwTweetColor);
@@ -77,6 +85,8 @@ namespace Adjutant
             changed |= compareValueToTag(checkMailCountOnFocus);
             changed |= compareValueToTag(checkMailCountOnNewMail);
             changed |= compareValueToTag(numMailCheckPeriod);
+            changed |= compareValueToTag(txtMailSound);
+            changed |= compareValueToTag(numMailSoundThreshold);
             changed |= compareValueToTag(picMailCountColor);
             changed |= compareValueToTag(picMailHeaderColor);
             changed |= compareValueToTag(picMailSummaryColor);
@@ -392,18 +402,6 @@ namespace Adjutant
             browseDir(txtTodoDir);
         }
 
-        private void txtStartDir_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter)
-                checkForChanges();
-        }
-
-        private void txtTodoDir_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter)
-                checkForChanges();
-        }
-
         private void chkEcho_CheckedChanged(object sender, EventArgs e)
         {
             checkForChanges();
@@ -445,10 +443,20 @@ namespace Adjutant
             pickColor(picMailSummaryColor);
         }
 
-        private void txtUser_KeyDown(object sender, KeyEventArgs e)
+        private void buttTwSoundBrowse_Click(object sender, EventArgs e)
         {
-            if (e.KeyCode == Keys.Enter)
-                checkForChanges();
+            fileDiag.ShowDialog();
+
+            if (fileDiag.FileName != "")
+                txtTwSound.Text = fileDiag.FileName;
+        }
+
+        private void buttMailSoundBrowse_Click(object sender, EventArgs e)
+        {
+            fileDiag.ShowDialog();
+
+            if (fileDiag.FileName != "")
+                txtMailSound.Text = fileDiag.FileName;
         }
     }
 }

@@ -108,6 +108,10 @@
             this.label32 = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
             this.tabTwitter = new System.Windows.Forms.TabPage();
+            this.label54 = new System.Windows.Forms.Label();
+            this.numTwSoundThreshold = new System.Windows.Forms.NumericUpDown();
+            this.buttTwSoundBrowse = new System.Windows.Forms.Button();
+            this.txtTwSound = new System.Windows.Forms.TextBox();
             this.picTwLinkColor = new System.Windows.Forms.PictureBox();
             this.buttPickTwLinkColor = new System.Windows.Forms.Button();
             this.label30 = new System.Windows.Forms.Label();
@@ -132,12 +136,27 @@
             this.label22 = new System.Windows.Forms.Label();
             this.checkTwCountOnFocus = new System.Windows.Forms.CheckBox();
             this.checkTwCountOnNewTweet = new System.Windows.Forms.CheckBox();
+            this.label51 = new System.Windows.Forms.Label();
+            this.label50 = new System.Windows.Forms.Label();
             this.label21 = new System.Windows.Forms.Label();
             this.tabMail = new System.Windows.Forms.TabPage();
+            this.label55 = new System.Windows.Forms.Label();
+            this.numMailSoundThreshold = new System.Windows.Forms.NumericUpDown();
+            this.buttMailSoundBrowse = new System.Windows.Forms.Button();
+            this.txtMailSound = new System.Windows.Forms.TextBox();
+            this.label52 = new System.Windows.Forms.Label();
+            this.label53 = new System.Windows.Forms.Label();
+            this.label49 = new System.Windows.Forms.Label();
             this.label45 = new System.Windows.Forms.Label();
             this.numMailCheckPeriod = new System.Windows.Forms.NumericUpDown();
             this.label46 = new System.Windows.Forms.Label();
+            this.picMailSummaryColor = new System.Windows.Forms.PictureBox();
+            this.buttPickMailSummaryColor = new System.Windows.Forms.Button();
+            this.picMailHeaderColor = new System.Windows.Forms.PictureBox();
+            this.buttPickMailHeaderColor = new System.Windows.Forms.Button();
+            this.label48 = new System.Windows.Forms.Label();
             this.picMailCountColor = new System.Windows.Forms.PictureBox();
+            this.label47 = new System.Windows.Forms.Label();
             this.buttPickMailCountColor = new System.Windows.Forms.Button();
             this.label44 = new System.Windows.Forms.Label();
             this.checkMailCountOnFocus = new System.Windows.Forms.CheckBox();
@@ -151,13 +170,7 @@
             this.diagColor = new System.Windows.Forms.ColorDialog();
             this.diagFont = new System.Windows.Forms.FontDialog();
             this.folderDiag = new System.Windows.Forms.FolderBrowserDialog();
-            this.label47 = new System.Windows.Forms.Label();
-            this.buttPickMailHeaderColor = new System.Windows.Forms.Button();
-            this.picMailHeaderColor = new System.Windows.Forms.PictureBox();
-            this.label48 = new System.Windows.Forms.Label();
-            this.buttPickMailSummaryColor = new System.Windows.Forms.Button();
-            this.picMailSummaryColor = new System.Windows.Forms.PictureBox();
-            this.label49 = new System.Windows.Forms.Label();
+            this.fileDiag = new System.Windows.Forms.OpenFileDialog();
             this.tabs.SuspendLayout();
             this.tabWindow.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numAutoHideDelay)).BeginInit();
@@ -184,6 +197,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.picTodoItemColor)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picTodoMiscColor)).BeginInit();
             this.tabTwitter.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numTwSoundThreshold)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picTwLinkColor)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picTwCountColor)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picTwTimestampColor)).BeginInit();
@@ -192,10 +206,11 @@
             ((System.ComponentModel.ISupportInitialize)(this.picTwUsernameColor)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numTwCountMinPeriod)).BeginInit();
             this.tabMail.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numMailSoundThreshold)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numMailCheckPeriod)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.picMailCountColor)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.picMailHeaderColor)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picMailSummaryColor)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picMailHeaderColor)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picMailCountColor)).BeginInit();
             this.SuspendLayout();
             // 
             // tabs
@@ -873,7 +888,7 @@
             this.txtStartDir.Name = "txtStartDir";
             this.txtStartDir.Size = new System.Drawing.Size(186, 20);
             this.txtStartDir.TabIndex = 15;
-            this.txtStartDir.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtStartDir_KeyDown);
+            this.txtStartDir.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
             // 
             // label11
             // 
@@ -946,7 +961,7 @@
             this.txtTodoDir.Name = "txtTodoDir";
             this.txtTodoDir.Size = new System.Drawing.Size(186, 20);
             this.txtTodoDir.TabIndex = 35;
-            this.txtTodoDir.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtTodoDir_KeyDown);
+            this.txtTodoDir.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
             // 
             // label35
             // 
@@ -1055,6 +1070,10 @@
             // 
             // tabTwitter
             // 
+            this.tabTwitter.Controls.Add(this.label54);
+            this.tabTwitter.Controls.Add(this.numTwSoundThreshold);
+            this.tabTwitter.Controls.Add(this.buttTwSoundBrowse);
+            this.tabTwitter.Controls.Add(this.txtTwSound);
             this.tabTwitter.Controls.Add(this.picTwLinkColor);
             this.tabTwitter.Controls.Add(this.buttPickTwLinkColor);
             this.tabTwitter.Controls.Add(this.label30);
@@ -1079,6 +1098,8 @@
             this.tabTwitter.Controls.Add(this.label22);
             this.tabTwitter.Controls.Add(this.checkTwCountOnFocus);
             this.tabTwitter.Controls.Add(this.checkTwCountOnNewTweet);
+            this.tabTwitter.Controls.Add(this.label51);
+            this.tabTwitter.Controls.Add(this.label50);
             this.tabTwitter.Controls.Add(this.label21);
             this.tabTwitter.Location = new System.Drawing.Point(4, 22);
             this.tabTwitter.Name = "tabTwitter";
@@ -1087,6 +1108,41 @@
             this.tabTwitter.TabIndex = 4;
             this.tabTwitter.Text = "Twitter";
             this.tabTwitter.UseVisualStyleBackColor = true;
+            // 
+            // label54
+            // 
+            this.label54.AutoSize = true;
+            this.label54.Location = new System.Drawing.Point(219, 99);
+            this.label54.Name = "label54";
+            this.label54.Size = new System.Drawing.Size(127, 13);
+            this.label54.TabIndex = 40;
+            this.label54.Text = "Set to 0 to disable sound.";
+            // 
+            // numTwSoundThreshold
+            // 
+            this.numTwSoundThreshold.Location = new System.Drawing.Point(367, 76);
+            this.numTwSoundThreshold.Name = "numTwSoundThreshold";
+            this.numTwSoundThreshold.Size = new System.Drawing.Size(73, 20);
+            this.numTwSoundThreshold.TabIndex = 39;
+            this.numTwSoundThreshold.ValueChanged += new System.EventHandler(this.checkForChanges);
+            // 
+            // buttTwSoundBrowse
+            // 
+            this.buttTwSoundBrowse.Location = new System.Drawing.Point(408, 47);
+            this.buttTwSoundBrowse.Name = "buttTwSoundBrowse";
+            this.buttTwSoundBrowse.Size = new System.Drawing.Size(32, 23);
+            this.buttTwSoundBrowse.TabIndex = 38;
+            this.buttTwSoundBrowse.Text = "...";
+            this.buttTwSoundBrowse.UseVisualStyleBackColor = true;
+            this.buttTwSoundBrowse.Click += new System.EventHandler(this.buttTwSoundBrowse_Click);
+            // 
+            // txtTwSound
+            // 
+            this.txtTwSound.Location = new System.Drawing.Point(239, 49);
+            this.txtTwSound.Name = "txtTwSound";
+            this.txtTwSound.Size = new System.Drawing.Size(163, 20);
+            this.txtTwSound.TabIndex = 32;
+            this.txtTwSound.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
             // 
             // picTwLinkColor
             // 
@@ -1274,7 +1330,7 @@
             // label23
             // 
             this.label23.AutoSize = true;
-            this.label23.Location = new System.Drawing.Point(224, 136);
+            this.label23.Location = new System.Drawing.Point(277, 136);
             this.label23.Name = "label23";
             this.label23.Size = new System.Drawing.Size(47, 13);
             this.label23.TabIndex = 5;
@@ -1282,7 +1338,7 @@
             // 
             // numTwCountMinPeriod
             // 
-            this.numTwCountMinPeriod.Location = new System.Drawing.Point(141, 134);
+            this.numTwCountMinPeriod.Location = new System.Drawing.Point(194, 134);
             this.numTwCountMinPeriod.Name = "numTwCountMinPeriod";
             this.numTwCountMinPeriod.Size = new System.Drawing.Size(77, 20);
             this.numTwCountMinPeriod.TabIndex = 4;
@@ -1290,17 +1346,16 @@
             // 
             // label22
             // 
-            this.label22.AutoSize = true;
-            this.label22.Location = new System.Drawing.Point(82, 109);
+            this.label22.Location = new System.Drawing.Point(21, 131);
             this.label22.Name = "label22";
-            this.label22.Size = new System.Drawing.Size(314, 13);
+            this.label22.Size = new System.Drawing.Size(167, 31);
             this.label22.TabIndex = 3;
-            this.label22.Text = "Minimum time period between two new tweet counts are showed:";
+            this.label22.Text = "Minimum time period between two new tweet counts are displayed:";
             // 
             // checkTwCountOnFocus
             // 
             this.checkTwCountOnFocus.AutoSize = true;
-            this.checkTwCountOnFocus.Location = new System.Drawing.Point(141, 73);
+            this.checkTwCountOnFocus.Location = new System.Drawing.Point(48, 74);
             this.checkTwCountOnFocus.Name = "checkTwCountOnFocus";
             this.checkTwCountOnFocus.Size = new System.Drawing.Size(140, 17);
             this.checkTwCountOnFocus.TabIndex = 2;
@@ -1311,7 +1366,7 @@
             // checkTwCountOnNewTweet
             // 
             this.checkTwCountOnNewTweet.AutoSize = true;
-            this.checkTwCountOnNewTweet.Location = new System.Drawing.Point(141, 50);
+            this.checkTwCountOnNewTweet.Location = new System.Drawing.Point(48, 51);
             this.checkTwCountOnNewTweet.Name = "checkTwCountOnNewTweet";
             this.checkTwCountOnNewTweet.Size = new System.Drawing.Size(111, 17);
             this.checkTwCountOnNewTweet.TabIndex = 1;
@@ -1319,10 +1374,28 @@
             this.checkTwCountOnNewTweet.UseVisualStyleBackColor = true;
             this.checkTwCountOnNewTweet.CheckedChanged += new System.EventHandler(this.checkForChanges);
             // 
+            // label51
+            // 
+            this.label51.AutoSize = true;
+            this.label51.Location = new System.Drawing.Point(219, 78);
+            this.label51.Name = "label51";
+            this.label51.Size = new System.Drawing.Size(142, 13);
+            this.label51.TabIndex = 0;
+            this.label51.Text = "After this many tweets arrive:";
+            // 
+            // label50
+            // 
+            this.label50.AutoSize = true;
+            this.label50.Location = new System.Drawing.Point(219, 25);
+            this.label50.Name = "label50";
+            this.label50.Size = new System.Drawing.Size(116, 13);
+            this.label50.TabIndex = 0;
+            this.label50.Text = "Play sound notification:";
+            // 
             // label21
             // 
             this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(82, 25);
+            this.label21.Location = new System.Drawing.Point(21, 25);
             this.label21.Name = "label21";
             this.label21.Size = new System.Drawing.Size(148, 13);
             this.label21.TabIndex = 0;
@@ -1330,6 +1403,12 @@
             // 
             // tabMail
             // 
+            this.tabMail.Controls.Add(this.label55);
+            this.tabMail.Controls.Add(this.numMailSoundThreshold);
+            this.tabMail.Controls.Add(this.buttMailSoundBrowse);
+            this.tabMail.Controls.Add(this.txtMailSound);
+            this.tabMail.Controls.Add(this.label52);
+            this.tabMail.Controls.Add(this.label53);
             this.tabMail.Controls.Add(this.label49);
             this.tabMail.Controls.Add(this.label45);
             this.tabMail.Controls.Add(this.numMailCheckPeriod);
@@ -1358,10 +1437,72 @@
             this.tabMail.Text = "Gmail";
             this.tabMail.UseVisualStyleBackColor = true;
             // 
+            // label55
+            // 
+            this.label55.AutoSize = true;
+            this.label55.Location = new System.Drawing.Point(229, 182);
+            this.label55.Name = "label55";
+            this.label55.Size = new System.Drawing.Size(127, 13);
+            this.label55.TabIndex = 45;
+            this.label55.Text = "Set to 0 to disable sound.";
+            // 
+            // numMailSoundThreshold
+            // 
+            this.numMailSoundThreshold.Location = new System.Drawing.Point(375, 159);
+            this.numMailSoundThreshold.Name = "numMailSoundThreshold";
+            this.numMailSoundThreshold.Size = new System.Drawing.Size(73, 20);
+            this.numMailSoundThreshold.TabIndex = 44;
+            this.numMailSoundThreshold.ValueChanged += new System.EventHandler(this.checkForChanges);
+            // 
+            // buttMailSoundBrowse
+            // 
+            this.buttMailSoundBrowse.Location = new System.Drawing.Point(416, 130);
+            this.buttMailSoundBrowse.Name = "buttMailSoundBrowse";
+            this.buttMailSoundBrowse.Size = new System.Drawing.Size(32, 23);
+            this.buttMailSoundBrowse.TabIndex = 43;
+            this.buttMailSoundBrowse.Text = "...";
+            this.buttMailSoundBrowse.UseVisualStyleBackColor = true;
+            this.buttMailSoundBrowse.Click += new System.EventHandler(this.buttMailSoundBrowse_Click);
+            // 
+            // txtMailSound
+            // 
+            this.txtMailSound.Location = new System.Drawing.Point(247, 132);
+            this.txtMailSound.Name = "txtMailSound";
+            this.txtMailSound.Size = new System.Drawing.Size(163, 20);
+            this.txtMailSound.TabIndex = 42;
+            this.txtMailSound.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
+            // 
+            // label52
+            // 
+            this.label52.AutoSize = true;
+            this.label52.Location = new System.Drawing.Point(229, 161);
+            this.label52.Name = "label52";
+            this.label52.Size = new System.Drawing.Size(140, 13);
+            this.label52.TabIndex = 40;
+            this.label52.Text = "After this many emails arrive:";
+            // 
+            // label53
+            // 
+            this.label53.AutoSize = true;
+            this.label53.Location = new System.Drawing.Point(227, 108);
+            this.label53.Name = "label53";
+            this.label53.Size = new System.Drawing.Size(116, 13);
+            this.label53.TabIndex = 41;
+            this.label53.Text = "Play sound notification:";
+            // 
+            // label49
+            // 
+            this.label49.AutoSize = true;
+            this.label49.Location = new System.Drawing.Point(35, 250);
+            this.label49.Name = "label49";
+            this.label49.Size = new System.Drawing.Size(62, 13);
+            this.label49.TabIndex = 23;
+            this.label49.Text = "Text colors:";
+            // 
             // label45
             // 
             this.label45.AutoSize = true;
-            this.label45.Location = new System.Drawing.Point(193, 202);
+            this.label45.Location = new System.Drawing.Point(189, 207);
             this.label45.Name = "label45";
             this.label45.Size = new System.Drawing.Size(43, 13);
             this.label45.TabIndex = 22;
@@ -1369,7 +1510,7 @@
             // 
             // numMailCheckPeriod
             // 
-            this.numMailCheckPeriod.Location = new System.Drawing.Point(110, 200);
+            this.numMailCheckPeriod.Location = new System.Drawing.Point(106, 205);
             this.numMailCheckPeriod.Name = "numMailCheckPeriod";
             this.numMailCheckPeriod.Size = new System.Drawing.Size(77, 20);
             this.numMailCheckPeriod.TabIndex = 21;
@@ -1378,24 +1519,80 @@
             // label46
             // 
             this.label46.AutoSize = true;
-            this.label46.Location = new System.Drawing.Point(40, 202);
+            this.label46.Location = new System.Drawing.Point(36, 207);
             this.label46.Name = "label46";
             this.label46.Size = new System.Drawing.Size(67, 13);
             this.label46.TabIndex = 20;
             this.label46.Text = "Check every";
             // 
+            // picMailSummaryColor
+            // 
+            this.picMailSummaryColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.picMailSummaryColor.Location = new System.Drawing.Point(103, 330);
+            this.picMailSummaryColor.Name = "picMailSummaryColor";
+            this.picMailSummaryColor.Size = new System.Drawing.Size(186, 23);
+            this.picMailSummaryColor.TabIndex = 19;
+            this.picMailSummaryColor.TabStop = false;
+            // 
+            // buttPickMailSummaryColor
+            // 
+            this.buttPickMailSummaryColor.Location = new System.Drawing.Point(304, 330);
+            this.buttPickMailSummaryColor.Name = "buttPickMailSummaryColor";
+            this.buttPickMailSummaryColor.Size = new System.Drawing.Size(87, 23);
+            this.buttPickMailSummaryColor.TabIndex = 18;
+            this.buttPickMailSummaryColor.Text = "Pick...";
+            this.buttPickMailSummaryColor.UseVisualStyleBackColor = true;
+            this.buttPickMailSummaryColor.Click += new System.EventHandler(this.buttPickMailSummaryColor_Click);
+            // 
+            // picMailHeaderColor
+            // 
+            this.picMailHeaderColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.picMailHeaderColor.Location = new System.Drawing.Point(103, 301);
+            this.picMailHeaderColor.Name = "picMailHeaderColor";
+            this.picMailHeaderColor.Size = new System.Drawing.Size(186, 23);
+            this.picMailHeaderColor.TabIndex = 19;
+            this.picMailHeaderColor.TabStop = false;
+            // 
+            // buttPickMailHeaderColor
+            // 
+            this.buttPickMailHeaderColor.Location = new System.Drawing.Point(304, 301);
+            this.buttPickMailHeaderColor.Name = "buttPickMailHeaderColor";
+            this.buttPickMailHeaderColor.Size = new System.Drawing.Size(87, 23);
+            this.buttPickMailHeaderColor.TabIndex = 18;
+            this.buttPickMailHeaderColor.Text = "Pick...";
+            this.buttPickMailHeaderColor.UseVisualStyleBackColor = true;
+            this.buttPickMailHeaderColor.Click += new System.EventHandler(this.buttPickMailHeaderColor_Click);
+            // 
+            // label48
+            // 
+            this.label48.AutoSize = true;
+            this.label48.Location = new System.Drawing.Point(24, 335);
+            this.label48.Name = "label48";
+            this.label48.Size = new System.Drawing.Size(73, 13);
+            this.label48.TabIndex = 17;
+            this.label48.Text = "Mail summary:";
+            // 
             // picMailCountColor
             // 
             this.picMailCountColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.picMailCountColor.Location = new System.Drawing.Point(107, 272);
+            this.picMailCountColor.Location = new System.Drawing.Point(103, 272);
             this.picMailCountColor.Name = "picMailCountColor";
             this.picMailCountColor.Size = new System.Drawing.Size(186, 23);
             this.picMailCountColor.TabIndex = 19;
             this.picMailCountColor.TabStop = false;
             // 
+            // label47
+            // 
+            this.label47.AutoSize = true;
+            this.label47.Location = new System.Drawing.Point(32, 306);
+            this.label47.Name = "label47";
+            this.label47.Size = new System.Drawing.Size(65, 13);
+            this.label47.TabIndex = 17;
+            this.label47.Text = "Mail header:";
+            // 
             // buttPickMailCountColor
             // 
-            this.buttPickMailCountColor.Location = new System.Drawing.Point(308, 272);
+            this.buttPickMailCountColor.Location = new System.Drawing.Point(304, 272);
             this.buttPickMailCountColor.Name = "buttPickMailCountColor";
             this.buttPickMailCountColor.Size = new System.Drawing.Size(87, 23);
             this.buttPickMailCountColor.TabIndex = 18;
@@ -1406,7 +1603,7 @@
             // label44
             // 
             this.label44.AutoSize = true;
-            this.label44.Location = new System.Drawing.Point(42, 277);
+            this.label44.Location = new System.Drawing.Point(38, 277);
             this.label44.Name = "label44";
             this.label44.Size = new System.Drawing.Size(59, 13);
             this.label44.TabIndex = 17;
@@ -1415,7 +1612,7 @@
             // checkMailCountOnFocus
             // 
             this.checkMailCountOnFocus.AutoSize = true;
-            this.checkMailCountOnFocus.Location = new System.Drawing.Point(107, 159);
+            this.checkMailCountOnFocus.Location = new System.Drawing.Point(47, 157);
             this.checkMailCountOnFocus.Name = "checkMailCountOnFocus";
             this.checkMailCountOnFocus.Size = new System.Drawing.Size(140, 17);
             this.checkMailCountOnFocus.TabIndex = 5;
@@ -1426,7 +1623,7 @@
             // checkMailCountOnNewMail
             // 
             this.checkMailCountOnNewMail.AutoSize = true;
-            this.checkMailCountOnNewMail.Location = new System.Drawing.Point(107, 136);
+            this.checkMailCountOnNewMail.Location = new System.Drawing.Point(47, 134);
             this.checkMailCountOnNewMail.Name = "checkMailCountOnNewMail";
             this.checkMailCountOnNewMail.Size = new System.Drawing.Size(103, 17);
             this.checkMailCountOnNewMail.TabIndex = 4;
@@ -1437,7 +1634,7 @@
             // label43
             // 
             this.label43.AutoSize = true;
-            this.label43.Location = new System.Drawing.Point(46, 108);
+            this.label43.Location = new System.Drawing.Point(32, 108);
             this.label43.Name = "label43";
             this.label43.Size = new System.Drawing.Size(164, 13);
             this.label43.TabIndex = 3;
@@ -1445,25 +1642,25 @@
             // 
             // txtPass
             // 
-            this.txtPass.Location = new System.Drawing.Point(110, 64);
+            this.txtPass.Location = new System.Drawing.Point(106, 64);
             this.txtPass.Name = "txtPass";
             this.txtPass.PasswordChar = '●';
             this.txtPass.Size = new System.Drawing.Size(186, 20);
             this.txtPass.TabIndex = 1;
-            this.txtPass.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtUser_KeyDown);
+            this.txtPass.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
             // 
             // txtUser
             // 
-            this.txtUser.Location = new System.Drawing.Point(110, 38);
+            this.txtUser.Location = new System.Drawing.Point(106, 38);
             this.txtUser.Name = "txtUser";
             this.txtUser.Size = new System.Drawing.Size(186, 20);
             this.txtUser.TabIndex = 1;
-            this.txtUser.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtUser_KeyDown);
+            this.txtUser.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
             // 
             // label42
             // 
             this.label42.AutoSize = true;
-            this.label42.Location = new System.Drawing.Point(48, 67);
+            this.label42.Location = new System.Drawing.Point(44, 67);
             this.label42.Name = "label42";
             this.label42.Size = new System.Drawing.Size(56, 13);
             this.label42.TabIndex = 0;
@@ -1472,7 +1669,7 @@
             // label41
             // 
             this.label41.AutoSize = true;
-            this.label41.Location = new System.Drawing.Point(46, 41);
+            this.label41.Location = new System.Drawing.Point(42, 41);
             this.label41.Name = "label41";
             this.label41.Size = new System.Drawing.Size(58, 13);
             this.label41.TabIndex = 0;
@@ -1492,71 +1689,6 @@
             // folderDiag
             // 
             this.folderDiag.RootFolder = System.Environment.SpecialFolder.MyComputer;
-            // 
-            // label47
-            // 
-            this.label47.AutoSize = true;
-            this.label47.Location = new System.Drawing.Point(36, 306);
-            this.label47.Name = "label47";
-            this.label47.Size = new System.Drawing.Size(65, 13);
-            this.label47.TabIndex = 17;
-            this.label47.Text = "Mail header:";
-            // 
-            // buttPickMailHeaderColor
-            // 
-            this.buttPickMailHeaderColor.Location = new System.Drawing.Point(308, 301);
-            this.buttPickMailHeaderColor.Name = "buttPickMailHeaderColor";
-            this.buttPickMailHeaderColor.Size = new System.Drawing.Size(87, 23);
-            this.buttPickMailHeaderColor.TabIndex = 18;
-            this.buttPickMailHeaderColor.Text = "Pick...";
-            this.buttPickMailHeaderColor.UseVisualStyleBackColor = true;
-            this.buttPickMailHeaderColor.Click += new System.EventHandler(this.buttPickMailHeaderColor_Click);
-            // 
-            // picMailHeaderColor
-            // 
-            this.picMailHeaderColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.picMailHeaderColor.Location = new System.Drawing.Point(107, 301);
-            this.picMailHeaderColor.Name = "picMailHeaderColor";
-            this.picMailHeaderColor.Size = new System.Drawing.Size(186, 23);
-            this.picMailHeaderColor.TabIndex = 19;
-            this.picMailHeaderColor.TabStop = false;
-            // 
-            // label48
-            // 
-            this.label48.AutoSize = true;
-            this.label48.Location = new System.Drawing.Point(28, 335);
-            this.label48.Name = "label48";
-            this.label48.Size = new System.Drawing.Size(73, 13);
-            this.label48.TabIndex = 17;
-            this.label48.Text = "Mail summary:";
-            // 
-            // buttPickMailSummaryColor
-            // 
-            this.buttPickMailSummaryColor.Location = new System.Drawing.Point(308, 330);
-            this.buttPickMailSummaryColor.Name = "buttPickMailSummaryColor";
-            this.buttPickMailSummaryColor.Size = new System.Drawing.Size(87, 23);
-            this.buttPickMailSummaryColor.TabIndex = 18;
-            this.buttPickMailSummaryColor.Text = "Pick...";
-            this.buttPickMailSummaryColor.UseVisualStyleBackColor = true;
-            this.buttPickMailSummaryColor.Click += new System.EventHandler(this.buttPickMailSummaryColor_Click);
-            // 
-            // picMailSummaryColor
-            // 
-            this.picMailSummaryColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.picMailSummaryColor.Location = new System.Drawing.Point(107, 330);
-            this.picMailSummaryColor.Name = "picMailSummaryColor";
-            this.picMailSummaryColor.Size = new System.Drawing.Size(186, 23);
-            this.picMailSummaryColor.TabIndex = 19;
-            this.picMailSummaryColor.TabStop = false;
-            // 
-            // label49
-            // 
-            this.label49.AutoSize = true;
-            this.label49.Location = new System.Drawing.Point(39, 250);
-            this.label49.Name = "label49";
-            this.label49.Size = new System.Drawing.Size(62, 13);
-            this.label49.TabIndex = 23;
-            this.label49.Text = "Text colors:";
             // 
             // formOptions
             // 
@@ -1602,6 +1734,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.picTodoMiscColor)).EndInit();
             this.tabTwitter.ResumeLayout(false);
             this.tabTwitter.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numTwSoundThreshold)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picTwLinkColor)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picTwCountColor)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picTwTimestampColor)).EndInit();
@@ -1611,10 +1744,11 @@
             ((System.ComponentModel.ISupportInitialize)(this.numTwCountMinPeriod)).EndInit();
             this.tabMail.ResumeLayout(false);
             this.tabMail.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numMailSoundThreshold)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numMailCheckPeriod)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.picMailCountColor)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.picMailHeaderColor)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picMailSummaryColor)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picMailHeaderColor)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picMailCountColor)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -1750,5 +1884,18 @@
         private System.Windows.Forms.Button buttPickMailHeaderColor;
         private System.Windows.Forms.Label label48;
         private System.Windows.Forms.Label label47;
+        private System.Windows.Forms.Button buttTwSoundBrowse;
+        private System.Windows.Forms.Label label51;
+        private System.Windows.Forms.Label label50;
+        public System.Windows.Forms.NumericUpDown numTwSoundThreshold;
+        public System.Windows.Forms.NumericUpDown numMailSoundThreshold;
+        private System.Windows.Forms.Button buttMailSoundBrowse;
+        private System.Windows.Forms.Label label52;
+        private System.Windows.Forms.Label label53;
+        private System.Windows.Forms.Label label54;
+        private System.Windows.Forms.Label label55;
+        public System.Windows.Forms.TextBox txtTwSound;
+        public System.Windows.Forms.TextBox txtMailSound;
+        private System.Windows.Forms.OpenFileDialog fileDiag;
     }
 }
