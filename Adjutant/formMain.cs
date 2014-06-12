@@ -10,7 +10,6 @@ using System.Runtime.InteropServices;
 using System.IO;
 using System.Diagnostics;
 using System.Net;
-using TweetSharp;
 using System.Text.RegularExpressions;
 using Microsoft.Win32;
 
@@ -40,24 +39,6 @@ namespace Adjutant
 
 
         public delegate void MyDelegate();
-
-        struct Tweet
-        {
-            public string user, actualUsername, text, url;
-            public DateTime created;
-            public long id;
-
-            public Tweet(string user, string actualUsername, string text, DateTime created, long id)
-            {
-                this.user = user;
-                this.actualUsername = actualUsername;
-                this.text = text.Replace("\n", Environment.NewLine);
-                this.created = created;
-                this.id = id;
-
-                url = "https://twitter.com/" + user + "/status/" + id;
-            }
-        }
 
         class TextChunk
         {
@@ -214,8 +195,7 @@ namespace Adjutant
 
         HideStyle hideStyle;
         Gmail gmail;
-        TwitterService twitter;
-        OAuthRequestToken requestToken;
+        Twitter twitter;
         UserActivityHook actHook;
         formOptions options;
         Process proc;
@@ -224,7 +204,6 @@ namespace Adjutant
         Brush brush = Brushes.White;
         Color echoColor, errorColor, todoMiscColor, todoItemColor, todoDoneColor, twUserColor, twMiscColor, twTweetColor, twLinkColor, twTimeColor, twCountColor, mailCountColor, mailHeaderColor, mailSummaryColor;
         DateTime autoHide, pauseEnd, lastTwCount;
-        List<Tweet> tweets = new List<Tweet>();
         List<TextChunk> chunks = new List<TextChunk>();
         Dictionary<string, string> customCmds;
         List<string> history = new List<string>(), twURLs = new List<string>(), twMentions = new List<string>(), todo;
@@ -232,7 +211,7 @@ namespace Adjutant
         string python, user, dir, todoDir, inputMode, token, secret, link, mailUser, mailPass, twUsername, twSound, mailSound;
         double opacityPassive, opacityActive;
         long lastTweet;
-        int x, y, lineH, minH, maxH, prevH, maxLines, prevX, prevY, leftMargin, chunkOffset, lastChunk, lastChunkChar, printAtOnce, autoHideDelay, tabInd, historyInd, twInd, minTweetPeriod, twSoundThreshold, hotkey, newMailCount, prevNewMailCount, mailSoundThreshold;
+        int x, y, lineH, minH, maxH, prevH, maxLines, prevX, prevY, leftMargin, chunkOffset, lastChunk, lastChunkChar, printAtOnce, autoHideDelay, tabInd, historyInd, minTweetPeriod, twSoundThreshold, hotkey, newMailCount, prevNewMailCount, mailSoundThreshold;
         bool initialized, activated, winKey, prompt, blankLine, echo, ctrlKey, drag, resizeW, resizeH, hiding, hidden, todoHideDone, todoAutoTransfer, twUpdateOnNewTweet, twUpdateOnFocus, twitterOutput, mailUpdateOnNewMail, mailUpdateOnFocus, hotkeyCtrl, hotkeyAlt, hotkeyShift;
         #endregion
 
@@ -999,24 +978,19 @@ namespace Adjutant
                     if (txtCMD.Text == "")
                         return;
 
-                    OAuthAccessToken access = twitter.GetAccessToken(requestToken, txtCMD.Text);
-                    token = access.Token;
-                    secret = access.TokenSecret;
-
-                    if (token != "?" && secret != "?")
+                    if (!twitter.FinalizeAuthorization(txtCMD.Text, out token, out secret))
+                        printError("Authorization failed. Please try again.", twitter.TwException);
+                    else
                     {
-                        twitter.AuthenticateWith(token, secret);
                         saveOptions();
 
                         print("Adjutant has been successfully authorized.");
 
                         tweetCount();
 
-                        if (tweets.Count != 0)
+                        if (twitter.AnyNewTweets())
                             twitterPrint();
                     }
-                    else
-                        print("Authorization failed. Please try again.");
 
                     txtCMD.Text = "";
                     inputMode = "default";
@@ -2332,62 +2306,32 @@ namespace Adjutant
             print("Please click on \"Authorize app\" and then copy the given PIN into Adjutant.");
 
             if (twitter == null)
-                twitter = new TwitterService("bQp3ytw07Ld9bmEBU4RI4w", "IXS35cJodk8aUVQO26vTYUb61kYbIV6cznOYBd7k7AI");
+                twitter = new Twitter();
 
-            requestToken = twitter.GetRequestToken();
-            Uri uri = twitter.GetAuthorizationUri(requestToken);
-            Process.Start(uri.ToString());
+            Uri uri = twitter.GetAuthorizationUri();
 
-            inputMode = "twitter pin";
-            setPrompt();
-        }
-
-        void twitterInit()  
-        {
-            twitter = new TwitterService("bQp3ytw07Ld9bmEBU4RI4w", "IXS35cJodk8aUVQO26vTYUb61kYbIV6cznOYBd7k7AI");
-
-            if (token != "?" && secret != "?")
+            if (uri == null)
+                printError("Error while getting Twitter authorization URI.", twitter.TwException);
+            else
             {
-                twitter.AuthenticateWith(token, secret);
+                Process.Start(uri.ToString());
 
-                if (twitter.VerifyCredentials(new VerifyCredentialsOptions()) == null)
-                {
-                    //authentication failed
-                    twitter = null;
-                    print("Error while initializing Twitter service. To see more information about this error please type the following command: \"help twitter /init\"", errorColor);
-                }
-                else
-                {
-                    twitter.StreamUser(NewTweet);
-
-                    var options = new ListTweetsOnHomeTimelineOptions();
-
-                    if (lastTweet != -1)
-                        options.SinceId = lastTweet;
-                    options.Count = 1000;
-
-                    try
-                    {
-                        IEnumerable<TwitterStatus> tweetList = twitter.ListTweetsOnHomeTimeline(options);
-
-                        if (tweetList != null)
-                            foreach (var tweet in tweetList.Reverse<TwitterStatus>())
-                                tweets.Add(new Tweet(tweet.User.Name, tweet.User.ScreenName, Regex.Unescape(WebUtility.HtmlDecode(tweet.Text)), tweet.CreatedDate, tweet.Id));
-                    }
-                    catch (Exception exc)
-                    {
-                        printError("Error while initiating Twitter module.", exc);
-                    }
-                }
+                inputMode = "twitter pin";
+                setPrompt();
             }
         }
 
-        string getField(string response, string key)
+        void twitterInit()
         {
-            int lb = response.IndexOf("\"" + key + "\":\"") + key.Length + 4;
-            int ub = response.IndexOf("\",\"", lb);
+            //twitter = new Twitter();
+            
+            if (token != "?" && secret != "?")
+            {
+                twitter = new Twitter(token, secret, "Winterstark");
 
-            return response.Substring(lb, ub - lb);
+                //if (!twitter.Authenticate(token, secret))
+                //    print("Error while initializing Twitter service. To see more information about this error please type the following command: \"help twitter /init\"", errorColor);
+            }
         }
 
         string howLongAgo(DateTime time)
@@ -2434,15 +2378,17 @@ namespace Adjutant
 
         void twitterPrint()
         {
-            if (tweets.Count > 0)
+            if (twitter.AnyNewTweets())
             {
-                print(tweets[twInd].user, "https://twitter.com/" + tweets[twInd].actualUsername, false, twUserColor);
+                Twitter.Tweet newTweet = twitter.GetNextUnreadTweet();
+
+                print(newTweet.user, "https://twitter.com/" + newTweet.actualUsername, false, twUserColor);
                 print(" tweeted ", false, twMiscColor);
 
-                twUsername = tweets[twInd].actualUsername;
+                twUsername = newTweet.actualUsername;
 
                 //split tweet into chunks in order to color mentions and links
-                string tweet = tweets[twInd].text;
+                string tweet = newTweet.text;
                 twURLs.Clear();
                 twMentions.Clear();
 
@@ -2478,11 +2424,11 @@ namespace Adjutant
                     print(tweet, false, twTweetColor);
 
                 //print timestamp
-                print(" " + howLongAgo(tweets[twInd].created), "https://twitter.com/" + tweets[twInd].actualUsername + "/status/" + tweets[twInd].id, twTimeColor);
+                print(" " + howLongAgo(newTweet.created), "https://twitter.com/" + newTweet.actualUsername + "/status/" + newTweet.id, twTimeColor);
 
-                lastTweet = tweets[twInd].id;
+                lastTweet = newTweet.id;
 
-                twitterOutput = twInd < tweets.Count - 1;
+                twitterOutput = twitter.AnyUnreadTweets();
 
                 if (!twitterOutput)
                 {
@@ -2496,43 +2442,29 @@ namespace Adjutant
 
         void twitterPrint(bool all)
         {
-            if (!all)
-                twitterPrint();
-            else
-            {
-                if (!twitterOutput)
-                    twInd = -1;
+            //if (!all)
+            //    twitterPrint();
+            //else
+            //{
+            //    if (!twitterOutput)
+            //        twInd = -1;
 
-                while (tweets.Count > 0)
-                {
-                    twInd++;
-                    twitterPrint();
-                }
-            }
+            //    while (tweets.Count > 0)
+            //    {
+            //        twInd++;
+            //        twitterPrint();
+            //    }
+            //}
         }
 
         void removeReadTweets()
         {
-            for (int i = 0; i <= twInd; i++)
-                tweets.RemoveAt(0);
+            twitter.RemoveReadTweets();
         }
 
         void tweetCount()
         {
-            string tweetCount;
-
-            switch (tweets.Count)
-            {
-                case 0:
-                    tweetCount = "No new tweets.";
-                    break;
-                case 1:
-                    tweetCount = "1 new tweet.";
-                    break;
-                default:
-                    tweetCount = tweets.Count + " new tweets.";
-                    break;
-            }
+            string tweetCount = twitter.GetNewTweetCount();
 
             if ((chunks.Count == 0 || chunks[chunks.Count - 1].ToString() != tweetCount) //don't display new tweet count if it's already displayed
                 && !twitterOutput) //or if Adjutant is currently in Twitter mode
@@ -2541,50 +2473,34 @@ namespace Adjutant
             lastTwCount = DateTime.Now;
         }
 
-        private void NewTweet(TwitterStreamArtifact streamEvent, TwitterResponse response)
+        public void NewTweet(string user, string actualUsername, string tweet, DateTime time)
         {
-            if (!response.Response.Contains("text"))
-                return;
+            //if (twUpdateOnNewTweet && DateTime.Now.Subtract(lastTwCount).TotalSeconds >= minTweetPeriod)
+            //{
+            //    if (activated)
+            //    {
+            //        if (tweets.Count == 0)
+            //        {
+            //            print(tweet + " " + howLongAgo(time), true);
+            //            lastTweet = id;
+            //        }
+            //        else
+            //        {
+            //            tweets.Add(new Tweet(user, actualUsername, tweet, time, id));
 
-            long id = long.Parse(getField(response.Response, "id_str"));
+            //            if (!hidden)
+            //                tweetCount();
+            //        }
+            //    }
+            //    else
+            //        tweets.Add(new Tweet(user, actualUsername, tweet, time, id));
+            //}
+            //else
+            //    tweets.Add(new Tweet(user, actualUsername, tweet, time, id));
 
-            string created = getField(response.Response, "created_at");
-            created = created.Substring(created.IndexOf(' '));
-            created = created.Substring(created.Length - 4, 4) + created.Substring(0, created.IndexOf(" +"));
-
-            DateTime time = DateTime.Parse(created);
-            time = TimeZone.CurrentTimeZone.ToLocalTime(time);
-
-            string user = getField(response.Response, "name");
-            string actualUsername = getField(response.Response, "screen_name");
-            string tweet = Regex.Unescape(WebUtility.HtmlDecode(getField(response.Response, "text")));
-
-            if (twUpdateOnNewTweet && DateTime.Now.Subtract(lastTwCount).TotalSeconds >= minTweetPeriod)
-            {
-                if (activated)
-                {
-                    if (tweets.Count == 0)
-                    {
-                        print(tweet + " " + howLongAgo(time), true);
-                        lastTweet = id;
-                    }
-                    else
-                    {
-                        tweets.Add(new Tweet(user, actualUsername, tweet, time, id));
-
-                        if (!hidden)
-                            tweetCount();
-                    }
-                }
-                else
-                    tweets.Add(new Tweet(user, actualUsername, tweet, time, id));
-            }
-            else
-                tweets.Add(new Tweet(user, actualUsername, tweet, time, id));
-
-            //play sound notification
-            if (twSoundThreshold != 0 && tweets.Count >= twSoundThreshold && File.Exists(twSound))
-                PlaySound(twSound, 0, SND_ASYNC);
+            ////play sound notification
+            //if (twSoundThreshold != 0 && tweets.Count >= twSoundThreshold && File.Exists(twSound))
+            //    PlaySound(twSound, 0, SND_ASYNC);
         }
 
         void cmdTwitter(string[] cmd)
@@ -2605,9 +2521,9 @@ namespace Adjutant
                 {
                     tweetCount();
 
-                    if (tweets.Count != 0)
+                    if (twitter.AnyNewTweets())
                     {
-                        twInd = 0;
+                        //twInd = 0;
                         twitterPrint();
                     }
                 }
@@ -2870,7 +2786,7 @@ namespace Adjutant
 
             txtCMD.Focus();
 
-            if (tweets.Count > 0 && twUpdateOnFocus && DateTime.Now.Subtract(lastTwCount).TotalSeconds >= minTweetPeriod)
+            if (twitter.AnyNewTweets() && twUpdateOnFocus && DateTime.Now.Subtract(lastTwCount).TotalSeconds >= minTweetPeriod)
                 tweetCount();
 
             if (mailUpdateOnFocus && newMailCount > 0)
@@ -3086,16 +3002,12 @@ namespace Adjutant
                         flush();
                         break;
                     case Keys.K:
-                        if (twInd > 0)
-                        {
-                            flush();
-                            twInd--;
-                            twitterPrint();
-                        }
+                        flush();
+                        twitter.GoToPreviousTweet();
+                        twitterPrint();
                         break;
                     case Keys.J:
                         flush();
-                        twInd++;
                         twitterPrint();
                         break;
                     case Keys.A:
