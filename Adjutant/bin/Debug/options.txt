@@ -1,14 +1,14 @@
 //window
-x=164
+x=168
 y=0
 width=467
-min_height=139
+min_height=131
 max_height=294
 global_hotkey=À
 hide_delay=10
 hide_style=ScrollUp
 opacity_passive=0,33
-opacity_active=0,8
+opacity_active=0,85
 background_color=-16777216
 
 //font
@@ -39,7 +39,7 @@ todo_done_color=-14436096
 //twitter module
 token=18160045-m6CI9FSXK5zhItM7QWJixujVJRR7aP0Io4v2hIGEg
 secret=7q763i5QxPn1oBE9OgNIqMrTJaqEjwASdcIdvT4Jj8
-last_tweet=-1
+last_tweet=480065781754261504
 update_on_new_tweet=True
 update_on_focus=True
 min_tweet_period=30

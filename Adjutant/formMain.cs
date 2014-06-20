@@ -516,7 +516,7 @@ namespace Adjutant
         void saveOptions()
         {
             StreamWriter file = new System.IO.StreamWriter(Application.StartupPath + "\\options.txt");
-
+            
             file.WriteLine("//window");
             file.WriteLine("x=" + x);
             file.WriteLine("y=" + y);
@@ -558,7 +558,7 @@ namespace Adjutant
             file.WriteLine("todo_item_color=" + todoItemColor.ToArgb());
             file.WriteLine("todo_done_color=" + todoDoneColor.ToArgb());
             file.WriteLine();
-
+            
             file.WriteLine("//twitter module");
             file.WriteLine("token=" + token);
             file.WriteLine("secret=" + secret);
@@ -983,8 +983,13 @@ namespace Adjutant
                     else
                     {
                         saveOptions();
-
                         print("Adjutant has been successfully authorized.");
+
+                        //get new tweets
+                        if (twitter.GetNewTweets(lastTweet))
+                            lastTweet = twitter.GetLastTweet();
+                        else
+                            printError("Could not get a list of new tweets.", twitter.TwException);
 
                         tweetCount();
 
@@ -1236,7 +1241,7 @@ namespace Adjutant
                             print("To authorize Adjutant to view your tweets, use the following command: \"twitter /init\"");
                             print("If the \"twitter\" command stopped working, there could be several different causes for the problem:");
                             print("Your Internet connection could be down.");
-                            print("www.twitter.com could be temporarily unavailable.");
+                            print("Twitter service could be temporarily unavailable.");
                             print("Adjutant's authorization might no longer be valid. Try authorizing it again.");
                         }
                         break;
@@ -2323,14 +2328,20 @@ namespace Adjutant
 
         void twitterInit()
         {
-            //twitter = new Twitter();
-            
             if (token != "?" && secret != "?")
             {
-                twitter = new Twitter(token, secret, "Winterstark");
+                twitter = new Twitter(token, secret, lastTweet);
 
-                //if (!twitter.Authenticate(token, secret))
-                //    print("Error while initializing Twitter service. To see more information about this error please type the following command: \"help twitter /init\"", errorColor);
+                if (!twitter.VerifyCredentials())
+                {
+                    print("Error while initializing Twitter service. To see more information about this error please type the following command: \"help twitter /init\"", errorColor);
+                    return;
+                }
+
+                if (twitter.GetNewTweets(lastTweet))
+                    lastTweet = Math.Max(lastTweet, twitter.GetLastTweet());
+                else
+                    printError("Could not get a list of new tweets.", twitter.TwException);
             }
         }
 
@@ -2401,9 +2412,16 @@ namespace Adjutant
                 {
                     if (urlInd < mentionInd)
                     {
+                        string newUrl = url;
+                        if (newTweet.urls.Count > 0)
+                        {
+                            newUrl = newTweet.urls[0];
+                            newTweet.urls.RemoveAt(0);
+                        }
+
                         print(tweet.Substring(0, urlInd), false, twTweetColor);
-                        print(url, url, false, twLinkColor);
-                        twURLs.Add(url);
+                        print(newUrl, newUrl, false, twLinkColor);
+                        twURLs.Add(newUrl);
 
                         tweet = tweet.Remove(0, urlInd + url.Length);
                     }
@@ -2442,6 +2460,12 @@ namespace Adjutant
 
         void twitterPrint(bool all)
         {
+            do
+            {
+                twitterPrint();
+            } while (twitterOutput);
+
+
             //if (!all)
             //    twitterPrint();
             //else
@@ -3042,6 +3066,8 @@ namespace Adjutant
                     case Keys.Escape:
                         twitterOutput = false;
                         setPrompt();
+
+                        twitter.RemoveReadTweets();
                         tweetCount();
                         break;
                 }

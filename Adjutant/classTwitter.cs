@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Net;
+using System.Web;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -24,7 +25,7 @@ namespace Adjutant
             {
                 this.user = user;
                 this.actualUsername = actualUsername;
-                this.text = text.Replace("\n", Environment.NewLine);
+                this.text = HttpUtility.HtmlDecode(Regex.Unescape(text)).Replace("\n", Environment.NewLine);
                 this.created = created;
                 this.id = id;
 
@@ -81,17 +82,12 @@ namespace Adjutant
             tweets = new List<Tweet>();
         }
 
-        public Twitter(string oauthToken, string oauthSecret, string screenName)
+        public Twitter(string oauthToken, string oauthSecret, long lastTweet)
         {
             this.oauthToken = oauthToken;
             this.oauthTokenSecret = oauthSecret;
             twInd = 0;
             tweets = new List<Tweet>();
-
-            getNewTweets();
-            
-            //List<string[]> respPars = parseParameters(webRequest("GET", "https://api.twitter.com/oauth/authenticate", ""), "&", "=");
-            //List<string[]> respPars = parseParameters(webRequest("GET", "https://api.twitter.com/oauth/authenticate", "oauth_token=\"" + token + "\""), "&", "=");
         }
 
         public Uri GetAuthorizationUri()
@@ -117,27 +113,85 @@ namespace Adjutant
             token = oauthToken;
             secret = oauthTokenSecret;
 
-            getNewTweets();
-
             return true;
-       } 
+       }
 
-        void getNewTweets()
+        public bool VerifyCredentials()
+        {
+            string resp = webRequest("GET", "https://api.twitter.com/1.1/account/verify_credentials.json", "");
+            return resp != "";
+        }
+
+        int getRateLimit(string resourceFamily, string resource)
         {
             try
             {
-                //string resp = webRequest("GET", "https://api.twitter.com/1.1/statuses/home_timeline.json", "count=\"5\"");
-                //string resp = webRequest("GET", "https://api.twitter.com/1.1/statuses/home_timeline.json", "max_id=\"476701684060925952\"&since_id=\"476669703226937344\"");
-                string resp = webRequest("GET", "https://api.twitter.com/1.1/statuses/home_timeline.json", "count=\"40\"");
-                //string resp = webRequest("GET", "https://api.twitter.com/1.1/statuses/home_timeline.json", "count=\"1\"&max_id=\"476700760420675585\"");
+                string resp = webRequest("GET", "https://api.twitter.com/1.1/application/rate_limit_status.json", "resources=\"" + resourceFamily + "\"");
 
+                //extract remaining number of uses of resource
+                string blockStart = ",\"\\/" + resourceFamily + "\\/" + resource + "\":{\"";
+                int lb = resp.IndexOf(blockStart);
+
+                lb += blockStart.Length;
+
+                string block = resp.Substring(lb, resp.IndexOf('}', lb) - lb);
+
+                lb = block.IndexOf("\"limit\":") + 8;
+                int ub = block.IndexOf(',', lb);
+
+                return int.Parse(block.Substring(lb, ub - lb));
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
+        public bool GetNewTweets(long lastTweet)
+        {
+            if (getRateLimit("statuses", "home_timeline") == 0)
+            {
+                TwException = new Exception("Twitter API rate limit exceeded.");
+                return false;
+            }
+   
+            List<Tweet> newTweets = new List<Tweet>();
+
+            //set parameters
+            //string parameters = "count=\"200\"";
+
+            //if (lastTweet != 0)
+            //    parameters += ", since_id=\"" + lastTweet + "\"";
+
+            string parameters;
+            if (lastTweet != 0)
+                parameters = "since_id=\"" + lastTweet + "\"";
+            else
+                parameters = "count=\"200\"";
+
+            string resp = webRequest("GET", "https://api.twitter.com/1.1/statuses/home_timeline.json", parameters);
+
+            if (resp != "[]")
+            {
                 //extract tweets from response
                 if (resp.Length > 2)
                     resp = resp.Substring(1, resp.Length - 2); //remove outermost pair of brackets [ ... ]
 
-                while (resp != "")
+                resp = "," + resp; //add a comma at the beginning for string-splitting purposes
+
+                string delimiter = "{\"created_at\":\"";
+                string[] tweetBlocks = resp.Split(new string[] { "," + delimiter }, StringSplitOptions.RemoveEmptyEntries);
+
+                //add delimiters back into blocks
+                for (int i = 0; i < tweetBlocks.Length; i++)
+                    tweetBlocks[i] = delimiter + tweetBlocks[i] + ",";
+
+                //parse blocks into tweets
+                foreach (string tweetBlock in tweetBlocks)
                 {
-                    DataNode tweetRootNode = constructDataNode(ref resp, "root");
+                    string block = delimiter + tweetBlock; //return delimiter string to beginning of block
+
+                    DataNode tweetRootNode = constructDataNode(ref block, "root");
                     DataNode userDetails = tweetRootNode.childNodes.Find(node => node.name == "user");
 
                     //find url field
@@ -152,15 +206,15 @@ namespace Adjutant
                     time = TimeZone.CurrentTimeZone.ToLocalTime(time);
 
                     //add tweet
-                    tweets.Add(new Tweet(userDetails.fields["name"], userDetails.fields["screen_name"], tweetRootNode.fields["text"], time, long.Parse(tweetRootNode.fields["id"]), urls));
+                    newTweets.Add(new Tweet(userDetails.fields["name"], userDetails.fields["screen_name"], tweetRootNode.fields["text"], time, long.Parse(tweetRootNode.fields["id"]), urls));
                 }
-            }
-            catch (Exception exc)
-            {
-                int xx = 9;
+
+                //add new tweets, in reverse order (oldest to newest)
+                newTweets.Reverse();
+                tweets.AddRange(newTweets);
             }
 
-            int x = 9;
+            return true;
         }
 
         DataNode constructDataNode(ref string response, string name)
@@ -318,7 +372,7 @@ namespace Adjutant
 
         public bool AnyUnreadTweets()
         {
-            return twInd < tweets.Count - 1;
+            return twInd < tweets.Count;
         }
 
         public string GetNewTweetCount()
@@ -334,6 +388,14 @@ namespace Adjutant
             }
         }
 
+        public long GetLastTweet()
+        {
+            if (tweets.Count > 0)
+                return tweets[tweets.Count - 1].id;
+            else
+                return 0;
+        }
+
         public Tweet GetNextUnreadTweet()
         {
             return tweets[twInd++];
@@ -347,7 +409,7 @@ namespace Adjutant
 
         public void RemoveReadTweets()
         {
-            for (int i = 0; i <= twInd; i++)
+            for (int i = 0; i < twInd; i++)
                 tweets.RemoveAt(0);
 
             twInd = 0;
@@ -386,12 +448,6 @@ namespace Adjutant
         {
             try
             {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(baseURL);
-
-                request.Method = method;
-                request.UserAgent = "Adjutant by @Winterstark";
-                request.Headers.Add("Authorization", constructAuthHeader(method, baseURL, parameters)); //authorization
-                
                 if (parameters != "")
                 {
                     //add parameters to baseURL
@@ -405,6 +461,12 @@ namespace Adjutant
                     baseURL = baseURL.Substring(0, baseURL.Length - 1);
                 }
 
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(baseURL);
+
+                request.Method = method;
+                request.UserAgent = "Adjutant by @Winterstark";
+                request.Headers.Add("Authorization", constructAuthHeader(method, baseURL, parameters)); //authorization
+                
                 //get response
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
 
@@ -453,6 +515,11 @@ namespace Adjutant
 
         string constructAuthHeader(string method, string baseURL, string parameters)
         {
+            //remove parameters from baseURL
+            if (baseURL.Contains('?'))
+                baseURL = baseURL.Substring(0, baseURL.IndexOf('?'));
+
+            //add oauth parameters
             if (parameters != "")
                 parameters += ", ";
 
@@ -461,6 +528,20 @@ namespace Adjutant
 
             parameters += "oauth_consumer_key=\"" + consumerKey + "\", oauth_nonce=\"" + generateNonce() + "\", oauth_signature_method=\"HMAC-SHA1\", oauth_timestamp=\"" + getTimestamp() + "\", oauth_version=\"1.0\"";
             parameters += ", oauth_signature=\"" + constructSignature(method, baseURL, parameters) + "\"";
+
+            //remove non-OAuth parameters
+            foreach (string par in parameters.Split(new string[] { ", " }, StringSplitOptions.None))
+                if (!par.Contains("oauth"))
+                {
+                    int lb = parameters.IndexOf(par);
+                    parameters = parameters.Remove(lb, par.Length);
+
+                    //cleanup commas
+                    if (lb >= 2 && parameters.Substring(lb - 2, 2) == ", ") //check left
+                        parameters = parameters.Remove(lb - 2, 2);
+                    else if (parameters.Length >= lb + 2 && parameters.Substring(lb, 2) == ", ") //check right
+                        parameters = parameters.Remove(lb, 2);
+                }
 
             return "OAuth " + parameters;
         }
@@ -476,8 +557,8 @@ namespace Adjutant
 
             string encParameters = "";
             foreach (string[] p in pairs)
-                if (p[0].Contains("oauth")) //only include oauth parameters
-                    encParameters += p[0] + "=" + p[1] + "&";
+                //if (p[0].Contains("oauth")) //only include oauth parameters
+                encParameters += p[0] + "=" + p[1] + "&";
 
             if (encParameters.Length > 0)
                 encParameters = encParameters.Substring(0, encParameters.Length - 1); //remove last '&'
