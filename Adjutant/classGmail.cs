@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using System.IO;
 using System.Net;
 using System.Xml;
+using System.ComponentModel;
 
 namespace Adjutant
 {
@@ -19,15 +20,18 @@ namespace Adjutant
         public readonly int M_SENDER = 4;
 
         string username, password;
+        Action<int, MailCheckAction> finishedCheckingMail;
 
         public int MailCount;
         public List<string[]> emails;
+        public Exception mailException;
 
 
-        public Gmail(string username, string password)
+        public Gmail(string username, string password, Action<int, MailCheckAction> finishedCheckingMail)
         {
-            this.username=username;
-            this.password=password;
+            this.username = username;
+            this.password = password;
+            this.finishedCheckingMail = finishedCheckingMail;
         }
 
         public void ChangeLogin(string username, string password)
@@ -37,11 +41,20 @@ namespace Adjutant
                 this.username = username;
                 this.password = password;
 
-                Check();
+                Check(MailCheckAction.NoAction);
             }
         }
 
-        public int Check()
+        public void Check(MailCheckAction action)
+        {
+            BackgroundWorker mailCheckWorker = new BackgroundWorker();
+            mailCheckWorker.DoWork += new DoWorkEventHandler(mailCheckWorker_DoWork);
+            mailCheckWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(mailCheckWorker_completedEvent);
+
+            mailCheckWorker.RunWorkerAsync(action);
+        }
+
+        private void mailCheckWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             try
             {
@@ -53,7 +66,8 @@ namespace Adjutant
                 Stream webStream = response.GetResponseStream();
                 XmlReader reader = XmlReader.Create(webStream);
 
-                emails = new List<string[]>();
+                List<string[]> newEmails = new List<string[]>();
+                int newMailCount = -1;
 
                 while (reader.Read())
                 {
@@ -63,7 +77,7 @@ namespace Adjutant
                     if (reader.Name == "fullcount")
                     {
                         if (reader.Read())
-                            MailCount = int.Parse(reader.Value);
+                            newMailCount = int.Parse(reader.Value);
                     }
                     else if (reader.Name == "entry")
                     {
@@ -121,7 +135,7 @@ namespace Adjutant
                             reader.Read();
                         }
 
-                        emails.Add(newEmail);
+                        newEmails.Add(newEmail);
                     }
                 }
 
@@ -129,12 +143,23 @@ namespace Adjutant
                 webStream.Close();
                 response.Close();
 
-                return MailCount;
+                e.Result = new Tuple<int, List<string[]>, MailCheckAction>(newMailCount, newEmails, (MailCheckAction)e.Argument);
             }
-            catch (Exception e)
+            catch (Exception exc)
             {
-                return -1;
+                mailException = exc;
+                e.Result = new Tuple<int, List<string[]>, MailCheckAction>(-1, null, (MailCheckAction)e.Argument);
             }
+        }
+
+        private void mailCheckWorker_completedEvent(object sender, RunWorkerCompletedEventArgs e)
+        {
+            Tuple<int, List<string[]>, MailCheckAction> result = (Tuple<int, List<string[]>, MailCheckAction>)e.Result;
+
+            MailCount = result.Item1;
+            emails = result.Item2;
+
+            finishedCheckingMail(MailCount, result.Item3);
         }
     }
 }

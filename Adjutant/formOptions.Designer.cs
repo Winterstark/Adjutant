@@ -225,7 +225,7 @@
             this.tabs.Name = "tabs";
             this.tabs.SelectedIndex = 0;
             this.tabs.Size = new System.Drawing.Size(484, 423);
-            this.tabs.TabIndex = 0;
+            this.tabs.TabIndex = 1;
             // 
             // tabWindow
             // 
@@ -275,7 +275,7 @@
             0});
             this.numAutoHideDelay.Name = "numAutoHideDelay";
             this.numAutoHideDelay.Size = new System.Drawing.Size(78, 20);
-            this.numAutoHideDelay.TabIndex = 17;
+            this.numAutoHideDelay.TabIndex = 8;
             this.numAutoHideDelay.ValueChanged += new System.EventHandler(this.checkForChanges);
             // 
             // label40
@@ -301,7 +301,7 @@
             this.txtHotkey.Location = new System.Drawing.Point(114, 163);
             this.txtHotkey.Name = "txtHotkey";
             this.txtHotkey.Size = new System.Drawing.Size(186, 20);
-            this.txtHotkey.TabIndex = 15;
+            this.txtHotkey.TabIndex = 7;
             this.txtHotkey.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtHotkey_KeyDown);
             // 
             // picBackColor
@@ -319,7 +319,7 @@
             this.buttPickBackColor.Location = new System.Drawing.Point(315, 357);
             this.buttPickBackColor.Name = "buttPickBackColor";
             this.buttPickBackColor.Size = new System.Drawing.Size(87, 23);
-            this.buttPickBackColor.TabIndex = 13;
+            this.buttPickBackColor.TabIndex = 14;
             this.buttPickBackColor.Text = "Pick...";
             this.buttPickBackColor.UseVisualStyleBackColor = true;
             this.buttPickBackColor.Click += new System.EventHandler(this.buttPickBackColor_Click);
@@ -331,7 +331,7 @@
             this.trackOpacityPassive.Maximum = 100;
             this.trackOpacityPassive.Name = "trackOpacityPassive";
             this.trackOpacityPassive.Size = new System.Drawing.Size(195, 45);
-            this.trackOpacityPassive.TabIndex = 11;
+            this.trackOpacityPassive.TabIndex = 12;
             this.trackOpacityPassive.TickStyle = System.Windows.Forms.TickStyle.None;
             this.trackOpacityPassive.Scroll += new System.EventHandler(this.trackOpacityPassive_Scroll);
             // 
@@ -342,7 +342,7 @@
             this.trackOpacityActive.Maximum = 100;
             this.trackOpacityActive.Name = "trackOpacityActive";
             this.trackOpacityActive.Size = new System.Drawing.Size(195, 45);
-            this.trackOpacityActive.TabIndex = 11;
+            this.trackOpacityActive.TabIndex = 10;
             this.trackOpacityActive.TickStyle = System.Windows.Forms.TickStyle.None;
             this.trackOpacityActive.Scroll += new System.EventHandler(this.trackOpacityActive_Scroll);
             // 
@@ -360,7 +360,7 @@
             this.comboHideStyle.Location = new System.Drawing.Point(114, 215);
             this.comboHideStyle.Name = "comboHideStyle";
             this.comboHideStyle.Size = new System.Drawing.Size(186, 21);
-            this.comboHideStyle.TabIndex = 10;
+            this.comboHideStyle.TabIndex = 9;
             this.comboHideStyle.SelectedIndexChanged += new System.EventHandler(this.checkForChanges);
             // 
             // numMaxH
@@ -368,7 +368,7 @@
             this.numMaxH.Location = new System.Drawing.Point(114, 122);
             this.numMaxH.Name = "numMaxH";
             this.numMaxH.Size = new System.Drawing.Size(78, 20);
-            this.numMaxH.TabIndex = 9;
+            this.numMaxH.TabIndex = 6;
             this.numMaxH.ValueChanged += new System.EventHandler(this.checkForChanges);
             // 
             // label5
@@ -385,7 +385,7 @@
             this.numMinH.Location = new System.Drawing.Point(114, 96);
             this.numMinH.Name = "numMinH";
             this.numMinH.Size = new System.Drawing.Size(78, 20);
-            this.numMinH.TabIndex = 7;
+            this.numMinH.TabIndex = 5;
             this.numMinH.ValueChanged += new System.EventHandler(this.checkForChanges);
             // 
             // label4
@@ -402,7 +402,7 @@
             this.numW.Location = new System.Drawing.Point(114, 70);
             this.numW.Name = "numW";
             this.numW.Size = new System.Drawing.Size(78, 20);
-            this.numW.TabIndex = 5;
+            this.numW.TabIndex = 4;
             this.numW.ValueChanged += new System.EventHandler(this.checkForChanges);
             // 
             // label3
@@ -419,7 +419,7 @@
             this.numOpacityPassive.Location = new System.Drawing.Point(315, 308);
             this.numOpacityPassive.Name = "numOpacityPassive";
             this.numOpacityPassive.Size = new System.Drawing.Size(87, 20);
-            this.numOpacityPassive.TabIndex = 3;
+            this.numOpacityPassive.TabIndex = 13;
             this.numOpacityPassive.ValueChanged += new System.EventHandler(this.numOpacityPassive_ValueChanged);
             // 
             // numOpacityActive
@@ -427,7 +427,7 @@
             this.numOpacityActive.Location = new System.Drawing.Point(315, 259);
             this.numOpacityActive.Name = "numOpacityActive";
             this.numOpacityActive.Size = new System.Drawing.Size(87, 20);
-            this.numOpacityActive.TabIndex = 3;
+            this.numOpacityActive.TabIndex = 11;
             this.numOpacityActive.ValueChanged += new System.EventHandler(this.numOpacityActive_ValueChanged);
             // 
             // numY
@@ -452,7 +452,7 @@
             this.numX.Location = new System.Drawing.Point(114, 18);
             this.numX.Name = "numX";
             this.numX.Size = new System.Drawing.Size(78, 20);
-            this.numX.TabIndex = 1;
+            this.numX.TabIndex = 2;
             this.numX.ValueChanged += new System.EventHandler(this.checkForChanges);
             // 
             // label9
@@ -565,7 +565,7 @@
             this.comboFont.Location = new System.Drawing.Point(94, 65);
             this.comboFont.Name = "comboFont";
             this.comboFont.Size = new System.Drawing.Size(186, 21);
-            this.comboFont.TabIndex = 18;
+            this.comboFont.TabIndex = 2;
             this.comboFont.SelectedIndexChanged += new System.EventHandler(this.comboFont_SelectedIndexChanged);
             // 
             // buttEditFont
@@ -573,7 +573,7 @@
             this.buttEditFont.Location = new System.Drawing.Point(295, 63);
             this.buttEditFont.Name = "buttEditFont";
             this.buttEditFont.Size = new System.Drawing.Size(75, 104);
-            this.buttEditFont.TabIndex = 17;
+            this.buttEditFont.TabIndex = 6;
             this.buttEditFont.Text = "Edit font...";
             this.buttEditFont.UseVisualStyleBackColor = true;
             this.buttEditFont.Click += new System.EventHandler(this.buttEditFont_Click);
@@ -583,7 +583,7 @@
             this.buttPickTextColor.Location = new System.Drawing.Point(295, 209);
             this.buttPickTextColor.Name = "buttPickTextColor";
             this.buttPickTextColor.Size = new System.Drawing.Size(75, 23);
-            this.buttPickTextColor.TabIndex = 17;
+            this.buttPickTextColor.TabIndex = 7;
             this.buttPickTextColor.Text = "Pick...";
             this.buttPickTextColor.UseVisualStyleBackColor = true;
             this.buttPickTextColor.Click += new System.EventHandler(this.buttPickTextColor_Click);
@@ -605,7 +605,7 @@
             this.chkItalic.Location = new System.Drawing.Point(179, 150);
             this.chkItalic.Name = "chkItalic";
             this.chkItalic.Size = new System.Drawing.Size(48, 17);
-            this.chkItalic.TabIndex = 15;
+            this.chkItalic.TabIndex = 5;
             this.chkItalic.Text = "Italic";
             this.chkItalic.UseVisualStyleBackColor = true;
             this.chkItalic.CheckedChanged += new System.EventHandler(this.chkItalic_CheckedChanged);
@@ -617,7 +617,7 @@
             this.chkBold.Location = new System.Drawing.Point(94, 150);
             this.chkBold.Name = "chkBold";
             this.chkBold.Size = new System.Drawing.Size(51, 17);
-            this.chkBold.TabIndex = 15;
+            this.chkBold.TabIndex = 4;
             this.chkBold.Text = "Bold";
             this.chkBold.UseVisualStyleBackColor = true;
             this.chkBold.CheckedChanged += new System.EventHandler(this.chkBold_CheckedChanged);
@@ -637,7 +637,7 @@
             0});
             this.numFontSize.Name = "numFontSize";
             this.numFontSize.Size = new System.Drawing.Size(78, 20);
-            this.numFontSize.TabIndex = 14;
+            this.numFontSize.TabIndex = 3;
             this.numFontSize.Value = new decimal(new int[] {
             6,
             0,
@@ -707,7 +707,7 @@
             this.chkBlankLine.Location = new System.Drawing.Point(123, 250);
             this.chkBlankLine.Name = "chkBlankLine";
             this.chkBlankLine.Size = new System.Drawing.Size(202, 17);
-            this.chkBlankLine.TabIndex = 41;
+            this.chkBlankLine.TabIndex = 7;
             this.chkBlankLine.Text = "Separate commands with a blank line";
             this.chkBlankLine.UseVisualStyleBackColor = true;
             this.chkBlankLine.CheckedChanged += new System.EventHandler(this.checkForChanges);
@@ -726,7 +726,7 @@
             this.buttPickEchoColor.Location = new System.Drawing.Point(324, 317);
             this.buttPickEchoColor.Name = "buttPickEchoColor";
             this.buttPickEchoColor.Size = new System.Drawing.Size(87, 23);
-            this.buttPickEchoColor.TabIndex = 39;
+            this.buttPickEchoColor.TabIndex = 9;
             this.buttPickEchoColor.Text = "Pick...";
             this.buttPickEchoColor.UseVisualStyleBackColor = true;
             this.buttPickEchoColor.Click += new System.EventHandler(this.buttPickEchoColor_Click);
@@ -745,7 +745,7 @@
             this.buttBrowseForStartDir.Location = new System.Drawing.Point(324, 49);
             this.buttBrowseForStartDir.Name = "buttBrowseForStartDir";
             this.buttBrowseForStartDir.Size = new System.Drawing.Size(32, 23);
-            this.buttBrowseForStartDir.TabIndex = 37;
+            this.buttBrowseForStartDir.TabIndex = 3;
             this.buttBrowseForStartDir.Text = "...";
             this.buttBrowseForStartDir.UseVisualStyleBackColor = true;
             this.buttBrowseForStartDir.Click += new System.EventHandler(this.buttBrowseForStartDir_Click);
@@ -765,7 +765,7 @@
             this.buttPickErrorColor.Location = new System.Drawing.Point(324, 346);
             this.buttPickErrorColor.Name = "buttPickErrorColor";
             this.buttPickErrorColor.Size = new System.Drawing.Size(87, 23);
-            this.buttPickErrorColor.TabIndex = 23;
+            this.buttPickErrorColor.TabIndex = 10;
             this.buttPickErrorColor.Text = "Pick...";
             this.buttPickErrorColor.UseVisualStyleBackColor = true;
             this.buttPickErrorColor.Click += new System.EventHandler(this.buttPickErrorColor_Click);
@@ -794,7 +794,7 @@
             0});
             this.numPrintAtOnce.Name = "numPrintAtOnce";
             this.numPrintAtOnce.Size = new System.Drawing.Size(78, 20);
-            this.numPrintAtOnce.TabIndex = 21;
+            this.numPrintAtOnce.TabIndex = 5;
             this.numPrintAtOnce.Value = new decimal(new int[] {
             1,
             0,
@@ -844,7 +844,7 @@
             this.chkEcho.Location = new System.Drawing.Point(123, 273);
             this.chkEcho.Name = "chkEcho";
             this.chkEcho.Size = new System.Drawing.Size(135, 17);
-            this.chkEcho.TabIndex = 18;
+            this.chkEcho.TabIndex = 8;
             this.chkEcho.Text = "Echo user\'s commands";
             this.chkEcho.UseVisualStyleBackColor = true;
             this.chkEcho.CheckedChanged += new System.EventHandler(this.checkForChanges);
@@ -855,7 +855,7 @@
             this.chkPrompt.Location = new System.Drawing.Point(123, 227);
             this.chkPrompt.Name = "chkPrompt";
             this.chkPrompt.Size = new System.Drawing.Size(173, 17);
-            this.chkPrompt.TabIndex = 18;
+            this.chkPrompt.TabIndex = 6;
             this.chkPrompt.Text = "Show prompt (current directory)";
             this.chkPrompt.UseVisualStyleBackColor = true;
             this.chkPrompt.CheckedChanged += new System.EventHandler(this.checkForChanges);
@@ -870,7 +870,7 @@
             0});
             this.numPrintDelay.Name = "numPrintDelay";
             this.numPrintDelay.Size = new System.Drawing.Size(78, 20);
-            this.numPrintDelay.TabIndex = 17;
+            this.numPrintDelay.TabIndex = 4;
             this.numPrintDelay.ValueChanged += new System.EventHandler(this.checkForChanges);
             // 
             // label13
@@ -887,7 +887,7 @@
             this.txtStartDir.Location = new System.Drawing.Point(123, 51);
             this.txtStartDir.Name = "txtStartDir";
             this.txtStartDir.Size = new System.Drawing.Size(186, 20);
-            this.txtStartDir.TabIndex = 15;
+            this.txtStartDir.TabIndex = 2;
             this.txtStartDir.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
             // 
             // label11
@@ -929,7 +929,7 @@
             this.checkTodoAutoTransfer.Location = new System.Drawing.Point(149, 117);
             this.checkTodoAutoTransfer.Name = "checkTodoAutoTransfer";
             this.checkTodoAutoTransfer.Size = new System.Drawing.Size(195, 35);
-            this.checkTodoAutoTransfer.TabIndex = 37;
+            this.checkTodoAutoTransfer.TabIndex = 5;
             this.checkTodoAutoTransfer.Text = "Automatically transfer active items to next day\'s todo list";
             this.checkTodoAutoTransfer.UseVisualStyleBackColor = true;
             this.checkTodoAutoTransfer.CheckedChanged += new System.EventHandler(this.checkForChanges);
@@ -940,7 +940,7 @@
             this.checkTodoHideDone.Location = new System.Drawing.Point(149, 94);
             this.checkTodoHideDone.Name = "checkTodoHideDone";
             this.checkTodoHideDone.Size = new System.Drawing.Size(102, 17);
-            this.checkTodoHideDone.TabIndex = 37;
+            this.checkTodoHideDone.TabIndex = 4;
             this.checkTodoHideDone.Text = "Hide done items";
             this.checkTodoHideDone.UseVisualStyleBackColor = true;
             this.checkTodoHideDone.CheckedChanged += new System.EventHandler(this.checkForChanges);
@@ -950,7 +950,7 @@
             this.buttBrowseForTodoDir.Location = new System.Drawing.Point(350, 39);
             this.buttBrowseForTodoDir.Name = "buttBrowseForTodoDir";
             this.buttBrowseForTodoDir.Size = new System.Drawing.Size(32, 23);
-            this.buttBrowseForTodoDir.TabIndex = 36;
+            this.buttBrowseForTodoDir.TabIndex = 3;
             this.buttBrowseForTodoDir.Text = "...";
             this.buttBrowseForTodoDir.UseVisualStyleBackColor = true;
             this.buttBrowseForTodoDir.Click += new System.EventHandler(this.buttBrowseForTodoDir_Click);
@@ -960,7 +960,7 @@
             this.txtTodoDir.Location = new System.Drawing.Point(149, 41);
             this.txtTodoDir.Name = "txtTodoDir";
             this.txtTodoDir.Size = new System.Drawing.Size(186, 20);
-            this.txtTodoDir.TabIndex = 35;
+            this.txtTodoDir.TabIndex = 2;
             this.txtTodoDir.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
             // 
             // label35
@@ -987,7 +987,7 @@
             this.buttPickTodoDoneColor.Location = new System.Drawing.Point(350, 276);
             this.buttPickTodoDoneColor.Name = "buttPickTodoDoneColor";
             this.buttPickTodoDoneColor.Size = new System.Drawing.Size(87, 23);
-            this.buttPickTodoDoneColor.TabIndex = 32;
+            this.buttPickTodoDoneColor.TabIndex = 8;
             this.buttPickTodoDoneColor.Text = "Pick...";
             this.buttPickTodoDoneColor.UseVisualStyleBackColor = true;
             this.buttPickTodoDoneColor.Click += new System.EventHandler(this.buttPickTodoDoneColor_Click);
@@ -1016,7 +1016,7 @@
             this.buttPickTodoItemColor.Location = new System.Drawing.Point(350, 247);
             this.buttPickTodoItemColor.Name = "buttPickTodoItemColor";
             this.buttPickTodoItemColor.Size = new System.Drawing.Size(87, 23);
-            this.buttPickTodoItemColor.TabIndex = 29;
+            this.buttPickTodoItemColor.TabIndex = 7;
             this.buttPickTodoItemColor.Text = "Pick...";
             this.buttPickTodoItemColor.UseVisualStyleBackColor = true;
             this.buttPickTodoItemColor.Click += new System.EventHandler(this.buttPickTodoItemColor_Click);
@@ -1045,7 +1045,7 @@
             this.buttPickTodoMiscColor.Location = new System.Drawing.Point(350, 218);
             this.buttPickTodoMiscColor.Name = "buttPickTodoMiscColor";
             this.buttPickTodoMiscColor.Size = new System.Drawing.Size(87, 23);
-            this.buttPickTodoMiscColor.TabIndex = 26;
+            this.buttPickTodoMiscColor.TabIndex = 6;
             this.buttPickTodoMiscColor.Text = "Pick...";
             this.buttPickTodoMiscColor.UseVisualStyleBackColor = true;
             this.buttPickTodoMiscColor.Click += new System.EventHandler(this.buttPickTodoMiscColor_Click);
@@ -1123,7 +1123,7 @@
             this.numTwSoundThreshold.Location = new System.Drawing.Point(367, 76);
             this.numTwSoundThreshold.Name = "numTwSoundThreshold";
             this.numTwSoundThreshold.Size = new System.Drawing.Size(73, 20);
-            this.numTwSoundThreshold.TabIndex = 39;
+            this.numTwSoundThreshold.TabIndex = 6;
             this.numTwSoundThreshold.ValueChanged += new System.EventHandler(this.checkForChanges);
             // 
             // buttTwSoundBrowse
@@ -1131,7 +1131,7 @@
             this.buttTwSoundBrowse.Location = new System.Drawing.Point(408, 47);
             this.buttTwSoundBrowse.Name = "buttTwSoundBrowse";
             this.buttTwSoundBrowse.Size = new System.Drawing.Size(32, 23);
-            this.buttTwSoundBrowse.TabIndex = 38;
+            this.buttTwSoundBrowse.TabIndex = 5;
             this.buttTwSoundBrowse.Text = "...";
             this.buttTwSoundBrowse.UseVisualStyleBackColor = true;
             this.buttTwSoundBrowse.Click += new System.EventHandler(this.buttTwSoundBrowse_Click);
@@ -1141,7 +1141,7 @@
             this.txtTwSound.Location = new System.Drawing.Point(239, 49);
             this.txtTwSound.Name = "txtTwSound";
             this.txtTwSound.Size = new System.Drawing.Size(163, 20);
-            this.txtTwSound.TabIndex = 32;
+            this.txtTwSound.TabIndex = 4;
             this.txtTwSound.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
             // 
             // picTwLinkColor
@@ -1159,7 +1159,7 @@
             this.buttPickTwLinkColor.Location = new System.Drawing.Point(342, 284);
             this.buttPickTwLinkColor.Name = "buttPickTwLinkColor";
             this.buttPickTwLinkColor.Size = new System.Drawing.Size(87, 23);
-            this.buttPickTwLinkColor.TabIndex = 30;
+            this.buttPickTwLinkColor.TabIndex = 11;
             this.buttPickTwLinkColor.Text = "Pick...";
             this.buttPickTwLinkColor.UseVisualStyleBackColor = true;
             this.buttPickTwLinkColor.Click += new System.EventHandler(this.buttPickTwLinkColor_Click);
@@ -1188,7 +1188,7 @@
             this.buttPickTwCountColor.Location = new System.Drawing.Point(342, 342);
             this.buttPickTwCountColor.Name = "buttPickTwCountColor";
             this.buttPickTwCountColor.Size = new System.Drawing.Size(87, 23);
-            this.buttPickTwCountColor.TabIndex = 27;
+            this.buttPickTwCountColor.TabIndex = 13;
             this.buttPickTwCountColor.Text = "Pick...";
             this.buttPickTwCountColor.UseVisualStyleBackColor = true;
             this.buttPickTwCountColor.Click += new System.EventHandler(this.buttPickTwCountColor_Click);
@@ -1217,7 +1217,7 @@
             this.buttPickTwTimestampColor.Location = new System.Drawing.Point(342, 313);
             this.buttPickTwTimestampColor.Name = "buttPickTwTimestampColor";
             this.buttPickTwTimestampColor.Size = new System.Drawing.Size(87, 23);
-            this.buttPickTwTimestampColor.TabIndex = 24;
+            this.buttPickTwTimestampColor.TabIndex = 12;
             this.buttPickTwTimestampColor.Text = "Pick...";
             this.buttPickTwTimestampColor.UseVisualStyleBackColor = true;
             this.buttPickTwTimestampColor.Click += new System.EventHandler(this.buttPickTwTimestampColor_Click);
@@ -1246,7 +1246,7 @@
             this.buttPickTwTweetColor.Location = new System.Drawing.Point(342, 255);
             this.buttPickTwTweetColor.Name = "buttPickTwTweetColor";
             this.buttPickTwTweetColor.Size = new System.Drawing.Size(87, 23);
-            this.buttPickTwTweetColor.TabIndex = 21;
+            this.buttPickTwTweetColor.TabIndex = 10;
             this.buttPickTwTweetColor.Text = "Pick...";
             this.buttPickTwTweetColor.UseVisualStyleBackColor = true;
             this.buttPickTwTweetColor.Click += new System.EventHandler(this.buttPickTwTweetColor_Click);
@@ -1275,7 +1275,7 @@
             this.buttPickTwMiscColor.Location = new System.Drawing.Point(342, 226);
             this.buttPickTwMiscColor.Name = "buttPickTwMiscColor";
             this.buttPickTwMiscColor.Size = new System.Drawing.Size(87, 23);
-            this.buttPickTwMiscColor.TabIndex = 18;
+            this.buttPickTwMiscColor.TabIndex = 9;
             this.buttPickTwMiscColor.Text = "Pick...";
             this.buttPickTwMiscColor.UseVisualStyleBackColor = true;
             this.buttPickTwMiscColor.Click += new System.EventHandler(this.buttPickTwMiscColor_Click);
@@ -1304,7 +1304,7 @@
             this.buttPickTwUsernameColor.Location = new System.Drawing.Point(342, 197);
             this.buttPickTwUsernameColor.Name = "buttPickTwUsernameColor";
             this.buttPickTwUsernameColor.Size = new System.Drawing.Size(87, 23);
-            this.buttPickTwUsernameColor.TabIndex = 15;
+            this.buttPickTwUsernameColor.TabIndex = 8;
             this.buttPickTwUsernameColor.Text = "Pick...";
             this.buttPickTwUsernameColor.UseVisualStyleBackColor = true;
             this.buttPickTwUsernameColor.Click += new System.EventHandler(this.buttPickTwUsernameColor_Click);
@@ -1341,7 +1341,7 @@
             this.numTwCountMinPeriod.Location = new System.Drawing.Point(194, 134);
             this.numTwCountMinPeriod.Name = "numTwCountMinPeriod";
             this.numTwCountMinPeriod.Size = new System.Drawing.Size(77, 20);
-            this.numTwCountMinPeriod.TabIndex = 4;
+            this.numTwCountMinPeriod.TabIndex = 7;
             this.numTwCountMinPeriod.ValueChanged += new System.EventHandler(this.checkForChanges);
             // 
             // label22
@@ -1358,7 +1358,7 @@
             this.checkTwCountOnFocus.Location = new System.Drawing.Point(48, 74);
             this.checkTwCountOnFocus.Name = "checkTwCountOnFocus";
             this.checkTwCountOnFocus.Size = new System.Drawing.Size(140, 17);
-            this.checkTwCountOnFocus.TabIndex = 2;
+            this.checkTwCountOnFocus.TabIndex = 3;
             this.checkTwCountOnFocus.Text = "Adjutant gets user focus";
             this.checkTwCountOnFocus.UseVisualStyleBackColor = true;
             this.checkTwCountOnFocus.CheckedChanged += new System.EventHandler(this.checkForChanges);
@@ -1369,7 +1369,7 @@
             this.checkTwCountOnNewTweet.Location = new System.Drawing.Point(48, 51);
             this.checkTwCountOnNewTweet.Name = "checkTwCountOnNewTweet";
             this.checkTwCountOnNewTweet.Size = new System.Drawing.Size(111, 17);
-            this.checkTwCountOnNewTweet.TabIndex = 1;
+            this.checkTwCountOnNewTweet.TabIndex = 2;
             this.checkTwCountOnNewTweet.Text = "New tweet arrives";
             this.checkTwCountOnNewTweet.UseVisualStyleBackColor = true;
             this.checkTwCountOnNewTweet.CheckedChanged += new System.EventHandler(this.checkForChanges);
@@ -1451,7 +1451,7 @@
             this.numMailSoundThreshold.Location = new System.Drawing.Point(375, 159);
             this.numMailSoundThreshold.Name = "numMailSoundThreshold";
             this.numMailSoundThreshold.Size = new System.Drawing.Size(73, 20);
-            this.numMailSoundThreshold.TabIndex = 44;
+            this.numMailSoundThreshold.TabIndex = 8;
             this.numMailSoundThreshold.ValueChanged += new System.EventHandler(this.checkForChanges);
             // 
             // buttMailSoundBrowse
@@ -1459,7 +1459,7 @@
             this.buttMailSoundBrowse.Location = new System.Drawing.Point(416, 130);
             this.buttMailSoundBrowse.Name = "buttMailSoundBrowse";
             this.buttMailSoundBrowse.Size = new System.Drawing.Size(32, 23);
-            this.buttMailSoundBrowse.TabIndex = 43;
+            this.buttMailSoundBrowse.TabIndex = 7;
             this.buttMailSoundBrowse.Text = "...";
             this.buttMailSoundBrowse.UseVisualStyleBackColor = true;
             this.buttMailSoundBrowse.Click += new System.EventHandler(this.buttMailSoundBrowse_Click);
@@ -1469,7 +1469,7 @@
             this.txtMailSound.Location = new System.Drawing.Point(247, 132);
             this.txtMailSound.Name = "txtMailSound";
             this.txtMailSound.Size = new System.Drawing.Size(163, 20);
-            this.txtMailSound.TabIndex = 42;
+            this.txtMailSound.TabIndex = 6;
             this.txtMailSound.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
             // 
             // label52
@@ -1513,7 +1513,7 @@
             this.numMailCheckPeriod.Location = new System.Drawing.Point(106, 205);
             this.numMailCheckPeriod.Name = "numMailCheckPeriod";
             this.numMailCheckPeriod.Size = new System.Drawing.Size(77, 20);
-            this.numMailCheckPeriod.TabIndex = 21;
+            this.numMailCheckPeriod.TabIndex = 9;
             this.numMailCheckPeriod.ValueChanged += new System.EventHandler(this.checkForChanges);
             // 
             // label46
@@ -1539,7 +1539,7 @@
             this.buttPickMailSummaryColor.Location = new System.Drawing.Point(304, 330);
             this.buttPickMailSummaryColor.Name = "buttPickMailSummaryColor";
             this.buttPickMailSummaryColor.Size = new System.Drawing.Size(87, 23);
-            this.buttPickMailSummaryColor.TabIndex = 18;
+            this.buttPickMailSummaryColor.TabIndex = 12;
             this.buttPickMailSummaryColor.Text = "Pick...";
             this.buttPickMailSummaryColor.UseVisualStyleBackColor = true;
             this.buttPickMailSummaryColor.Click += new System.EventHandler(this.buttPickMailSummaryColor_Click);
@@ -1558,7 +1558,7 @@
             this.buttPickMailHeaderColor.Location = new System.Drawing.Point(304, 301);
             this.buttPickMailHeaderColor.Name = "buttPickMailHeaderColor";
             this.buttPickMailHeaderColor.Size = new System.Drawing.Size(87, 23);
-            this.buttPickMailHeaderColor.TabIndex = 18;
+            this.buttPickMailHeaderColor.TabIndex = 11;
             this.buttPickMailHeaderColor.Text = "Pick...";
             this.buttPickMailHeaderColor.UseVisualStyleBackColor = true;
             this.buttPickMailHeaderColor.Click += new System.EventHandler(this.buttPickMailHeaderColor_Click);
@@ -1595,7 +1595,7 @@
             this.buttPickMailCountColor.Location = new System.Drawing.Point(304, 272);
             this.buttPickMailCountColor.Name = "buttPickMailCountColor";
             this.buttPickMailCountColor.Size = new System.Drawing.Size(87, 23);
-            this.buttPickMailCountColor.TabIndex = 18;
+            this.buttPickMailCountColor.TabIndex = 10;
             this.buttPickMailCountColor.Text = "Pick...";
             this.buttPickMailCountColor.UseVisualStyleBackColor = true;
             this.buttPickMailCountColor.Click += new System.EventHandler(this.buttPickMailCountColor_Click);
@@ -1646,7 +1646,7 @@
             this.txtPass.Name = "txtPass";
             this.txtPass.PasswordChar = '●';
             this.txtPass.Size = new System.Drawing.Size(186, 20);
-            this.txtPass.TabIndex = 1;
+            this.txtPass.TabIndex = 3;
             this.txtPass.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
             // 
             // txtUser
@@ -1654,7 +1654,7 @@
             this.txtUser.Location = new System.Drawing.Point(106, 38);
             this.txtUser.Name = "txtUser";
             this.txtUser.Size = new System.Drawing.Size(186, 20);
-            this.txtUser.TabIndex = 1;
+            this.txtUser.TabIndex = 2;
             this.txtUser.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
             // 
             // label42
@@ -1680,7 +1680,7 @@
             this.buttSave.Location = new System.Drawing.Point(12, 441);
             this.buttSave.Name = "buttSave";
             this.buttSave.Size = new System.Drawing.Size(484, 47);
-            this.buttSave.TabIndex = 1;
+            this.buttSave.TabIndex = 15;
             this.buttSave.Text = "Save changes";
             this.buttSave.UseVisualStyleBackColor = true;
             this.buttSave.Visible = false;

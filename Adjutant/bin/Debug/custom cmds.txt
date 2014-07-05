@@ -1,2 +1,2 @@
 !wordy=c:\apps\wordy\wordy.exe
-!python=c:\dev\python\python.exe
+!python=c:\dev\python\python.exe -i

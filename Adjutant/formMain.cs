@@ -38,8 +38,6 @@ namespace Adjutant
         static extern bool PlaySound(string fname, int Mod, int flag);
 
 
-        public delegate void MyDelegate();
-
         class TextChunk
         {
             string text, link;
@@ -62,6 +60,12 @@ namespace Adjutant
                 return text;
             }
 
+            public string GetText()
+            {
+                //includes newline
+                return text + (newline ? Environment.NewLine : "");
+            }
+
             public bool IsNewline()
             {
                 return newline;
@@ -70,6 +74,12 @@ namespace Adjutant
             public bool IsAbsNewline()
             {
                 return absNewline;
+            }
+
+            public void InsertNewline()
+            {
+                newline = true;
+                absNewline = true;
             }
 
             public Color GetColor()
@@ -163,7 +173,8 @@ namespace Adjutant
                         }
                     }
 
-                    chunks.Add(new TextChunk(text.Substring(0, len), link, color, text.Length != len || newline, absNewline && text.Length == len, segmentW, lineH));
+                    //chunks.Add(new TextChunk(text.Substring(0, len), link, color, text.Length != len || newline, absNewline && text.Length == len, segmentW, lineH));
+                    chunks.Add(new TextChunk(text.Substring(0, len), link, color, absNewline || text.Length != len, absNewline && text.Length == len, segmentW, lineH));
                     text = text.Substring(len);
 
                     if (len < text.Length)
@@ -202,7 +213,7 @@ namespace Adjutant
         BufferedGraphicsContext context;
         BufferedGraphics grafx;
         Brush brush = Brushes.White;
-        Color echoColor, errorColor, todoMiscColor, todoItemColor, todoDoneColor, twUserColor, twMiscColor, twTweetColor, twLinkColor, twTimeColor, twCountColor, mailCountColor, mailHeaderColor, mailSummaryColor;
+        Color echoColor, errorColor, helpColor, todoMiscColor, todoItemColor, todoDoneColor, twUserColor, twMiscColor, twTweetColor, twLinkColor, twTimeColor, twCountColor, mailCountColor, mailHeaderColor, mailSummaryColor;
         DateTime autoHide, pauseEnd, lastTwCount;
         List<TextChunk> chunks = new List<TextChunk>();
         Dictionary<string, string> customCmds;
@@ -211,7 +222,7 @@ namespace Adjutant
         string python, user, dir, todoDir, inputMode, token, secret, link, mailUser, mailPass, twUsername, twSound, mailSound;
         double opacityPassive, opacityActive;
         long lastTweet;
-        int x, y, lineH, minH, maxH, prevH, maxLines, prevX, prevY, leftMargin, chunkOffset, lastChunk, lastChunkChar, printAtOnce, autoHideDelay, tabInd, historyInd, minTweetPeriod, twSoundThreshold, hotkey, newMailCount, prevNewMailCount, mailSoundThreshold;
+        int x, y, lineH, minH, maxH, prevH, maxLines, prevX, prevY, leftMargin, chunkOffset, lastChunk, lastChunkChar, printAtOnce, autoHideDelay, tabInd, historyInd, minTweetPeriod, twSoundThreshold, hotkey, newMailCount, prevNewMailCount, mailSoundThreshold, tutorialStep;
         bool initialized, activated, winKey, prompt, blankLine, echo, ctrlKey, drag, resizeW, resizeH, hiding, hidden, todoHideDone, todoAutoTransfer, twUpdateOnNewTweet, twUpdateOnFocus, twitterOutput, mailUpdateOnNewMail, mailUpdateOnFocus, hotkeyCtrl, hotkeyAlt, hotkeyShift;
         #endregion
 
@@ -247,6 +258,59 @@ namespace Adjutant
                 SetForegroundWindow(this.Handle);
         }
 
+        void toggleSelectMode()
+        {
+            if (!txtSelection.Visible)
+            {
+                if (chunks.Count > 0 && lastChunk != -1)
+                {
+                    //get console output
+                    string consoleOutput = "";
+                    int ind = -1; //where console output begins on screen
+
+                    for (int i = 0; i <= lastChunk && i < chunks.Count; i++)
+                    {
+                        if (chunkOffset == i)
+                            ind = consoleOutput.Length;
+
+                        consoleOutput += chunks[i].GetText();
+                    }
+
+                    //display in txtbox
+                    txtSelection.SelectionStart = 0;
+                    txtSelection.Text = consoleOutput;
+
+                    txtSelection.Font = txtCMD.Font;
+                    txtSelection.BackColor = txtCMD.BackColor;
+                    txtSelection.ForeColor = txtCMD.ForeColor;
+                    txtSelection.Width = this.Width;
+                    txtSelection.Height = txtCMD.Top;
+                    txtSelection.Visible = true;
+                    
+                    //scroll to current position
+                    if (ind == -1)
+                        ind = consoleOutput.Length;
+
+                    //scroll to end
+                    txtSelection.Select(txtSelection.Text.Length, 0);
+                    txtSelection.ScrollToCaret();
+
+                    //then scroll back where console output begins on screen
+                    txtSelection.Select(ind, 0);
+                    txtSelection.ScrollToCaret();
+
+                    txtSelection.Focus();
+                }
+            }
+            else
+            {
+                //hide selection txtbox
+                txtSelection.Visible = false;
+                
+                txtCMD.Focus();
+            }
+        }
+
         void draw(Graphics gfx)
         {
             gfx.Clear(this.BackColor);
@@ -262,12 +326,12 @@ namespace Adjutant
             }
         }
 
-        void MeasureLineHeight()
+        void measureLineHeight()
         {
             lineH = (int)grafx.Graphics.MeasureString("A", txtCMD.Font).Height;
         }
 
-        int MeasureWidth(string txt)
+        int measureWidth(string txt)
         {
             return (int)grafx.Graphics.MeasureString(txt, txtCMD.Font, int.MaxValue, new StringFormat(StringFormatFlags.MeasureTrailingSpaces)).Width;
         }
@@ -938,6 +1002,11 @@ namespace Adjutant
 
         void command()
         {
+            //replace custom commands (if the command isn't "custom")
+            if (txtCMD.Text.Length < 6 || txtCMD.Text.Substring(0, 6).ToLower() != "custom")
+                foreach (var customCmd in customCmds)
+                    txtCMD.Text = txtCMD.Text.Replace(customCmd.Key, customCmd.Value);
+
             if (txtCMD.Text != "")
             {
                 if (blankLine && chunks.Count > 0)
@@ -949,32 +1018,35 @@ namespace Adjutant
                     flush(); //echo print should be instantaneous
                 }
             }
-               
+
             switch (inputMode)
             {
-                case "user":
+                case "user": //first time running -> awaiting username
                     bool firstRun = user == "first_run";
 
-                    user = txtCMD.Text;
-                    saveOptions();
-
-                    if (firstRun)
-                    {
-                        //continue with first time intro
-                        greeting();
-                        print("This seems to be the first time you are running Adjutant. Would you like to run the tutorial/setup? (y/n)");
-
-                        inputMode = "tutorial";
-                    }
+                    if (txtCMD.Text == "")
+                        print("Please enter your name.", errorColor);
                     else
                     {
-                        inputMode = "default";
+                        user = txtCMD.Text;
+                        saveOptions();
+
+                        if (firstRun)
+                        {
+                            //continue with first time intro
+                            greeting();
+                            print("This seems to be the first time you are running Adjutant. Would you like to run the tutorial? (y/n)");
+
+                            tutorialStep = 0;
+                            inputMode = "tutorial";
+                        }
+                        else
+                            inputMode = "default";
+
                         setPrompt();
                     }
-
-                    txtCMD.Text = "";
                     break;
-                case "twitter pin":
+                case "twitter pin": //authorizing Twitter
                     if (txtCMD.Text == "")
                         return;
 
@@ -997,11 +1069,10 @@ namespace Adjutant
                             twitterPrint();
                     }
 
-                    txtCMD.Text = "";
                     inputMode = "default";
                     setPrompt();
                     break;
-                case "process redirect":
+                case "process redirect": //forwarding input to external process
                     print(txtCMD.Text);
 
                     if (proc != null)
@@ -1017,19 +1088,84 @@ namespace Adjutant
                         inputMode = "default";
                         setPrompt();
                     }
-
-                    txtCMD.Text = "";
                     break;
-                case "tutorial":
-                    if (txtCMD.Text.ToLower() == "y" || txtCMD.Text.ToLower() == "yes")
+                case "tutorial": //starting tutorial mode
+                    if (txtCMD.Text.ToLower() == "exit")
                     {
-                        //TODO TUTORIAL
+                        inputMode = "default";
+                        setPrompt();
+                        print("Tutorial canceled.");
                     }
+                    else
+                    {
+                        //tutorial steps
+                        switch (tutorialStep)
+                        {
+                            case 0:
+                                if (txtCMD.Text.ToLower() == "y" || txtCMD.Text.ToLower() == "yes")
+                                {
+                                    tutorialStep++;
 
-                    txtCMD.Text = "";
-                    inputMode = "default";
+                                    printHelp("To stop the tutorial type \"exit\" at any time.<pause>");
+                                    printHelp("");
+
+                                    printHelp("Adjutant is a versatile and customizable console application, similar to Windows Command Prompt.");
+                                    printHelp("For example, you can browse your computer with the standard command \"cd [directory]\".<pause>");
+                                    printHelp("Adjutant also allows you to save commands or blocks of text into custom variables.");
+                                    printHelp("For the purposes of this tutorial, Adjutant has created a variable called \"$path\" with the Adjutant directory as its value.<pause>");
+                                    printHelp("Open that directory by typing the following command: \"cd $path\".");
+                                }
+                                else
+                                {
+                                    inputMode = "default";
+                                    setPrompt();
+                                }
+                                break;
+                            case 1:
+                                if (txtCMD.Text.ToLower() == "cd " + customCmds["$path"].ToLower())
+                                {
+                                    cd(customCmds["$path"]);
+                                    tutorialStep++;
+
+                                    printHelp("To add your own custom commands and variables use the \"custom\" command. Type \"help custom\" to find out more (when you finish the tutorial).<pause>");
+                                    printHelp("");
+                                    printHelp("Now open the \"tutorial\" subdirectory with the \"cd\" command: \"cd tutorial\".");
+                                }
+                                break;
+                            case 2:
+                                if (txtCMD.Text.ToLower() == "cd tutorial")
+                                {
+                                    cd(customCmds["$path"] + "\\tutorial");
+                                    tutorialStep++;
+
+                                    printHelp("In this directory you will find several files to interact with, as you would using Command Prompt.<pause>");
+                                    printHelp("For example, open a file by typing its name: \"example.txt\"");
+                                }
+                                break;
+                            case 3:
+                                if (txtCMD.Text.ToLower() == "example.txt")
+                                {
+                                    runProcess("example.txt");
+                                    tutorialStep++;
+
+                                    printHelp("Besides the basic Command Prompt commands, Adjutant also has several advanced features, such as a Todo task manager, a Twitter client, and a Gmail client.");
+                                    printHelp("Adjutant's help system can tell you more about those modules, as well as other commands.<pause>");
+                                    printHelp("");
+                                    printHelp("To see a list of all commands, enter \"help\".<pause>");
+                                    printHelp("To learn about a command in more detail, type \"help [command]\".<pause>");
+                                    printHelp("Also note that ALL command switches can be used by just typing their initial letter.<pause>For example: \"/erase\" and \"/e\" perform the same switch operation.");
+                                    printHelp("");
+                                    print("If you have any questions, suggestions, or bug reports, send me an email: ", false); print("winterstark@gmail.com", "mailto:winterstark@gmail.com", Color.Blue);
+                                    printHelp("Have fun using Adjutant!");
+
+                                    inputMode = "default";
+                                    setPrompt();
+                                }
+                                break;
+                        }
+                    }
                     break;
-                default:
+                default: //standard command input
                     try
                     {
                         string[] cmd = txtCMD.Text.Split(' ');
@@ -1081,7 +1217,7 @@ namespace Adjutant
                                 if (ind != -1)
                                     cd(dir.Substring(0, ind + 1));
                                 break;
-                            case"calc":
+                            case "calc":
                                 Process.Start("calc");
                                 break;
                             case "custom":
@@ -1093,12 +1229,24 @@ namespace Adjutant
                             case "done":
                                 cmdDone(cmd);
                                 break;
+                            case "mail":
+                                cmdMail(cmd);
+                                break;
+                            case "tutorial":
+                                //create $path
+                                if (!customCmds.ContainsKey("$path"))
+                                    customCmds.Add("$path", Application.StartupPath);
+                                
+                                //init tutorial
+                                tutorialStep = 0;
+                                inputMode = "tutorial";
+                                setPrompt();
+
+                                print("Run the tutorial? (y/n)");
+                                break;
                             case "twitter":
                             case "tw":
                                 cmdTwitter(cmd);
-                                break;
-                            case "mail":
-                                cmdMail(cmd);
                                 break;
                             case "user":
                                 print("Your current username: " + user);
@@ -1110,10 +1258,6 @@ namespace Adjutant
                                 flush();
                                 break;
                             default:
-                                //replace custom commands
-                                foreach (var customCmd in customCmds)
-                                    txtCMD.Text = txtCMD.Text.Replace(customCmd.Key, customCmd.Value);
-
                                 runProcess(txtCMD.Text);
                                 break;
                         }
@@ -1122,17 +1266,17 @@ namespace Adjutant
                     {
                         printError("Error while executing command.", exc);
                     }
-
-                    if (txtCMD.Text != "")
-                    {    
-                        //add to command history
-                        history.Add(txtCMD.Text);
-                        historyInd = 0;
-
-                        txtCMD.Text = "";
-                    }
                     break;
             }
+
+            //add line to command history and clear
+            if (txtCMD.Text != "")
+            {   
+                history.Add(txtCMD.Text);
+                historyInd = 0;
+            }
+
+            txtCMD.Text = "";
         }
 
         void cmdHelp(string[] cmd)
@@ -1141,124 +1285,131 @@ namespace Adjutant
             {
                 print("List of Adjutant commands: " + Environment.NewLine);
                 foreach (string command in new string[] { "about", "calc", "cd", "cls", "custom", "date", "done", "exit", "help", "mail", "prompt", "time", "todo", "tutorial", "twitter", "user" })
-                    print(command);
-                print("For more information on a specific command, type \"help <COMMAND>\"");
+                    print(command, helpColor);
+
+                printHelp("For more information on a specific command, type \"help [COMMAND]\"<pause>");
+                printHelp("");
+                printHelp("Also note that ALL command switches can be used by just typing their initial letter.<pause>For example: \"/erase\" and \"/e\" perform the same switch operation.");
             }
             else
             {
                 switch (cmd[1])
                 {
                     case "about":
-                        print("Displays information about Adjutant.");
+                        printHelp("Displays information about Adjutant.");
                         break;
                     case "calc":
-                        print("Starts Windows Calculator");
+                        printHelp("Starts Windows Calculator.");
                         break;
                     case "cd":
-                        print("Changes current directory.");
+                        printHelp("Changes current directory.");
                         break;
                     case "cls":
-                        print("Clears screen (console).");
+                        printHelp("Clears screen (console).");
                         break;
                     case "custom":
-                        print("Use this command to save your custom commands, file or folder paths, URLs, or any other string constants.");
-                        print("Add a new custom command with the following syntax: \"custom [command_name]=[command_string]\".");
-                        print("To view the current custom commands just call the command without any other arguments: \"custom\".");
-                        print("To delete a custom command use this syntax: \"custom /del [command_name]\".");
+                        printHelp("Use this command to save your custom commands, file or folder paths, URLs, or any other string constants.");
+                        printHelp("Add a new custom command with the following syntax: \"custom [command_name]=[command_string]\".");
+                        printHelp("To view the current custom commands just call the command without any other arguments: \"custom\".");
+                        printHelp("To delete a custom command use this syntax: \"custom /del [command_name]\".");
                         break;
                     case "date":
-                        print("Gets the current date.");
+                        printHelp("Gets the current date.");
                         break;
                     case "done":
-                        print("Use \"done\" to mark tasks in your todo lists as completed.");
-                        print("\"done [task_index]\" marks the task with that index (in today's todo list) as finished.");
-                        print("\"done [task_index] /tomorrow OR /t\" marks the task with that index (in tomorrow's todo list) as finished.");
-                        print("\"done [task_index] /date=YYYY-MM-DD OR /d=YYYY-MM-DD\" marks the task with that index (in a specific date's todo list) as finished.");
-                        print("You can specify more than one index at a time by separating them with commas.");
-                        print("To specify a sequential range of numbers separate the bounds with a hyphen.");
-                        print("For example: \"done 4,8,15-16,23,42,100-108\"");
-                        print("Use the \"/undo\" switch to make a done item \"todo\" again. You can only undo one item at a time.");
-                        print("Use the \"/erase\" switch to remove todo items instead of marking them as read. This action is permanent and can only be done one item at a time.");
-                        print("To add new tasks or view task lists use the \"todo\" command.");
+                        printHelp("Use \"done\" to mark tasks in your todo lists as completed.");
+                        printHelp("\"done [task_index]\" marks the task with that index (in today's todo list) as finished.");
+                        printHelp("\"done [task_index] /tomorrow\" marks the task with that index (in tomorrow's todo list) as finished.");
+                        printHelp("\"done [task_index] /date=YYYY-MM-DD\" marks the task with that index (in a specific date's todo list) as finished.");
+                        printHelp("You can specify more than one index at a time by separating them with commas.");
+                        printHelp("To specify a sequential range of numbers separate the bounds with a hyphen.");
+                        printHelp("For example: \"done 4,8,15-16,23,42,100-108\"");
+                        printHelp("Use the \"/undo\" switch to make a done item \"todo\" again. You can only undo one item at a time.");
+                        printHelp("Use the \"/erase\" switch to remove todo items instead of marking them as read. This action is permanent and can only be done one item at a time.");
+                        printHelp("");
+                        printHelp("To change other settings, go to the Options menu.");
+                        printHelp("To add new tasks or view task lists use the \"todo\" command.");
                         break;
                     case "exit":
-                        print("Shuts down Adjutant.");
+                        printHelp("Shuts down Adjutant.");
                         break;
                     case "help":
-                        print("H E L P C E P T I O N");
+                        printHelp("H E L P C E P T I O N");
                         break;
                     case "mail":
-                        print("The \"mail\" command allows you to check your Gmail account for new messages.");
-                        print("To setup your account, use the following command: \"mail /setup [username] [password]\".");
-                        print("Calling the command will display the list of new mail.");
-                        print("Calling the command with the \"\\verbose\" switch will display the list of new mail, as well as the first segment of each mail.");
-                        print("Use \"mail \\refresh\" to manually check for new mail.");
-                        print("To change how often Adjutant checks for new mail, as well as other options, go to the Options menu.");
+                        printHelp("The \"mail\" command allows you to check your Gmail account for new messages.");
+                        printHelp("To setup your account, use the following command: \"mail /setup [username] [password]\".");
+                        printHelp("Calling the command will display the list of new mail.");
+                        printHelp("Calling the command with the \"\\verbose\" switch will display the list of new mail, as well as the first segment of each mail.");
+                        printHelp("Use \"mail \\refresh\" to manually check for new mail.");
+                        printHelp("To change how often Adjutant checks for new mail, as well as other options, go to the Options menu.");
                         break;
                     case "time":
-                        print("Gets the current time.");
+                        printHelp("Gets the current time.");
                         break;
                     case "todo":
-                        print("The \"todo\" command implements a simple todo list manager.");
-                        print("Use it to add new tasks or view task lists.");
-                        print("\"todo [task]\" adds a new task for today.");
-                        print("\"todo [task] /tomorrow OR /t\" adds a new task to tomorrow's todo list.");
-                        print("\"todo [task] /date=YYYY-MM-DD OR /d=YYYY-MM-DD\" adds a new task for a specific date.");
-                        print("\"todo\" displays unfinished tasks for today.");
-                        print("\"todo /tomorrow OR /t\" displays unfinished tasks for tomorrow.");
-                        print("\"todo /date=YYYY-MM-DD OR /d=YYYY-MM-DD\" displays unfinished tasks for a specific day.");
-                        print("\"todo /list OR /l\" displays all todo lists from this date onward.");
-                        print("\"todo /archive OR /a\" displays past todo lists.");
-                        print("To check tasks as completed use the \"done\" command.");
+                        printHelp("The \"todo\" command implements a simple todo list manager.");
+                        printHelp("Use it to add new tasks or view task lists.");
+                        printHelp("\"todo [task]\" adds a new task for today.");
+                        printHelp("\"todo [task] /tomorrow\" adds a new task to tomorrow's todo list.");
+                        printHelp("\"todo [task] /date=YYYY-MM-DD\" adds a new task for a specific date.");
+                        printHelp("\"todo\" displays unfinished tasks for today.");
+                        printHelp("\"todo /tomorrow\" displays unfinished tasks for tomorrow.");
+                        printHelp("\"todo /date=YYYY-MM-DD\" displays unfinished tasks for a specific day.");
+                        printHelp("\"todo /list\" displays all todo lists from this date onward.");
+                        printHelp("\"todo /archive\" displays past todo lists.");
+                        printHelp("");
+                        printHelp("To change other settings, go to the Options menu.");
+                        printHelp("To check tasks as completed use the \"done\" command.");
                         break;
                     case "twitter":
                     case "tw":
                         if (cmd.Length < 3 || !cmd[2].ToLower().Contains("/i"))
                         {
-                            print("This command allows you to read the tweets in your home timeline.");
-                            print("You can also use the shorter keyword \"tw\".");
-                            print("");
-                            print("Calling the command will display a tweet (if there are any) and will lock input into Adjutant.");
-                            print("Press the 'o' button to open all URLs in the tweet.");
-                            print("Press the 'm' button to open all mentions and hashtags in the tweet.");
-                            print("Press the 'u' button to open the user's profile.");
-                            print("Note that you can also click on usernames, URLs, hashtags, etc, to open them in your browser.");
-                            print("");
-                            print("Press the 'j' button to read the next tweet.");
-                            print("Press the 'k' button to go back to the previous tweet.");
-                            print("Press the 'a' button to print all tweets at once.");
-                            print("Press the 'Escape' button to exit Twitter mode and enable standard input again.");
-                            print("");
-                            print("You can also print out all tweets with the following command: \"twitter /all\"");
-                            print("");
-                            print("Before using the Twitter service you will have to authorize Adjutant to view your tweets.");
-                            print("The authorization should begin automatically; if not, enter the following command: \"twitter /init\"");
-                            print("If you run into any problems with authorization, you can get more information by typing the following: \"help twitter /init\"");
-                            print("To change other settings, go to the Options menu.");
+                            printHelp("This command allows you to read the tweets in your home timeline.");
+                            printHelp("You can also use the shorter keyword \"tw\".");
+                            printHelp("");
+                            printHelp("Calling the command will display a tweet (if there are any) and will lock input into Adjutant.");
+                            printHelp("Press \"o\" to open all URLs in the tweet.");
+                            printHelp("Press \"m\" to open all mentions and hashtags in the tweet.");
+                            printHelp("Press \"u\" to open the user's profile.");
+                            printHelp("Note that you can also click on usernames, URLs, hashtags, etc, to open them in your browser.");
+                            printHelp("");
+                            printHelp("Press \"j\" to read the next tweet.");
+                            printHelp("Press \"k\" to go back to the previous tweet.");
+                            printHelp("Press \"a\" to print all tweets at once.");
+                            printHelp("Press \"Escape\" to exit Twitter mode and enable standard input again.");
+                            printHelp("");
+                            printHelp("You can also print out all tweets with the following command: \"twitter /all\"");
+                            printHelp("");
+                            printHelp("Before using the Twitter service you will have to authorize Adjutant to view your tweets.");
+                            printHelp("The authorization should begin automatically; if not, enter the following command: \"twitter /init\"");
+                            printHelp("If you run into any problems with authorization, you can get more information by typing the following: \"help twitter /init\"");
+                            printHelp("To change other settings, go to the Options menu.");
                         }
                         else
                         {
-                            print("To authorize Adjutant to view your tweets, use the following command: \"twitter /init\"");
-                            print("If the \"twitter\" command stopped working, there could be several different causes for the problem:");
-                            print("Your Internet connection could be down.");
-                            print("Twitter service could be temporarily unavailable.");
-                            print("Adjutant's authorization might no longer be valid. Try authorizing it again.");
+                            printHelp("To authorize Adjutant to view your tweets, use the following command: \"twitter /init\"");
+                            printHelp("A webpage will open in your default browser with a PIN code. Copy and paste the PIN into Adjutant to finish authorization.<pause>");
+                            printHelp("");
+                            printHelp("If the \"twitter\" command stopped working, there could be several different causes for the problem:");
+                            printHelp("Your Internet connection could be down.");
+                            printHelp("Twitter service could be temporarily unavailable.");
+                            printHelp("Adjutant's authorization might no longer be valid. Try authorizing it again.");
                         }
                         break;
                     case "options":
-                        print("Opens the options window.");
+                        printHelp("Opens the options window.");
                         break;
                     case "prompt":
-                        print("Toggles prompt.");
+                        printHelp("Toggles prompt.");
                         break;
                     case "user":
-                        print("Change your username with this command.");
-                        print("Currently, your username is only used when Adjutant starts and displays the welcome message.");
+                        printHelp("Change your username with this command.");
+                        printHelp("Currently, your username is only used when Adjutant starts and displays the welcome message.");
                         break;
                     case "tutorial":
-                        print("Learn how to use Adjutant.");
-                        print("This command has not yet been implemented.");
-                        print("");
+                        printHelp("Learn how to use Adjutant.");
                         break;
                     default:
                         print("Unrecognized command.", errorColor);
@@ -1344,7 +1495,7 @@ namespace Adjutant
             grafx = context.Allocate(this.CreateGraphics(), new Rectangle(0, 0, this.Width, this.Height));
 
             //calc window height
-            MeasureLineHeight();
+            measureLineHeight();
             maxLines = txtCMD.Top / lineH;
         }
 
@@ -1462,12 +1613,12 @@ namespace Adjutant
                 txt = txt.Replace("<pause>", "");
             else
                 txt = txt.Replace("<pause>", Environment.NewLine + "<pause>" + Environment.NewLine);
-
+            
             string[] lines = txt.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
             for (int i = 0; i < lines.Length; i++)
             {
                 bool nLine = i == lines.Length - 1 ? newline : true;
-                List<TextChunk> newChunks = TextChunk.Chunkify(lines[i], link, color, leftMargin, this.Width, txtCMD.Font, nLine, nLine, MeasureWidth, lineH);
+                List<TextChunk> newChunks = TextChunk.Chunkify(lines[i], link, color, leftMargin, this.Width, txtCMD.Font, nLine, nLine, measureWidth, lineH);
 
                 chunks.AddRange(newChunks);
 
@@ -1477,14 +1628,14 @@ namespace Adjutant
                 {
                     if (newChunks.Count > 1)
                         leftMargin = 0;
-                    leftMargin += MeasureWidth(newChunks[newChunks.Count - 1].ToString());
+                    leftMargin += measureWidth(newChunks[newChunks.Count - 1].ToString());
                 }
             }
 
             if (timerPrint.Interval != ZERO_DELAY)
             {
                 if (this.InvokeRequired)
-                    MessageBox.Show("invoke required");
+                    MessageBox.Show("error - invoke required");
 
                 jumpToLastLine();
                 timerPrint.Enabled = true;
@@ -1505,6 +1656,23 @@ namespace Adjutant
         {
             print(msg + "<pause>", errorColor);
             print(exc.Message, errorColor);
+        }
+
+        void printHelp(string msg)
+        {
+            if (msg != "")
+            {
+                //prints quoted segments (e.g. "command [arg1] [arg2] /switch") in helpColor
+                string[] segments = msg.Split(new char[] { '"' });
+
+                for (int i = 0; i < segments.Length; i++)
+                    if (i % 2 == 1) //print every other segment in helpColor
+                        print(segments[i], i == segments.Length - 1, helpColor);
+                    else
+                        print(segments[i], i == segments.Length - 1);
+            }
+            else
+                print(""); //newline
         }
 
         void flush()
@@ -1568,6 +1736,10 @@ namespace Adjutant
                 args = "";
             }
 
+            //procName missing directory?
+            if (!File.Exists(procName) && File.Exists(dir + procName))
+                procName = dir + procName;
+
             //determine type of process
             ProcessStartInfo procInfo;
 
@@ -1578,8 +1750,8 @@ namespace Adjutant
                     //it's a python script
                     if (python != "")
                     {
-                        //procInfo = new ProcessStartInfo(@"cmd.exe", @"/C " + python + " \"" + procName + "\" " + args + cmd);
-                        procInfo = new ProcessStartInfo(python, " \"" + procName + "\" " + args);
+                        procInfo = new ProcessStartInfo(@"cmd.exe", "/C \"" + procName + "\" " + args);
+                        //procInfo = new ProcessStartInfo(python, " \"" + procName + "\" " + args);
                         inputMode = "process redirect";
                     }
                     else
@@ -1640,20 +1812,25 @@ namespace Adjutant
                 proc.SynchronizingObject = this;
 
                 proc.BeginOutputReadLine();
+                proc.BeginErrorReadLine();
             }
             else
             {
                 //just print the output
                 proc = Process.Start(procInfo);
-                
-                StreamReader outputStream = proc.StandardOutput;
-                string output = outputStream.ReadToEnd();
-                proc.WaitForExit(1000);
 
-                if (output != "")
-                    print(output);
-                else
-                    print("Unrecognized command.", errorColor);
+                if (!File.Exists(procName) || Path.GetExtension(procName).ToLower() == ".exe")
+                {
+                    //wait for output of .exe files
+                    StreamReader outputStream = proc.StandardOutput;
+                    string output = outputStream.ReadToEnd();
+                    proc.WaitForExit(1000);
+
+                    if (output != "")
+                        print(output);
+                    else
+                        print("Unrecognized command.", errorColor);
+                }
             }
         }
 
@@ -2342,6 +2519,9 @@ namespace Adjutant
                     lastTweet = Math.Max(lastTweet, twitter.GetLastTweet());
                 else
                     printError("Could not get a list of new tweets.", twitter.TwException);
+
+                if (!twitter.EstablishStreamConnection())
+                    printError("Could not establish a connection to Twitter's streaming API.", twitter.TwException);
             }
         }
 
@@ -2360,7 +2540,7 @@ namespace Adjutant
             else if (diff.TotalDays < 2)
                 return "Yesterday";
             else
-                return diff.TotalDays + " days ago";
+                return (int)diff.TotalDays + " days ago";
         }
 
         string getNextURL(string tweet, out int ind)
@@ -2450,7 +2630,7 @@ namespace Adjutant
 
                 if (!twitterOutput)
                 {
-                    print("No more tweets.");
+                    print("No more tweets.", "http://www.twitter.com/", twCountColor);
                     removeReadTweets();
                 }
 
@@ -2464,21 +2644,6 @@ namespace Adjutant
             {
                 twitterPrint();
             } while (twitterOutput);
-
-
-            //if (!all)
-            //    twitterPrint();
-            //else
-            //{
-            //    if (!twitterOutput)
-            //        twInd = -1;
-
-            //    while (tweets.Count > 0)
-            //    {
-            //        twInd++;
-            //        twitterPrint();
-            //    }
-            //}
         }
 
         void removeReadTweets()
@@ -2564,20 +2729,14 @@ namespace Adjutant
         {
             if (!string.IsNullOrEmpty(mailUser) && !string.IsNullOrEmpty(mailPass))
             {
-                gmail = new Gmail(mailUser, mailPass);
-                getNewMailCount();
-
-                if (newMailCount != -1)
-                {
-                    displayNewMailCount();
-                    timerMailCheck.Enabled = true;
-                }
+                gmail = new Gmail(mailUser, mailPass, finishedCheckingMail);
+                getNewMailCount(MailCheckAction.MailInit);
             }
         }
 
-        void getNewMailCount()
+        void getNewMailCount(MailCheckAction action)
         {
-            newMailCount = gmail.Check();
+            gmail.Check(action);
         }
 
         void displayNewMailCount()
@@ -2618,6 +2777,8 @@ namespace Adjutant
 
         void displayNewMail(bool verbose)
         {
+            getNewMailCount(MailCheckAction.NoAction); //temp line
+
             if (gmail.emails.Count == 0)
                 print("No new mail.", "https://mail.google.com/mail/ca/u/0/#inbox", mailCountColor);
             else
@@ -2653,17 +2814,43 @@ namespace Adjutant
                 print("Use the following command: \"mail /setup [username] [password]\".", errorColor);
             }
             else if (cmd.Length >= 2 && cmd[1].Contains("/r"))
-            {
                 //manual recheck
-                getNewMailCount();
-
-                prevNewMailCount = -1; //force the mail count to display even if it's zero
-                displayNewMailCount();
-            }
+                getNewMailCount(MailCheckAction.ForceOutput);
             else
             {
                 bool verbose = cmd.Length > 1 && cmd[1].Contains("/v");
                 displayNewMail(verbose);
+            }
+        }
+
+        void finishedCheckingMail(int mailCountResult, MailCheckAction action)
+        {
+            newMailCount = mailCountResult;
+
+            //check if error
+            if (newMailCount == -1)
+                printError("Error while checking for new mail.", gmail.mailException);
+            else
+            {
+                //perform designated action
+                switch (action)
+                {
+                    case MailCheckAction.MailInit:
+                        if (newMailCount != -1)
+                        {
+                            displayNewMailCount();
+                            timerMailCheck.Enabled = true;
+                        }
+                        break;
+                    case MailCheckAction.TimerCheck:
+                        if (mailUpdateOnNewMail)
+                            displayNewMailCount();
+                        break;
+                    case MailCheckAction.ForceOutput:
+                        prevNewMailCount = -1; //force the mail count to display even if it's zero
+                        displayNewMailCount();
+                        break;
+                }
             }
         }
         #endregion
@@ -2748,7 +2935,10 @@ namespace Adjutant
 
             loadCustomCmds();
 
+            txtSelection.MouseWheel += new System.Windows.Forms.MouseEventHandler(txtSelection_MouseWheel);
+
             link = "";
+            helpColor = Color.Yellow;
 
             //get python exe path
             RegistryKey pyKey = Registry.ClassesRoot.OpenSubKey(@"Python.File\shell\open\command");
@@ -2773,6 +2963,11 @@ namespace Adjutant
             //first run
             if (user == "first_run")
             {
+                //create $path
+                if (!customCmds.ContainsKey("$path"))
+                    customCmds.Add("$path", Application.StartupPath);
+
+                //display intro
                 print("Welcome to Adjutant!<pause>");
                 print("What is your name?");
                 inputMode = "user";
@@ -2786,10 +2981,10 @@ namespace Adjutant
             todoLoad();
 
             //twitter init
-            twitterInit();
+            //twitterInit();
 
             //mail init
-            mailInit();
+            //mailInit();
         }
 
         private void formMain_Activated(object sender, EventArgs e)
@@ -2831,11 +3026,11 @@ namespace Adjutant
             for (int i = 0; i < chunks.Count; i++)
             {
                 //can join with next chunk(s)?
-                while (i < chunks.Count - 1 && chunks[i].JoinChunk(chunks[i + 1], lMarg, this.Width, txtCMD.Font, MeasureWidth))
+                while (i < chunks.Count - 1 && chunks[i].JoinChunk(chunks[i + 1], lMarg, this.Width, txtCMD.Font, measureWidth))
                     chunks.RemoveAt(i + 1);
 
                 //need to split chunk?
-                List<TextChunk> newChunks = TextChunk.Chunkify(chunks[i].ToString(), chunks[i].GetLink(), chunks[i].GetColor(), lMarg, this.Width, txtCMD.Font, true, chunks[i].IsAbsNewline(), MeasureWidth, lineH);
+                List<TextChunk> newChunks = TextChunk.Chunkify(chunks[i].ToString(), chunks[i].GetLink(), chunks[i].GetColor(), lMarg, this.Width, txtCMD.Font, true, chunks[i].IsAbsNewline(), measureWidth, lineH);
 
                 if (newChunks.Count > 1)
                 {
@@ -2852,7 +3047,7 @@ namespace Adjutant
                 if (chunks[i].IsNewline())
                     lMarg = 0;
                 else
-                    lMarg += MeasureWidth(chunks[i].ToString());
+                    lMarg += measureWidth(chunks[i].ToString());
             }
 
             if (lastChunk >= chunks.Count)
@@ -2892,6 +3087,9 @@ namespace Adjutant
         private void formMain_KeyDown(object sender, KeyEventArgs e)
         {
             ctrlKey = e.Control;
+
+            if (e.KeyCode == Keys.F5 || (txtSelection.Visible && e.KeyCode == Keys.Escape))
+                toggleSelectMode();
         }
 
         private void formMain_KeyUp(object sender, KeyEventArgs e)
@@ -2989,6 +3187,16 @@ namespace Adjutant
 
             draw(grafx.Graphics);
             this.Refresh();
+        }
+
+        private void formMain_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            toggleSelectMode();
+        }
+
+        private void txtSelection_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            toggleSelectMode();
         }
 
         private void txtCMD_MouseDown(object sender, MouseEventArgs e)
@@ -3148,6 +3356,53 @@ namespace Adjutant
                 }
         }
 
+        private void txtSelection_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            if (!txtSelection.Text.Contains(Environment.NewLine))
+                return; //no lines to scroll through
+
+            int nLines = Math.Abs(e.Delta / 30); //number of lines to scroll
+            int ind = txtSelection.SelectionStart;
+
+            if (e.Delta < 0)
+                for (int i = 0; i < nLines; i++)
+                {
+                    if (ind == txtSelection.Text.Length)
+                        break;
+
+                    ind = txtSelection.Text.IndexOf(Environment.NewLine, ind + 1);
+
+                    if (ind == -1)
+                    {
+                        ind = txtSelection.Text.Length;
+                        break;
+                    }
+                }
+            else
+                for (int i = 0; i < nLines; i++)
+                {
+                    if (ind == 0)
+                        break;
+
+                    ind = txtSelection.Text.LastIndexOf(Environment.NewLine, ind - 1);
+
+                    if (ind == -1)
+                    {
+                        ind = 0;
+                        break;
+                    }
+                }
+                
+            txtSelection.SelectionStart = ind;
+            txtSelection.ScrollToCaret();
+        }
+
+        private void txtSelection_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Control && e.KeyCode == Keys.A)
+                txtSelection.SelectAll();
+        }
+
         private void timerDisableTopMost_Tick(object sender, EventArgs e)
         {
             this.TopMost = false;
@@ -3180,6 +3435,9 @@ namespace Adjutant
 
                     if (chunks[lastChunk].ToString() == "<pause>")
                     {
+                        if (chunks[lastChunk].IsNewline() && lastChunk > 0 && !chunks[lastChunk - 1].IsNewline())
+                            chunks[lastChunk - 1].InsertNewline(); //a newline needs to be inserted
+
                         update();
                         pauseEnd = DateTime.Now.AddMilliseconds(750);
                         chunks.RemoveAt(lastChunk);
@@ -3329,10 +3587,7 @@ namespace Adjutant
 
         private void timerMailCheck_Tick(object sender, EventArgs e)
         {
-            getNewMailCount();
-
-            if (mailUpdateOnNewMail)
-                displayNewMailCount();
+            getNewMailCount(MailCheckAction.TimerCheck);
         }
 
         private void menuOptions_Click(object sender, EventArgs e)

@@ -1,0 +1,6 @@
+To return to Adjutant click on it to give it focus.
+
+You can also select it with the global hotkey (default value is the tilde key "¸" - found left of the number "1" key).
+
+
+By default, Adjutant autohides by scrolling up after several seconds if inactivity. Use the global hotkey to bring it back down, or move the mouse cursor to the edge of the screen where Adjutant is hiding.

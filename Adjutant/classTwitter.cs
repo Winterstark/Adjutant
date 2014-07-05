@@ -8,7 +8,7 @@ using System.Net;
 using System.Web;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
-using System.Diagnostics;
+using System.ComponentModel;
 
 namespace Adjutant
 {
@@ -122,6 +122,55 @@ namespace Adjutant
             return resp != "";
         }
 
+        public bool EstablishStreamConnection()
+        {
+            try
+            {
+                BackgroundWorker service = new BackgroundWorker();
+
+                service.DoWork += new DoWorkEventHandler(twitterStreamingWorker);
+                service.RunWorkerAsync();
+
+                return true;
+            }
+            catch (Exception exc)
+            {
+                TwException = exc;
+                return false;
+            }
+        }
+
+        private void twitterStreamingWorker(object sender, DoWorkEventArgs e)
+        {
+            string method = "GET", baseURL = "https://userstream.twitter.com/1.1/user.json";
+
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(baseURL);
+
+            request.Method = method;
+            request.UserAgent = "Adjutant by @Winterstark";
+            request.Headers.Add("Authorization", constructAuthHeader(method, baseURL, ""));
+
+            using (var resp = (HttpWebResponse)request.GetResponse())
+            {
+                Encoding encode = System.Text.Encoding.GetEncoding("utf-8");
+
+                using (var respStream = new StreamReader(resp.GetResponseStream(), encode))
+                {
+                    while (!respStream.EndOfStream)
+                    {
+                        string line = respStream.ReadLine();
+
+                        if (line.Length > 11 && line.Substring(0, 11) != "{\"friends\":")
+                            processNewTweets(line);
+
+                        System.Threading.Thread.Sleep(1000);
+                    }
+
+                    System.Windows.Forms.MessageBox.Show("Stopped tracking new tweets." + Environment.NewLine + DateTime.Now + Environment.NewLine + resp.StatusCode + ": " + resp.StatusDescription);
+                }
+            }
+        }
+
         int getRateLimit(string resourceFamily, string resource)
         {
             try
@@ -154,28 +203,32 @@ namespace Adjutant
                 TwException = new Exception("Twitter API rate limit exceeded.");
                 return false;
             }
-   
-            List<Tweet> newTweets = new List<Tweet>();
 
             //set parameters
-            //string parameters = "count=\"200\"";
+            string parameters = "count=\"200\"";
 
-            //if (lastTweet != 0)
-            //    parameters += ", since_id=\"" + lastTweet + "\"";
-
-            string parameters;
             if (lastTweet != 0)
-                parameters = "since_id=\"" + lastTweet + "\"";
-            else
-                parameters = "count=\"200\"";
+                parameters += ", since_id=\"" + lastTweet + "\"";
 
             string resp = webRequest("GET", "https://api.twitter.com/1.1/statuses/home_timeline.json", parameters);
 
             if (resp != "[]")
             {
-                //extract tweets from response
                 if (resp.Length > 2)
                     resp = resp.Substring(1, resp.Length - 2); //remove outermost pair of brackets [ ... ]
+
+                return processNewTweets(resp); //return success/failure of processNewTweets function
+            }
+            else
+                return true;
+        }
+
+        bool processNewTweets(string resp)
+        {
+            try
+            {
+                //extract tweets from response
+                List<Tweet> newTweets = new List<Tweet>();
 
                 resp = "," + resp; //add a comma at the beginning for string-splitting purposes
 
@@ -205,16 +258,52 @@ namespace Adjutant
                     DateTime time = DateTime.Parse(created);
                     time = TimeZone.CurrentTimeZone.ToLocalTime(time);
 
+                    //check if retweeted tweet's text is complete
+                    string text = tweetRootNode.fields["text"];
+
+                    if (text.Contains("\\u2026")) //symbol for "..."
+                    {
+                        DataNode retweetedStatus = tweetRootNode.childNodes.Find(node => node.name == "retweeted_status");
+
+                        if (retweetedStatus != null) //if not a false alarm
+                        {
+
+                            int ub = text.IndexOf("\\u2026");
+                            text = text.Replace("\\u2026", "");
+
+                            string fullText = retweetedStatus.fields["text"];
+
+                            //find where the extra text begins
+                            string searchSegment;
+                            int lenSearchSegment = 0, lb;
+
+                            do
+                            {
+                                lenSearchSegment = Math.Min(lenSearchSegment + 10, ub);
+                                searchSegment = text.Substring(ub - lenSearchSegment, lenSearchSegment);
+
+                                lb = fullText.IndexOf(searchSegment);
+                            } while (fullText.IndexOf(searchSegment, lb + 1) != -1); //extend search segment until only 1 match is found in the full text
+
+                            text += fullText.Substring(lb + lenSearchSegment);
+                        }
+                    }
+
                     //add tweet
-                    newTweets.Add(new Tweet(userDetails.fields["name"], userDetails.fields["screen_name"], tweetRootNode.fields["text"], time, long.Parse(tweetRootNode.fields["id"]), urls));
+                    newTweets.Add(new Tweet(userDetails.fields["name"], userDetails.fields["screen_name"], text, time, long.Parse(tweetRootNode.fields["id"]), urls));
                 }
 
                 //add new tweets, in reverse order (oldest to newest)
                 newTweets.Reverse();
                 tweets.AddRange(newTweets);
-            }
 
-            return true;
+                return true;
+            }
+            catch (Exception exc)
+            {
+                TwException = exc;
+                return false;
+            }
         }
 
         DataNode constructDataNode(ref string response, string name)
@@ -311,59 +400,18 @@ namespace Adjutant
 
         int getNextDelimiter(string response, int lb)
         {
-            int commaInd = response.IndexOf(',', lb);
-            int bracketInd = response.IndexOf('}', lb);
+            return Misc.GetNextDelimiter(response, lb, ',', '}');
 
-            if (commaInd == -1)
-                return bracketInd;
-            else if (bracketInd == -1)
-                return commaInd;
-            else
-                return Math.Min(commaInd, bracketInd);
+            //int commaInd = response.IndexOf(',', lb);
+            //int bracketInd = response.IndexOf('}', lb);
+
+            //if (commaInd == -1)
+            //    return bracketInd;
+            //else if (bracketInd == -1)
+            //    return commaInd;
+            //else
+            //    return Math.Min(commaInd, bracketInd);
         }
-
-        //public bool Authenticate(string token, string secret)
-        //{
-        //    try
-        //    {
-        //        twitter.AuthenticateWith(token, secret);
-
-        //        if (twitter.VerifyCredentials(new VerifyCredentialsOptions()) == null)
-        //        {
-        //            //authentication failed
-        //            twitter = null;
-        //            return false;
-        //        }
-        //        else
-        //        {
-        //            twitter.StreamUser(NewTweet);
-
-        //            var options = new ListTweetsOnHomeTimelineOptions();
-
-        //            //if (lastTweet != -1)
-        //            //    options.SinceId = lastTweet;
-        //            //options.Count = 1000;
-
-        //            IEnumerable<TwitterStatus> tweetList = twitter.ListTweetsOnHomeTimeline(options);
-
-        //            if (tweetList != null)
-        //                foreach (var tweet in tweetList.Reverse<TwitterStatus>())
-        //                    tweets.Add(new Tweet(tweet.User.Name, tweet.User.ScreenName, Regex.Unescape(WebUtility.HtmlDecode(tweet.Text)), tweet.CreatedDate, tweet.Id));
-
-        //            return true;
-        //        }
-        //    }
-        //    catch (Exception exc)
-        //    {
-        //        TwException = exc;
-        //        return false;
-        //    }
-        //}
-
-        //public bool Init()
-        //{
-        //    return false;
-        //}
 
         public bool AnyNewTweets()
         {
@@ -403,7 +451,9 @@ namespace Adjutant
 
         public void GoToPreviousTweet()
         {
-            if (twInd > 0)
+            if (twInd > 1)
+                twInd -= 2;
+            else if (twInd > 0)
                 twInd--;
         }
 
@@ -414,35 +464,6 @@ namespace Adjutant
 
             twInd = 0;
         }
-
-        //private void NewTweet(TwitterStreamArtifact streamEvent, TwitterResponse response)
-        //{
-        //    if (!response.Response.Contains("text"))
-        //        return;
-
-        //    long id = long.Parse(getField(response.Response, "id_str"));
-
-        //    string created = getField(response.Response, "created_at");
-        //    created = created.Substring(created.IndexOf(' '));
-        //    created = created.Substring(created.Length - 4, 4) + created.Substring(0, created.IndexOf(" +"));
-
-        //    DateTime time = DateTime.Parse(created);
-        //    time = TimeZone.CurrentTimeZone.ToLocalTime(time);
-
-        //    string user = getField(response.Response, "name");
-        //    string actualUsername = getField(response.Response, "screen_name");
-        //    string tweet = Regex.Unescape(WebUtility.HtmlDecode(getField(response.Response, "text")));
-
-        //    tweets.Add(new Tweet(user, actualUsername, tweet, time, id));
-        //}
-
-        //private string getField(string response, string key)
-        //{
-        //    int lb = response.IndexOf("\"" + key + "\":\"") + key.Length + 4;
-        //    int ub = response.IndexOf("\",\"", lb);
-
-        //    return response.Substring(lb, ub - lb);
-        //}
 
         string webRequest(string method, string baseURL, string parameters)
         {
@@ -465,14 +486,14 @@ namespace Adjutant
 
                 request.Method = method;
                 request.UserAgent = "Adjutant by @Winterstark";
-                request.Headers.Add("Authorization", constructAuthHeader(method, baseURL, parameters)); //authorization
+                request.Headers.Add("Authorization", constructAuthHeader(method, baseURL, parameters));
                 
                 //get response
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
 
                 Stream respStream = response.GetResponseStream();
                 StreamReader reader = new StreamReader(respStream);
-
+                
                 string respMsg = reader.ReadToEnd();
 
                 reader.Close();
