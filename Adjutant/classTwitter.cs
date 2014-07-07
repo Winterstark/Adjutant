@@ -156,17 +156,29 @@ namespace Adjutant
 
                 using (var respStream = new StreamReader(resp.GetResponseStream(), encode))
                 {
-                    while (!respStream.EndOfStream)
+                    try
                     {
-                        string line = respStream.ReadLine();
+                        while (!respStream.EndOfStream)
+                        {
+                            System.Diagnostics.Debug.WriteLine("Still working - " + DateTime.Now);
 
-                        if (line.Length > 11 && line.Substring(0, 11) != "{\"friends\":")
-                            processNewTweets(line);
+                            string line = respStream.ReadLine();
 
-                        System.Threading.Thread.Sleep(1000);
+                            if (line.Length > 11 && line.Substring(0, 11) != "{\"friends\":")
+                                processNewTweets(line);
+
+                            System.Threading.Thread.Sleep(1000);
+                        }
+                    }
+                    catch
+                    {
+                        System.Diagnostics.Debug.WriteLine("EXCEPTION!");
+                        System.Windows.Forms.MessageBox.Show("EXCEPTION!");
                     }
 
-                    System.Windows.Forms.MessageBox.Show("Stopped tracking new tweets." + Environment.NewLine + DateTime.Now + Environment.NewLine + resp.StatusCode + ": " + resp.StatusDescription);
+                    string endMsg = "Stopped tracking new tweets." + Environment.NewLine + DateTime.Now + Environment.NewLine + resp.StatusCode + ": " + resp.StatusDescription;
+                    System.Diagnostics.Debug.WriteLine(endMsg);
+                    System.Windows.Forms.MessageBox.Show(endMsg);
                 }
             }
         }
@@ -423,17 +435,9 @@ namespace Adjutant
             return twInd < tweets.Count;
         }
 
-        public string GetNewTweetCount()
+        public int GetNewTweetCount()
         {
-            switch (tweets.Count)
-            {
-                case 0:
-                    return "No new tweets.";
-                case 1:
-                    return "1 new tweet.";
-                default:
-                    return tweets.Count + " new tweets.";
-            }
+            return tweets.Count;
         }
 
         public long GetLastTweet()

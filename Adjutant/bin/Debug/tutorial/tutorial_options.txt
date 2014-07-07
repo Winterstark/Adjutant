@@ -1,0 +1,62 @@
+SKIP
+"You can change various window preferences in the Window tab."->[tabs]
+"Window x-coordinate."->(numX)
+"Window y-coordinate."->(numY)
+"Window width."->(numW)
+"Window minimum height: even if there is no console output the window will be at least this large."->(numMinH)
+"Window maximum height: no matter how much console output there is the window will never be larger than this value."->(numMaxH)
+"Use this combination of keys to activate Adjutant from Windows and other programs."->(txtHotkey)*If Adjutant is already active and focused the global hotkey will hide it.
+"Adjutant will automatically hide after this many seconds pass without any user input or interaction."->(numAutoHideDelay)
+"The manner in which Adjutant will appear and disappear."->(comboHideStyle)
+"This value controls how opaque the window is when it is active and focused."->(trackOpacityActive)
+"This value controls how opaque the windows is when it loses focus, for example if the user clicks an icon on the Desktop."->(trackOpacityPassive)
+"Window background color."->(picBackColor)
+"Modify the font Adjutant uses for console output in the Font tab."->[tabs]
+"Font family."->(comboFont)
+"Text size."->(numFontSize)
+"Bold style."->(chkBold)
+"Italic style."->(chkItalic)
+"Click this button to open the Font selection dialog."->(buttEditFont)
+"Default text color."->(picTextColor)
+"This label demonstrates how the console output will look."->(lblFontPreview)
+"The Console tab hosts various general options."->[tabs]
+"Check this option to make Adjutant run when Windows starts."->(chkRunAtStartup)
+"This is the initial directory Adjutant will be in when it runs."->(txtStartDir)*This directory isn't fixed: it will change to whatever directory Adjutant was in the last time it was running.
+"How fast the output animation will be."->(numPrintDelay)
+"How many characters will be outputted in each step of the output animation."->(numPrintAtOnce)
+"Check this option to show the current directory (or current input mode, such as Twitter) to the left of the input text box."->(chkPrompt)
+"This option separates commands' output with a blank line."->(chkBlankLine)
+"This option will instantaneously output the user's command when entered."->(chkEcho)
+"Text color of echo output."->(picEchoColor)
+"Text color of error messages."->(picErrorColor)
+"Modify Todo list manager settings in the Todo tab"->[tabs]
+"Adjutant will save Todo lists as text files in this directory."->(txtTodoDir)*If you use Dropbox you can set this directory in your Dropbox folder so that your todo lists get synced across your devices.
+"If this option is turned on completed items will not appear on your todo list. If the option is turned off completed items will be shown in 'Done message' color with a strikeout."->(chkTodoHideDone)
+"When this option is active any tasks that are not marked as Done will reappear in next day's todo list."->(chkTodoAutoTransfer)*This means that any task you add will last forever, until you mark it as Done.
+"Miscellaneous text color used in the Todo manager."->(picTodoMiscColor)
+"Text color used for active tasks."->(picTodoItemColor)
+"Text color used for completed tasks."->(picTodoDoneColor)
+"The Twitter tab contains options for the Twitter module"->[tabs]
+"Show new tweet count (how many unread tweets you have) when a new tweet arrives."->(chkTwCountOnNewTweet)
+"Show new tweet count when the user activates Adjutant."->(chkTwCountOnFocus)
+"Play this sound when a certain number of new tweets accumulate."->(txtTwSound)
+"The number of new tweets required to trigger the sound notification."->(numTwSoundThreshold)
+"Adjutant will not show a new tweet count until at least this many seconds have passed since the last new tweet count."->(numTwCountMinPeriod)
+"Twitter usernames color."->(picTwUsernameColor)*Also used for hashtags.
+"Miscellaneous text color used in Tweet outputs (for example, the text 'tweeted' in '<user> tweeted <tweet>')."->(picTwMiscColor)
+"Main text color of tweets."->(picTwTweetColor)
+"Text color used for links."->(picTwLinkColor)
+"Text color used for tweet timestamps (how long ago the tweet was created)."->(picTwTimestampColor)
+"Text color used for displaying new tweet counts."->(picTwCountColor)
+"Setup your Gmail checker in the Gmail tab"->[tabs]
+"Your Gmail username."->(txtUser)
+"Your Gmail password."->(txtPass)*The username and password are stored in the file 'mail_login.dat' using AES encryption.
+"Show new mail count as soon as new mail arrives."->(chkMailCountOnNewMail)
+"Show new mail count when the user activates Adjutant."->(chkMailCountOnFocus)
+"Play a sound notification when a certain number of new emails accumulate."->(txtMailSound)
+"The number of new emails required to trigger the sound notification."->(numMailSoundThreshold)
+"How often Adjutant checks for mail."->(numMailCheckPeriod)
+"Text color used for displaying new mail counts."->(picMailCountColor)
+"Text color of mail titles."->(picMailHeaderColor)
+"Text color of mail summaries."->(picMailSummaryColor)
+"When you change a setting a button will appear here. Click it to save changes."->(buttSave)

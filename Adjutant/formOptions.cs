@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.IO;
+using Microsoft.Win32;
+using GenericForms;
 
 namespace Adjutant
 {
@@ -62,14 +64,14 @@ namespace Adjutant
             changed |= compareValueToTag(picErrorColor);
 
             changed |= compareValueToTag(txtTodoDir);
-            changed |= compareValueToTag(checkTodoHideDone);
-            changed |= compareValueToTag(checkTodoAutoTransfer);
+            changed |= compareValueToTag(chkTodoHideDone);
+            changed |= compareValueToTag(chkTodoAutoTransfer);
             changed |= compareValueToTag(picTodoMiscColor);
             changed |= compareValueToTag(picTodoItemColor);
             changed |= compareValueToTag(picTodoDoneColor);
 
-            changed |= compareValueToTag(checkTwCountOnNewTweet);
-            changed |= compareValueToTag(checkTwCountOnFocus);
+            changed |= compareValueToTag(chkTwCountOnNewTweet);
+            changed |= compareValueToTag(chkTwCountOnFocus);
             changed |= compareValueToTag(numTwCountMinPeriod);
             changed |= compareValueToTag(txtTwSound);
             changed |= compareValueToTag(numTwSoundThreshold);
@@ -82,8 +84,8 @@ namespace Adjutant
 
             changed |= compareValueToTag(txtUser);
             changed |= compareValueToTag(txtPass);
-            changed |= compareValueToTag(checkMailCountOnFocus);
-            changed |= compareValueToTag(checkMailCountOnNewMail);
+            changed |= compareValueToTag(chkMailCountOnFocus);
+            changed |= compareValueToTag(chkMailCountOnNewMail);
             changed |= compareValueToTag(numMailCheckPeriod);
             changed |= compareValueToTag(txtMailSound);
             changed |= compareValueToTag(numMailSoundThreshold);
@@ -150,7 +152,18 @@ namespace Adjutant
             else if (chkItalic.Checked)
                 style = FontStyle.Italic;
 
-            lblFontPreview.Font = new Font(comboFont.Text, (float)numFontSize.Value, style);
+            try
+            {
+                lblFontPreview.Font = new Font(comboFont.Text, (float)numFontSize.Value, style);
+            }
+            catch (Exception exc)
+            {
+                MessageBox.Show(exc.Message, "Unsupported font (" + comboFont.Text + ")", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                if (comboFont.SelectedIndex != -1)
+                    comboFont.Items.RemoveAt(comboFont.SelectedIndex);
+                comboFont.Text = (string)comboFont.Tag;
+            }
 
             lblFontPreview.ForeColor = picTextColor.BackColor;
             if (lblFontPreview.ForeColor.ToArgb() == -1)
@@ -168,6 +181,13 @@ namespace Adjutant
         private void formOptions_Load(object sender, EventArgs e)
         {
             fontPreview();
+            
+            //runs at startup?
+            RegistryKey rkApp = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+            chkRunAtStartup.Checked = rkApp.GetValue("Adjutant") != null;
+
+            //tutorial
+            Tutorial tutorial = new Tutorial(Application.StartupPath + "\\tutorial\\tutorial_options.txt", this);
         }
         
         private void trackOpacityActive_Scroll(object sender, EventArgs e)
@@ -457,6 +477,22 @@ namespace Adjutant
 
             if (fileDiag.FileName != "")
                 txtMailSound.Text = fileDiag.FileName;
+        }
+
+        private void chkRunAtStartup_CheckedChanged(object sender, EventArgs e)
+        {
+            RegistryKey rkApp = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+
+            if (chkRunAtStartup.Checked)
+            {
+                rkApp.SetValue("Adjutant", Application.ExecutablePath.ToString());
+                MessageBox.Show("Adjutant now runs at Windows startup.");
+            }
+            else
+            {
+                rkApp.DeleteValue("Adjutant", true);
+                MessageBox.Show("Adjutant no longer runs at Windows startup.");
+            }
         }
     }
 }

@@ -43,16 +43,19 @@ namespace Adjutant
             string text, link;
             Rectangle bounds;
             SolidBrush brush;
-            bool newline, absNewline, mouseOver;
+            bool newline, absNewline, mouseOver, strikeout;
 
-            public TextChunk(string text, string link, Color color, bool newline, bool absNewline, int w, int h)
+
+            public TextChunk(string text, string link, Color color, bool strikeout, bool newline, bool absNewline, int w, int h)
             {
                 this.text = text;
                 this.link = link;
-                brush = new SolidBrush(color);
-                bounds = new Rectangle(0, 0, w, h);
+                this.strikeout = strikeout;
                 this.newline = newline;
                 this.absNewline = absNewline;
+
+                brush = new SolidBrush(color);
+                bounds = new Rectangle(0, 0, w, h);
             }
 
             public override string ToString()
@@ -85,6 +88,11 @@ namespace Adjutant
             public Color GetColor()
             {
                 return brush.Color;
+            }
+
+            public bool GetStrikeout()
+            {
+                return strikeout;
             }
 
             public string GetLink()
@@ -126,6 +134,9 @@ namespace Adjutant
                 if (mouseOver)
                     gfx.DrawRectangle(new Pen(brush), bounds);
 
+                if (strikeout)
+                    font = new Font(font, FontStyle.Strikeout);
+
                 gfx.DrawString(text.Substring(0, lastChar), font, brush, x, y);
 
                 if (newline)
@@ -137,7 +148,7 @@ namespace Adjutant
                     x += bounds.Width;
             }
 
-            public static List<TextChunk> Chunkify(string text, string link, Color color, int leftMargin, int maxWidth, Font font, bool newline, bool absNewline, Func<string, int> MeasureWidth, int lineH)
+            public static List<TextChunk> Chunkify(string text, string link, Color color, bool strikeout, int leftMargin, int maxWidth, Font font, bool newline, bool absNewline, Func<string, int> MeasureWidth, int lineH)
             {
                 List<TextChunk> chunks = new List<TextChunk>();
 
@@ -173,8 +184,7 @@ namespace Adjutant
                         }
                     }
 
-                    //chunks.Add(new TextChunk(text.Substring(0, len), link, color, text.Length != len || newline, absNewline && text.Length == len, segmentW, lineH));
-                    chunks.Add(new TextChunk(text.Substring(0, len), link, color, absNewline || text.Length != len, absNewline && text.Length == len, segmentW, lineH));
+                    chunks.Add(new TextChunk(text.Substring(0, len), link, color, strikeout, absNewline || text.Length != len, absNewline && text.Length == len, segmentW, lineH));
                     text = text.Substring(len);
 
                     if (len < text.Length)
@@ -188,12 +198,12 @@ namespace Adjutant
             {
                 int newWidth = MeasureWidth(text + nextChunk.text);
 
-                if (!absNewline && leftMargin + newWidth <= maxWidth && brush.Color == nextChunk.brush.Color)
+                if (!absNewline && leftMargin + newWidth <= maxWidth && brush.Color == nextChunk.brush.Color && strikeout == nextChunk.strikeout)
                 {
                     text += nextChunk.text;
                     bounds.Width = newWidth;
-                    newline &= nextChunk.newline;
-                    absNewline |= nextChunk.absNewline;
+                    newline = nextChunk.newline;
+                    absNewline = nextChunk.absNewline;
 
                     return true;
                 }
@@ -223,7 +233,7 @@ namespace Adjutant
         double opacityPassive, opacityActive;
         long lastTweet;
         int x, y, lineH, minH, maxH, prevH, maxLines, prevX, prevY, leftMargin, chunkOffset, lastChunk, lastChunkChar, printAtOnce, autoHideDelay, tabInd, historyInd, minTweetPeriod, twSoundThreshold, hotkey, newMailCount, prevNewMailCount, mailSoundThreshold, tutorialStep;
-        bool initialized, activated, winKey, prompt, blankLine, echo, ctrlKey, drag, resizeW, resizeH, hiding, hidden, todoHideDone, todoAutoTransfer, twUpdateOnNewTweet, twUpdateOnFocus, twitterOutput, mailUpdateOnNewMail, mailUpdateOnFocus, hotkeyCtrl, hotkeyAlt, hotkeyShift;
+        bool initialized, activated, winKey, prompt, blankLine, echo, ctrlKey, drag, resizeW, resizeH, autoResize, hiding, hidden, todoHideDone, todoAutoTransfer, twUpdateOnNewTweet, twUpdateOnFocus, twOutput, twPrevCountBelowThreshold, mailUpdateOnNewMail, mailUpdateOnFocus, hotkeyCtrl, hotkeyAlt, hotkeyShift;
         #endregion
 
 
@@ -720,14 +730,14 @@ namespace Adjutant
                 options.picErrorColor.Tag = errorColor;
 
                 options.txtTodoDir.Tag = todoDir;
-                options.checkTodoHideDone.Tag = todoHideDone;
-                options.checkTodoAutoTransfer.Tag = todoAutoTransfer;
+                options.chkTodoHideDone.Tag = todoHideDone;
+                options.chkTodoAutoTransfer.Tag = todoAutoTransfer;
                 options.picTodoMiscColor.Tag = todoMiscColor;
                 options.picTodoItemColor.Tag = todoItemColor;
                 options.picTodoDoneColor.Tag = todoDoneColor;
 
-                options.checkTwCountOnNewTweet.Tag = twUpdateOnNewTweet;
-                options.checkTwCountOnFocus.Tag = twUpdateOnFocus;
+                options.chkTwCountOnNewTweet.Tag = twUpdateOnNewTweet;
+                options.chkTwCountOnFocus.Tag = twUpdateOnFocus;
                 options.numTwCountMinPeriod.Tag = minTweetPeriod;
                 options.txtTwSound.Tag = twSound;
                 options.numTwSoundThreshold.Tag = twSoundThreshold;
@@ -740,8 +750,8 @@ namespace Adjutant
 
                 options.txtUser.Tag = mailUser;
                 options.txtPass.Tag = mailPass;
-                options.checkMailCountOnNewMail.Tag = mailUpdateOnNewMail;
-                options.checkMailCountOnFocus.Tag = mailUpdateOnFocus;
+                options.chkMailCountOnNewMail.Tag = mailUpdateOnNewMail;
+                options.chkMailCountOnFocus.Tag = mailUpdateOnFocus;
                 options.numMailCheckPeriod.Tag = timerMailCheck.Interval / 60000;
                 options.txtMailSound.Tag = mailSound;
                 options.numMailSoundThreshold.Tag = mailSoundThreshold;
@@ -778,14 +788,14 @@ namespace Adjutant
                 options.picErrorColor.BackColor = errorColor;
 
                 options.txtTodoDir.Text = todoDir;
-                options.checkTodoHideDone.Checked = todoHideDone;
-                options.checkTodoAutoTransfer.Checked = todoAutoTransfer;
+                options.chkTodoHideDone.Checked = todoHideDone;
+                options.chkTodoAutoTransfer.Checked = todoAutoTransfer;
                 options.picTodoMiscColor.BackColor = todoMiscColor;
                 options.picTodoItemColor.BackColor = todoItemColor;
                 options.picTodoDoneColor.BackColor = todoDoneColor;
 
-                options.checkTwCountOnNewTweet.Checked = twUpdateOnNewTweet;
-                options.checkTwCountOnFocus.Checked = twUpdateOnFocus;
+                options.chkTwCountOnNewTweet.Checked = twUpdateOnNewTweet;
+                options.chkTwCountOnFocus.Checked = twUpdateOnFocus;
                 options.numTwCountMinPeriod.Value = minTweetPeriod;
                 options.txtTwSound.Text = twSound;
                 options.numTwSoundThreshold.Value = twSoundThreshold;
@@ -798,8 +808,8 @@ namespace Adjutant
 
                 options.txtUser.Text = mailUser;
                 options.txtPass.Text = mailPass;
-                options.checkMailCountOnNewMail.Checked = mailUpdateOnNewMail;
-                options.checkMailCountOnFocus.Checked = mailUpdateOnFocus;
+                options.chkMailCountOnNewMail.Checked = mailUpdateOnNewMail;
+                options.chkMailCountOnFocus.Checked = mailUpdateOnFocus;
                 options.numMailCheckPeriod.Value = timerMailCheck.Interval / 60000;
                 options.txtMailSound.Text = mailSound;
                 options.numMailSoundThreshold.Value = mailSoundThreshold;
@@ -864,14 +874,14 @@ namespace Adjutant
             errorColor = options.picErrorColor.BackColor;
 
             todoDir = options.txtTodoDir.Text;
-            todoHideDone = options.checkTodoHideDone.Checked;
-            todoAutoTransfer = options.checkTodoAutoTransfer.Checked;
+            todoHideDone = options.chkTodoHideDone.Checked;
+            todoAutoTransfer = options.chkTodoAutoTransfer.Checked;
             todoMiscColor = options.picTodoMiscColor.BackColor;
             todoItemColor = options.picTodoItemColor.BackColor;
             todoDoneColor = options.picTodoDoneColor.BackColor;
 
-            twUpdateOnNewTweet = options.checkTwCountOnNewTweet.Checked;
-            twUpdateOnFocus = options.checkTwCountOnFocus.Checked;
+            twUpdateOnNewTweet = options.chkTwCountOnNewTweet.Checked;
+            twUpdateOnFocus = options.chkTwCountOnFocus.Checked;
             minTweetPeriod = (int)options.numTwCountMinPeriod.Value;
             twSound = options.txtTwSound.Text;
             twSoundThreshold = (int)options.numTwSoundThreshold.Value;
@@ -884,8 +894,8 @@ namespace Adjutant
 
             mailUser = options.txtUser.Text;
             mailPass = options.txtPass.Text;
-            mailUpdateOnNewMail = options.checkMailCountOnNewMail.Checked;
-            mailUpdateOnFocus = options.checkMailCountOnFocus.Checked;
+            mailUpdateOnNewMail = options.chkMailCountOnNewMail.Checked;
+            mailUpdateOnFocus = options.chkMailCountOnFocus.Checked;
             timerMailCheck.Interval = (int)options.numMailCheckPeriod.Value * 60000;
             mailSound = options.txtMailSound.Text;
             mailSoundThreshold = (int)options.numMailSoundThreshold.Value;
@@ -963,7 +973,7 @@ namespace Adjutant
         {
             if (prompt)
             {
-                if (twitterOutput)
+                if (twOutput)
                     lblPrompt.Text = "Twitter>";
                 else if (inputMode == "twitter pin")
                     lblPrompt.Text = "Twitter PIN:";
@@ -1148,12 +1158,21 @@ namespace Adjutant
                                     runProcess("example.txt");
                                     tutorialStep++;
 
-                                    printHelp("Besides the basic Command Prompt commands, Adjutant also has several advanced features, such as a Todo task manager, a Twitter client, and a Gmail client.");
+                                    printHelp("Besides the basic Command Prompt commands, Adjutant also has several advanced features, such as a Todo task manager, a Twitter client, and a Gmail client.<pause>");
+                                    printHelp("To manage your personal tasks, use the \"todo\" and \"done\" commands.<pause>");
+                                    printHelp("To initialize Twitter module type \"twitter /init\"<pause>");
+                                    printHelp("To setup your Gmail account checker type \"mail /setup [username] [password]\"<pause>");
                                     printHelp("Adjutant's help system can tell you more about those modules, as well as other commands.<pause>");
                                     printHelp("");
                                     printHelp("To see a list of all commands, enter \"help\".<pause>");
                                     printHelp("To learn about a command in more detail, type \"help [command]\".<pause>");
-                                    printHelp("Also note that ALL command switches can be used by just typing their initial letter.<pause>For example: \"/erase\" and \"/e\" perform the same switch operation.");
+                                    printHelp("Also note that ALL command switches can be used by just typing their initial letter.<pause>For example: \"/erase\" and \"/e\" perform the same switch operation.<pause>");
+                                    printHelp("");
+                                    printHelp("Adjutant's default output behaviour is to print 3 characters at a time. To flush out the current output press \"Enter\" while the output is being printed.");
+                                    printHelp("You can change the default behaviour in the Options.<pause>");
+                                    printHelp("");
+                                    printHelp("You can use the Options window to change various other preferences, such as colors, sound notifications, running at Windows startup, etc.<pause> The Options tutorial will give you more information.");
+                                    printHelp("To go to the Options just type \"options\" in the console, or right-click on it and select Options.<pause>");
                                     printHelp("");
                                     print("If you have any questions, suggestions, or bug reports, send me an email: ", false); print("winterstark@gmail.com", "mailto:winterstark@gmail.com", Color.Blue);
                                     printHelp("Have fun using Adjutant!");
@@ -1525,6 +1544,7 @@ namespace Adjutant
                     if (countedLines == maxLines && this.Height + lineH <= maxH)
                     {
                         //increase console height by 1 line
+                        autoResize = true;
                         this.Height += lineH;
                         windowAutosize();
                     }
@@ -1578,30 +1598,40 @@ namespace Adjutant
 
         void print(string txt)
         {
-            print(txt, "", true, txtCMD.ForeColor);
+            print(txt, "", true, txtCMD.ForeColor, false);
         }
 
         void print(string txt, bool newline)
         {
-            print(txt, "", newline, txtCMD.ForeColor);
+            print(txt, "", newline, txtCMD.ForeColor, false);
         }
 
         void print(string txt, Color color)
         {
-            print(txt, "", true, color);
+            print(txt, "", true, color, false);
         }
 
         void print(string txt, bool newline, Color color)
         {
-            print(txt, "", newline, color);
+            print(txt, "", newline, color, false);
+        }
+
+        void print(string txt, bool newline, Color color, bool strikeout)
+        {
+            print(txt, "", newline, color, strikeout);
         }
 
         void print(string txt, string link, Color color)
         {
-            print(txt, link, true, color);
+            print(txt, link, true, color, false);
         }
 
         void print(string txt, string link, bool newline, Color color)
+        {
+            print(txt, link, true, color, false);
+        }
+
+        void print(string txt, string link, bool newline, Color color, bool strikeout)
         {
             if (txt == "")
                 txt = " "; //blank line
@@ -1618,7 +1648,7 @@ namespace Adjutant
             for (int i = 0; i < lines.Length; i++)
             {
                 bool nLine = i == lines.Length - 1 ? newline : true;
-                List<TextChunk> newChunks = TextChunk.Chunkify(lines[i], link, color, leftMargin, this.Width, txtCMD.Font, nLine, nLine, measureWidth, lineH);
+                List<TextChunk> newChunks = TextChunk.Chunkify(lines[i], link, color, strikeout, leftMargin, this.Width, txtCMD.Font, nLine, nLine, measureWidth, lineH);
 
                 chunks.AddRange(newChunks);
 
@@ -2104,7 +2134,6 @@ namespace Adjutant
             string contents = file.ReadToEnd();
             file.Close();
 
-            //return contents.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).ToList().FindAll(t => t.Length < 8 || t.Substring(0, 8) != "__DONE__");
             return contents.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).ToList();
         }
 
@@ -2167,7 +2196,10 @@ namespace Adjutant
                     if (task.Contains("__DONE__"))
                     {
                         if (!todoHideDone)
-                            print(ind++ + ". " + task.Replace("__DONE__", ""), todoDoneColor);
+                        {
+                            print(ind++ + ". " + task.Replace("__DONE__", ""), false, todoDoneColor, true);
+                            print(" ✓", todoDoneColor);
+                        }
                     }
                     else
                         print(ind++ + ". " + task, todoItemColor);
@@ -2188,12 +2220,22 @@ namespace Adjutant
 
             print("To do list for " + date + ":", todoFile(date), todoMiscColor);
 
-            int ind = 1;
-            foreach (string task in tasklist(todoFile(date)))
-                if (task.Contains("__DONE__"))
-                    print(ind++ + ". " + task.Replace("__DONE__", ""), todoDoneColor);
-                else
-                    print(ind++ + ". " + task, todoItemColor);
+            List<string> tasks = tasklist(todoFile(date));
+
+            if (tasks != null)
+            {
+                int ind = 1;
+                foreach (string task in tasklist(todoFile(date)))
+                    if (task.Contains("__DONE__"))
+                    {
+                        print(ind++ + ". " + task.Replace("__DONE__", ""), false, todoDoneColor, true);
+                        print(" ✓", todoDoneColor);
+                    }
+                    else
+                        print(ind++ + ". " + task, todoItemColor);
+            }
+            else
+                print("Todo file does not exist for specified date.", errorColor);
         }
 
         void cmdTodo(string[] cmd)
@@ -2319,6 +2361,12 @@ namespace Adjutant
             }
 
             List<string> tasks = tasklist(todoFile(date)); //load target todo list
+
+            if (tasks == null)
+            {
+                print("Todo file does not exist for specified date.", errorColor);
+                return;
+            }
 
             if (undo)
             {
@@ -2462,7 +2510,7 @@ namespace Adjutant
                     //mark items
                     foreach (int dn in done)
                     {
-                        print(tasks[dn] + " DONE", todoDoneColor);
+                        print(tasks[dn], true, todoDoneColor, true);
                         tasks[dn] = "__DONE__" + tasks[dn];
                     }
                 }
@@ -2508,6 +2556,7 @@ namespace Adjutant
             if (token != "?" && secret != "?")
             {
                 twitter = new Twitter(token, secret, lastTweet);
+                twPrevCountBelowThreshold = true;
 
                 if (!twitter.VerifyCredentials())
                 {
@@ -2626,9 +2675,9 @@ namespace Adjutant
 
                 lastTweet = newTweet.id;
 
-                twitterOutput = twitter.AnyUnreadTweets();
+                twOutput = twitter.AnyUnreadTweets();
 
-                if (!twitterOutput)
+                if (!twOutput)
                 {
                     print("No more tweets.", "http://www.twitter.com/", twCountColor);
                     removeReadTweets();
@@ -2643,53 +2692,49 @@ namespace Adjutant
             do
             {
                 twitterPrint();
-            } while (twitterOutput);
+            } while (twOutput);
         }
 
         void removeReadTweets()
         {
             twitter.RemoveReadTweets();
+
+            if (twitter.GetNewTweetCount() < twSoundThreshold)
+                twPrevCountBelowThreshold = true;
         }
 
         void tweetCount()
         {
-            string tweetCount = twitter.GetNewTweetCount();
+            int tweetCount = twitter.GetNewTweetCount();
+            string tweetCountMsg;
 
-            if ((chunks.Count == 0 || chunks[chunks.Count - 1].ToString() != tweetCount) //don't display new tweet count if it's already displayed
-                && !twitterOutput) //or if Adjutant is currently in Twitter mode
-                print(tweetCount, "http://www.twitter.com/", twCountColor);
+            switch (tweetCount)
+            {
+                case 0:
+                    tweetCountMsg = "No new tweets.";
+                    break;
+                case 1:
+                    tweetCountMsg = "1 new tweet.";
+                    break;
+                default:
+                    tweetCountMsg = tweetCount + " new tweets.";
+                    break;
+            }
+
+            if ((chunks.Count == 0 || chunks[chunks.Count - 1].ToString() != tweetCountMsg) //don't display new tweet count if it's already displayed
+                && !twOutput) //or if Adjutant is currently in Twitter mode
+            {
+                print(tweetCountMsg, "http://www.twitter.com/", twCountColor);
+
+                //play sound notification
+                if (twSoundThreshold != 0 && tweetCount >= twSoundThreshold && twPrevCountBelowThreshold && File.Exists(twSound))
+                {
+                    PlaySound(twSound, 0, SND_ASYNC);
+                    twPrevCountBelowThreshold = false;
+                }
+            }
 
             lastTwCount = DateTime.Now;
-        }
-
-        public void NewTweet(string user, string actualUsername, string tweet, DateTime time)
-        {
-            //if (twUpdateOnNewTweet && DateTime.Now.Subtract(lastTwCount).TotalSeconds >= minTweetPeriod)
-            //{
-            //    if (activated)
-            //    {
-            //        if (tweets.Count == 0)
-            //        {
-            //            print(tweet + " " + howLongAgo(time), true);
-            //            lastTweet = id;
-            //        }
-            //        else
-            //        {
-            //            tweets.Add(new Tweet(user, actualUsername, tweet, time, id));
-
-            //            if (!hidden)
-            //                tweetCount();
-            //        }
-            //    }
-            //    else
-            //        tweets.Add(new Tweet(user, actualUsername, tweet, time, id));
-            //}
-            //else
-            //    tweets.Add(new Tweet(user, actualUsername, tweet, time, id));
-
-            ////play sound notification
-            //if (twSoundThreshold != 0 && tweets.Count >= twSoundThreshold && File.Exists(twSound))
-            //    PlaySound(twSound, 0, SND_ASYNC);
         }
 
         void cmdTwitter(string[] cmd)
@@ -2980,10 +3025,10 @@ namespace Adjutant
             greeting();
             todoLoad();
 
-            //twitter init
+            ////twitter init
             //twitterInit();
 
-            //mail init
+            ////mail init
             //mailInit();
         }
 
@@ -3020,6 +3065,12 @@ namespace Adjutant
 
         private void formMain_Resize(object sender, EventArgs e)
         {
+            if (autoResize) //if Adjutant resized itself
+            {
+                autoResize = false;
+                return;
+            }
+
             int lMarg = 0;
 
             //recalculate text chunks
@@ -3030,7 +3081,7 @@ namespace Adjutant
                     chunks.RemoveAt(i + 1);
 
                 //need to split chunk?
-                List<TextChunk> newChunks = TextChunk.Chunkify(chunks[i].ToString(), chunks[i].GetLink(), chunks[i].GetColor(), lMarg, this.Width, txtCMD.Font, true, chunks[i].IsAbsNewline(), measureWidth, lineH);
+                List<TextChunk> newChunks = TextChunk.Chunkify(chunks[i].ToString(), chunks[i].GetLink(), chunks[i].GetColor(), chunks[i].GetStrikeout(), lMarg, this.Width, txtCMD.Font, true, chunks[i].IsAbsNewline(), measureWidth, lineH);
 
                 if (newChunks.Count > 1)
                 {
@@ -3155,6 +3206,9 @@ namespace Adjutant
 
         private void formMain_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
         {
+            if (chunks.Count == 0)
+                return;
+
             //scroll up/down 3 lines
             int i = 0;
 
@@ -3227,7 +3281,7 @@ namespace Adjutant
 
             autohideTrigger();
 
-            if (twitterOutput)
+            if (twOutput)
                 switch (e.KeyCode)
                 {
                     case Keys.Enter:
@@ -3272,7 +3326,7 @@ namespace Adjutant
                             txtCMD.Text = "";
                         break;
                     case Keys.Escape:
-                        twitterOutput = false;
+                        twOutput = false;
                         setPrompt();
 
                         twitter.RemoveReadTweets();

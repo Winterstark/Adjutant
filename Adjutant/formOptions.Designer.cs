@@ -72,6 +72,7 @@
             this.label15 = new System.Windows.Forms.Label();
             this.label12 = new System.Windows.Forms.Label();
             this.tabConsole = new System.Windows.Forms.TabPage();
+            this.chkRunAtStartup = new System.Windows.Forms.CheckBox();
             this.chkBlankLine = new System.Windows.Forms.CheckBox();
             this.picEchoColor = new System.Windows.Forms.PictureBox();
             this.buttPickEchoColor = new System.Windows.Forms.Button();
@@ -92,8 +93,8 @@
             this.txtStartDir = new System.Windows.Forms.TextBox();
             this.label11 = new System.Windows.Forms.Label();
             this.tabTodo = new System.Windows.Forms.TabPage();
-            this.checkTodoAutoTransfer = new System.Windows.Forms.CheckBox();
-            this.checkTodoHideDone = new System.Windows.Forms.CheckBox();
+            this.chkTodoAutoTransfer = new System.Windows.Forms.CheckBox();
+            this.chkTodoHideDone = new System.Windows.Forms.CheckBox();
             this.buttBrowseForTodoDir = new System.Windows.Forms.Button();
             this.txtTodoDir = new System.Windows.Forms.TextBox();
             this.label35 = new System.Windows.Forms.Label();
@@ -134,8 +135,8 @@
             this.label23 = new System.Windows.Forms.Label();
             this.numTwCountMinPeriod = new System.Windows.Forms.NumericUpDown();
             this.label22 = new System.Windows.Forms.Label();
-            this.checkTwCountOnFocus = new System.Windows.Forms.CheckBox();
-            this.checkTwCountOnNewTweet = new System.Windows.Forms.CheckBox();
+            this.chkTwCountOnFocus = new System.Windows.Forms.CheckBox();
+            this.chkTwCountOnNewTweet = new System.Windows.Forms.CheckBox();
             this.label51 = new System.Windows.Forms.Label();
             this.label50 = new System.Windows.Forms.Label();
             this.label21 = new System.Windows.Forms.Label();
@@ -159,8 +160,8 @@
             this.label47 = new System.Windows.Forms.Label();
             this.buttPickMailCountColor = new System.Windows.Forms.Button();
             this.label44 = new System.Windows.Forms.Label();
-            this.checkMailCountOnFocus = new System.Windows.Forms.CheckBox();
-            this.checkMailCountOnNewMail = new System.Windows.Forms.CheckBox();
+            this.chkMailCountOnFocus = new System.Windows.Forms.CheckBox();
+            this.chkMailCountOnNewMail = new System.Windows.Forms.CheckBox();
             this.label43 = new System.Windows.Forms.Label();
             this.txtPass = new System.Windows.Forms.TextBox();
             this.txtUser = new System.Windows.Forms.TextBox();
@@ -674,6 +675,7 @@
             // 
             // tabConsole
             // 
+            this.tabConsole.Controls.Add(this.chkRunAtStartup);
             this.tabConsole.Controls.Add(this.chkBlankLine);
             this.tabConsole.Controls.Add(this.picEchoColor);
             this.tabConsole.Controls.Add(this.buttPickEchoColor);
@@ -701,10 +703,21 @@
             this.tabConsole.Text = "Console";
             this.tabConsole.UseVisualStyleBackColor = true;
             // 
+            // chkRunAtStartup
+            // 
+            this.chkRunAtStartup.AutoSize = true;
+            this.chkRunAtStartup.Location = new System.Drawing.Point(123, 33);
+            this.chkRunAtStartup.Name = "chkRunAtStartup";
+            this.chkRunAtStartup.Size = new System.Drawing.Size(192, 17);
+            this.chkRunAtStartup.TabIndex = 41;
+            this.chkRunAtStartup.Text = "Run Adjutant when Windows starts";
+            this.chkRunAtStartup.UseVisualStyleBackColor = true;
+            this.chkRunAtStartup.CheckedChanged += new System.EventHandler(this.chkRunAtStartup_CheckedChanged);
+            // 
             // chkBlankLine
             // 
             this.chkBlankLine.AutoSize = true;
-            this.chkBlankLine.Location = new System.Drawing.Point(123, 250);
+            this.chkBlankLine.Location = new System.Drawing.Point(123, 255);
             this.chkBlankLine.Name = "chkBlankLine";
             this.chkBlankLine.Size = new System.Drawing.Size(202, 17);
             this.chkBlankLine.TabIndex = 7;
@@ -742,7 +755,7 @@
             // 
             // buttBrowseForStartDir
             // 
-            this.buttBrowseForStartDir.Location = new System.Drawing.Point(324, 49);
+            this.buttBrowseForStartDir.Location = new System.Drawing.Point(324, 68);
             this.buttBrowseForStartDir.Name = "buttBrowseForStartDir";
             this.buttBrowseForStartDir.Size = new System.Drawing.Size(32, 23);
             this.buttBrowseForStartDir.TabIndex = 3;
@@ -781,7 +794,7 @@
             // 
             // numPrintAtOnce
             // 
-            this.numPrintAtOnce.Location = new System.Drawing.Point(123, 182);
+            this.numPrintAtOnce.Location = new System.Drawing.Point(123, 191);
             this.numPrintAtOnce.Maximum = new decimal(new int[] {
             50,
             0,
@@ -805,7 +818,7 @@
             // label20
             // 
             this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(207, 184);
+            this.label20.Location = new System.Drawing.Point(207, 193);
             this.label20.Name = "label20";
             this.label20.Size = new System.Drawing.Size(99, 13);
             this.label20.TabIndex = 20;
@@ -814,7 +827,7 @@
             // label19
             // 
             this.label19.AutoSize = true;
-            this.label19.Location = new System.Drawing.Point(83, 184);
+            this.label19.Location = new System.Drawing.Point(83, 193);
             this.label19.Name = "label19";
             this.label19.Size = new System.Drawing.Size(31, 13);
             this.label19.TabIndex = 20;
@@ -822,7 +835,7 @@
             // 
             // label17
             // 
-            this.label17.Location = new System.Drawing.Point(120, 123);
+            this.label17.Location = new System.Drawing.Point(120, 136);
             this.label17.Name = "label17";
             this.label17.Size = new System.Drawing.Size(331, 69);
             this.label17.TabIndex = 19;
@@ -832,7 +845,7 @@
             // label16
             // 
             this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(217, 102);
+            this.label16.Location = new System.Drawing.Point(217, 115);
             this.label16.Name = "label16";
             this.label16.Size = new System.Drawing.Size(79, 13);
             this.label16.TabIndex = 19;
@@ -841,7 +854,7 @@
             // chkEcho
             // 
             this.chkEcho.AutoSize = true;
-            this.chkEcho.Location = new System.Drawing.Point(123, 273);
+            this.chkEcho.Location = new System.Drawing.Point(123, 278);
             this.chkEcho.Name = "chkEcho";
             this.chkEcho.Size = new System.Drawing.Size(135, 17);
             this.chkEcho.TabIndex = 8;
@@ -852,7 +865,7 @@
             // chkPrompt
             // 
             this.chkPrompt.AutoSize = true;
-            this.chkPrompt.Location = new System.Drawing.Point(123, 227);
+            this.chkPrompt.Location = new System.Drawing.Point(123, 232);
             this.chkPrompt.Name = "chkPrompt";
             this.chkPrompt.Size = new System.Drawing.Size(173, 17);
             this.chkPrompt.TabIndex = 6;
@@ -862,7 +875,7 @@
             // 
             // numPrintDelay
             // 
-            this.numPrintDelay.Location = new System.Drawing.Point(123, 100);
+            this.numPrintDelay.Location = new System.Drawing.Point(123, 113);
             this.numPrintDelay.Maximum = new decimal(new int[] {
             1000,
             0,
@@ -876,7 +889,7 @@
             // label13
             // 
             this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(58, 102);
+            this.label13.Location = new System.Drawing.Point(58, 115);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(59, 13);
             this.label13.TabIndex = 16;
@@ -884,7 +897,7 @@
             // 
             // txtStartDir
             // 
-            this.txtStartDir.Location = new System.Drawing.Point(123, 51);
+            this.txtStartDir.Location = new System.Drawing.Point(123, 70);
             this.txtStartDir.Name = "txtStartDir";
             this.txtStartDir.Size = new System.Drawing.Size(186, 20);
             this.txtStartDir.TabIndex = 2;
@@ -893,7 +906,7 @@
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(42, 54);
+            this.label11.Location = new System.Drawing.Point(42, 73);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(75, 13);
             this.label11.TabIndex = 14;
@@ -901,8 +914,8 @@
             // 
             // tabTodo
             // 
-            this.tabTodo.Controls.Add(this.checkTodoAutoTransfer);
-            this.tabTodo.Controls.Add(this.checkTodoHideDone);
+            this.tabTodo.Controls.Add(this.chkTodoAutoTransfer);
+            this.tabTodo.Controls.Add(this.chkTodoHideDone);
             this.tabTodo.Controls.Add(this.buttBrowseForTodoDir);
             this.tabTodo.Controls.Add(this.txtTodoDir);
             this.tabTodo.Controls.Add(this.label35);
@@ -924,26 +937,26 @@
             this.tabTodo.Text = "Todo";
             this.tabTodo.UseVisualStyleBackColor = true;
             // 
-            // checkTodoAutoTransfer
+            // chkTodoAutoTransfer
             // 
-            this.checkTodoAutoTransfer.Location = new System.Drawing.Point(149, 117);
-            this.checkTodoAutoTransfer.Name = "checkTodoAutoTransfer";
-            this.checkTodoAutoTransfer.Size = new System.Drawing.Size(195, 35);
-            this.checkTodoAutoTransfer.TabIndex = 5;
-            this.checkTodoAutoTransfer.Text = "Automatically transfer active items to next day\'s todo list";
-            this.checkTodoAutoTransfer.UseVisualStyleBackColor = true;
-            this.checkTodoAutoTransfer.CheckedChanged += new System.EventHandler(this.checkForChanges);
+            this.chkTodoAutoTransfer.Location = new System.Drawing.Point(149, 117);
+            this.chkTodoAutoTransfer.Name = "chkTodoAutoTransfer";
+            this.chkTodoAutoTransfer.Size = new System.Drawing.Size(195, 35);
+            this.chkTodoAutoTransfer.TabIndex = 5;
+            this.chkTodoAutoTransfer.Text = "Automatically transfer active items to next day\'s todo list";
+            this.chkTodoAutoTransfer.UseVisualStyleBackColor = true;
+            this.chkTodoAutoTransfer.CheckedChanged += new System.EventHandler(this.checkForChanges);
             // 
-            // checkTodoHideDone
+            // chkTodoHideDone
             // 
-            this.checkTodoHideDone.AutoSize = true;
-            this.checkTodoHideDone.Location = new System.Drawing.Point(149, 94);
-            this.checkTodoHideDone.Name = "checkTodoHideDone";
-            this.checkTodoHideDone.Size = new System.Drawing.Size(102, 17);
-            this.checkTodoHideDone.TabIndex = 4;
-            this.checkTodoHideDone.Text = "Hide done items";
-            this.checkTodoHideDone.UseVisualStyleBackColor = true;
-            this.checkTodoHideDone.CheckedChanged += new System.EventHandler(this.checkForChanges);
+            this.chkTodoHideDone.AutoSize = true;
+            this.chkTodoHideDone.Location = new System.Drawing.Point(149, 94);
+            this.chkTodoHideDone.Name = "chkTodoHideDone";
+            this.chkTodoHideDone.Size = new System.Drawing.Size(102, 17);
+            this.chkTodoHideDone.TabIndex = 4;
+            this.chkTodoHideDone.Text = "Hide done items";
+            this.chkTodoHideDone.UseVisualStyleBackColor = true;
+            this.chkTodoHideDone.CheckedChanged += new System.EventHandler(this.checkForChanges);
             // 
             // buttBrowseForTodoDir
             // 
@@ -1096,8 +1109,8 @@
             this.tabTwitter.Controls.Add(this.label23);
             this.tabTwitter.Controls.Add(this.numTwCountMinPeriod);
             this.tabTwitter.Controls.Add(this.label22);
-            this.tabTwitter.Controls.Add(this.checkTwCountOnFocus);
-            this.tabTwitter.Controls.Add(this.checkTwCountOnNewTweet);
+            this.tabTwitter.Controls.Add(this.chkTwCountOnFocus);
+            this.tabTwitter.Controls.Add(this.chkTwCountOnNewTweet);
             this.tabTwitter.Controls.Add(this.label51);
             this.tabTwitter.Controls.Add(this.label50);
             this.tabTwitter.Controls.Add(this.label21);
@@ -1352,27 +1365,27 @@
             this.label22.TabIndex = 3;
             this.label22.Text = "Minimum time period between two new tweet counts are displayed:";
             // 
-            // checkTwCountOnFocus
+            // chkTwCountOnFocus
             // 
-            this.checkTwCountOnFocus.AutoSize = true;
-            this.checkTwCountOnFocus.Location = new System.Drawing.Point(48, 74);
-            this.checkTwCountOnFocus.Name = "checkTwCountOnFocus";
-            this.checkTwCountOnFocus.Size = new System.Drawing.Size(140, 17);
-            this.checkTwCountOnFocus.TabIndex = 3;
-            this.checkTwCountOnFocus.Text = "Adjutant gets user focus";
-            this.checkTwCountOnFocus.UseVisualStyleBackColor = true;
-            this.checkTwCountOnFocus.CheckedChanged += new System.EventHandler(this.checkForChanges);
+            this.chkTwCountOnFocus.AutoSize = true;
+            this.chkTwCountOnFocus.Location = new System.Drawing.Point(48, 74);
+            this.chkTwCountOnFocus.Name = "chkTwCountOnFocus";
+            this.chkTwCountOnFocus.Size = new System.Drawing.Size(140, 17);
+            this.chkTwCountOnFocus.TabIndex = 3;
+            this.chkTwCountOnFocus.Text = "Adjutant gets user focus";
+            this.chkTwCountOnFocus.UseVisualStyleBackColor = true;
+            this.chkTwCountOnFocus.CheckedChanged += new System.EventHandler(this.checkForChanges);
             // 
-            // checkTwCountOnNewTweet
+            // chkTwCountOnNewTweet
             // 
-            this.checkTwCountOnNewTweet.AutoSize = true;
-            this.checkTwCountOnNewTweet.Location = new System.Drawing.Point(48, 51);
-            this.checkTwCountOnNewTweet.Name = "checkTwCountOnNewTweet";
-            this.checkTwCountOnNewTweet.Size = new System.Drawing.Size(111, 17);
-            this.checkTwCountOnNewTweet.TabIndex = 2;
-            this.checkTwCountOnNewTweet.Text = "New tweet arrives";
-            this.checkTwCountOnNewTweet.UseVisualStyleBackColor = true;
-            this.checkTwCountOnNewTweet.CheckedChanged += new System.EventHandler(this.checkForChanges);
+            this.chkTwCountOnNewTweet.AutoSize = true;
+            this.chkTwCountOnNewTweet.Location = new System.Drawing.Point(48, 51);
+            this.chkTwCountOnNewTweet.Name = "chkTwCountOnNewTweet";
+            this.chkTwCountOnNewTweet.Size = new System.Drawing.Size(111, 17);
+            this.chkTwCountOnNewTweet.TabIndex = 2;
+            this.chkTwCountOnNewTweet.Text = "New tweet arrives";
+            this.chkTwCountOnNewTweet.UseVisualStyleBackColor = true;
+            this.chkTwCountOnNewTweet.CheckedChanged += new System.EventHandler(this.checkForChanges);
             // 
             // label51
             // 
@@ -1422,8 +1435,8 @@
             this.tabMail.Controls.Add(this.label47);
             this.tabMail.Controls.Add(this.buttPickMailCountColor);
             this.tabMail.Controls.Add(this.label44);
-            this.tabMail.Controls.Add(this.checkMailCountOnFocus);
-            this.tabMail.Controls.Add(this.checkMailCountOnNewMail);
+            this.tabMail.Controls.Add(this.chkMailCountOnFocus);
+            this.tabMail.Controls.Add(this.chkMailCountOnNewMail);
             this.tabMail.Controls.Add(this.label43);
             this.tabMail.Controls.Add(this.txtPass);
             this.tabMail.Controls.Add(this.txtUser);
@@ -1609,27 +1622,27 @@
             this.label44.TabIndex = 17;
             this.label44.Text = "Mail count:";
             // 
-            // checkMailCountOnFocus
+            // chkMailCountOnFocus
             // 
-            this.checkMailCountOnFocus.AutoSize = true;
-            this.checkMailCountOnFocus.Location = new System.Drawing.Point(47, 157);
-            this.checkMailCountOnFocus.Name = "checkMailCountOnFocus";
-            this.checkMailCountOnFocus.Size = new System.Drawing.Size(140, 17);
-            this.checkMailCountOnFocus.TabIndex = 5;
-            this.checkMailCountOnFocus.Text = "Adjutant gets user focus";
-            this.checkMailCountOnFocus.UseVisualStyleBackColor = true;
-            this.checkMailCountOnFocus.CheckedChanged += new System.EventHandler(this.checkForChanges);
+            this.chkMailCountOnFocus.AutoSize = true;
+            this.chkMailCountOnFocus.Location = new System.Drawing.Point(47, 157);
+            this.chkMailCountOnFocus.Name = "chkMailCountOnFocus";
+            this.chkMailCountOnFocus.Size = new System.Drawing.Size(140, 17);
+            this.chkMailCountOnFocus.TabIndex = 5;
+            this.chkMailCountOnFocus.Text = "Adjutant gets user focus";
+            this.chkMailCountOnFocus.UseVisualStyleBackColor = true;
+            this.chkMailCountOnFocus.CheckedChanged += new System.EventHandler(this.checkForChanges);
             // 
-            // checkMailCountOnNewMail
+            // chkMailCountOnNewMail
             // 
-            this.checkMailCountOnNewMail.AutoSize = true;
-            this.checkMailCountOnNewMail.Location = new System.Drawing.Point(47, 134);
-            this.checkMailCountOnNewMail.Name = "checkMailCountOnNewMail";
-            this.checkMailCountOnNewMail.Size = new System.Drawing.Size(103, 17);
-            this.checkMailCountOnNewMail.TabIndex = 4;
-            this.checkMailCountOnNewMail.Text = "New mail arrives";
-            this.checkMailCountOnNewMail.UseVisualStyleBackColor = true;
-            this.checkMailCountOnNewMail.CheckedChanged += new System.EventHandler(this.checkForChanges);
+            this.chkMailCountOnNewMail.AutoSize = true;
+            this.chkMailCountOnNewMail.Location = new System.Drawing.Point(47, 134);
+            this.chkMailCountOnNewMail.Name = "chkMailCountOnNewMail";
+            this.chkMailCountOnNewMail.Size = new System.Drawing.Size(103, 17);
+            this.chkMailCountOnNewMail.TabIndex = 4;
+            this.chkMailCountOnNewMail.Text = "New mail arrives";
+            this.chkMailCountOnNewMail.UseVisualStyleBackColor = true;
+            this.chkMailCountOnNewMail.CheckedChanged += new System.EventHandler(this.checkForChanges);
             // 
             // label43
             // 
@@ -1824,8 +1837,8 @@
         private System.Windows.Forms.Label label24;
         private System.Windows.Forms.Label label23;
         private System.Windows.Forms.Label label22;
-        public System.Windows.Forms.CheckBox checkTwCountOnFocus;
-        public System.Windows.Forms.CheckBox checkTwCountOnNewTweet;
+        public System.Windows.Forms.CheckBox chkTwCountOnFocus;
+        public System.Windows.Forms.CheckBox chkTwCountOnNewTweet;
         public System.Windows.Forms.NumericUpDown numTwCountMinPeriod;
         public System.Windows.Forms.PictureBox picTwCountColor;
         private System.Windows.Forms.Button buttPickTwCountColor;
@@ -1850,8 +1863,8 @@
         private System.Windows.Forms.FolderBrowserDialog folderDiag;
         public System.Windows.Forms.TextBox txtTodoDir;
         private System.Windows.Forms.Button buttBrowseForStartDir;
-        public System.Windows.Forms.CheckBox checkTodoAutoTransfer;
-        public System.Windows.Forms.CheckBox checkTodoHideDone;
+        public System.Windows.Forms.CheckBox chkTodoAutoTransfer;
+        public System.Windows.Forms.CheckBox chkTodoHideDone;
         public System.Windows.Forms.CheckBox chkEcho;
         public System.Windows.Forms.PictureBox picEchoColor;
         private System.Windows.Forms.Button buttPickEchoColor;
@@ -1865,8 +1878,8 @@
         public System.Windows.Forms.TextBox txtHotkey;
         private System.Windows.Forms.Label label42;
         private System.Windows.Forms.Label label41;
-        public System.Windows.Forms.CheckBox checkMailCountOnFocus;
-        public System.Windows.Forms.CheckBox checkMailCountOnNewMail;
+        public System.Windows.Forms.CheckBox chkMailCountOnFocus;
+        public System.Windows.Forms.CheckBox chkMailCountOnNewMail;
         private System.Windows.Forms.Label label43;
         public System.Windows.Forms.PictureBox picMailCountColor;
         private System.Windows.Forms.Button buttPickMailCountColor;
@@ -1897,5 +1910,6 @@
         public System.Windows.Forms.TextBox txtTwSound;
         public System.Windows.Forms.TextBox txtMailSound;
         private System.Windows.Forms.OpenFileDialog fileDiag;
+        private System.Windows.Forms.CheckBox chkRunAtStartup;
     }
 }
