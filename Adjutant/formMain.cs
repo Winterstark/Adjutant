@@ -22,8 +22,7 @@ namespace Adjutant
         const string YEAR = "2014";
 
         const int ZERO_DELAY = 60001;
-
-        private int SND_ASYNC = 0x0001;
+        const int SND_ASYNC = 0x0001;
 
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
@@ -36,181 +35,6 @@ namespace Adjutant
 
         [DllImport("WinMM.dll")]
         static extern bool PlaySound(string fname, int Mod, int flag);
-
-
-        class TextChunk
-        {
-            string text, link;
-            Rectangle bounds;
-            SolidBrush brush;
-            bool newline, absNewline, mouseOver, strikeout;
-
-
-            public TextChunk(string text, string link, Color color, bool strikeout, bool newline, bool absNewline, int w, int h)
-            {
-                this.text = text;
-                this.link = link;
-                this.strikeout = strikeout;
-                this.newline = newline;
-                this.absNewline = absNewline;
-
-                brush = new SolidBrush(color);
-                bounds = new Rectangle(0, 0, w, h);
-            }
-
-            public override string ToString()
-            {
-                return text;
-            }
-
-            public string GetText()
-            {
-                //includes newline
-                return text + (newline ? Environment.NewLine : "");
-            }
-
-            public bool IsNewline()
-            {
-                return newline;
-            }
-
-            public bool IsAbsNewline()
-            {
-                return absNewline;
-            }
-
-            public void InsertNewline()
-            {
-                newline = true;
-                absNewline = true;
-            }
-
-            public Color GetColor()
-            {
-                return brush.Color;
-            }
-
-            public bool GetStrikeout()
-            {
-                return strikeout;
-            }
-
-            public string GetLink()
-            {
-                return link;
-            }
-
-            public string IfMouseOverReturnLink(Point mousePos)
-            {
-                if (link != "" && bounds.Contains(mousePos))
-                {
-                    mouseOver = true;
-                    return link;
-                }
-                else
-                {
-                    mouseOver = false;
-                    return "";
-                }
-            }
-
-            public void MouseNotOver()
-            {
-                mouseOver = false;
-            }
-
-            public void Draw(Graphics gfx, Font font, ref int x, ref int y)
-            {
-                Draw(gfx, font, ref x, ref y, text.Length);
-            }
-
-            public void Draw(Graphics gfx, Font font, ref int x, ref int y, int lastChar)
-            {
-                lastChar = Math.Min(text.Length, lastChar);
-
-                bounds.X = x;
-                bounds.Y = y;
-
-                if (mouseOver)
-                    gfx.DrawRectangle(new Pen(brush), bounds);
-
-                if (strikeout)
-                    font = new Font(font, FontStyle.Strikeout);
-
-                gfx.DrawString(text.Substring(0, lastChar), font, brush, x, y);
-
-                if (newline)
-                {
-                    x = 0;
-                    y += bounds.Height;
-                }
-                else
-                    x += bounds.Width;
-            }
-
-            public static List<TextChunk> Chunkify(string text, string link, Color color, bool strikeout, int leftMargin, int maxWidth, Font font, bool newline, bool absNewline, Func<string, int> MeasureWidth, int lineH)
-            {
-                List<TextChunk> chunks = new List<TextChunk>();
-
-                //if (text.Length <= 1)
-                if (text.Length == 0)
-                    return chunks;
-
-                while (text != "")
-                {
-                    int len = text.Length;
-                    int segmentW = MeasureWidth(text.Substring(0, len));
-
-                    while (len > 1 && leftMargin + segmentW > maxWidth)
-                    {
-                        if (text.LastIndexOf(' ', len - 1) < 1)
-                        {
-                            //no more spaces; break a word in two to split the line
-                            len--;
-                            segmentW = MeasureWidth(text.Substring(0, len));
-
-                            while (len > 1 && leftMargin + segmentW > maxWidth)
-                            {
-                                len--;
-                                segmentW = MeasureWidth(text.Substring(0, len));
-                            }
-
-                            break;
-                        }
-                        else
-                        {
-                            len = text.LastIndexOf(' ', len - 1);
-                            segmentW = MeasureWidth(text.Substring(0, len));
-                        }
-                    }
-
-                    chunks.Add(new TextChunk(text.Substring(0, len), link, color, strikeout, absNewline || text.Length != len, absNewline && text.Length == len, segmentW, lineH));
-                    text = text.Substring(len);
-
-                    if (len < text.Length)
-                        leftMargin = 0;
-                }
-
-                return chunks;
-            }
-
-            public bool JoinChunk(TextChunk nextChunk, int leftMargin, int maxWidth, Font font, Func<string, int> MeasureWidth)
-            {
-                int newWidth = MeasureWidth(text + nextChunk.text);
-
-                if (!absNewline && leftMargin + newWidth <= maxWidth && brush.Color == nextChunk.brush.Color && strikeout == nextChunk.strikeout)
-                {
-                    text += nextChunk.text;
-                    bounds.Width = newWidth;
-                    newline = nextChunk.newline;
-                    absNewline = nextChunk.absNewline;
-
-                    return true;
-                }
-                else
-                    return false;
-            }
-        }
 
         enum HideStyle { Disappear, Fade, ScrollUp, ScrollDown, ScrollLeft, ScrollRight };
 
@@ -225,15 +49,15 @@ namespace Adjutant
         Brush brush = Brushes.White;
         Color echoColor, errorColor, helpColor, todoMiscColor, todoItemColor, todoDoneColor, twUserColor, twMiscColor, twTweetColor, twLinkColor, twTimeColor, twCountColor, mailCountColor, mailHeaderColor, mailSummaryColor;
         DateTime autoHide, pauseEnd, lastTwCount;
-        List<TextChunk> chunks = new List<TextChunk>();
+        List<Chunk> chunks = new List<Chunk>();
         Dictionary<string, string> customCmds;
         List<string> history = new List<string>(), twURLs = new List<string>(), twMentions = new List<string>(), todo;
         string[] filteredPaths;
         string python, user, dir, todoDir, inputMode, token, secret, link, mailUser, mailPass, twUsername, twSound, mailSound;
         double opacityPassive, opacityActive;
         long lastTweet;
-        int x, y, lineH, minH, maxH, prevH, maxLines, prevX, prevY, leftMargin, chunkOffset, lastChunk, lastChunkChar, printAtOnce, autoHideDelay, tabInd, historyInd, minTweetPeriod, twSoundThreshold, hotkey, newMailCount, prevNewMailCount, mailSoundThreshold, tutorialStep;
-        bool initialized, activated, winKey, prompt, blankLine, echo, ctrlKey, drag, resizeW, resizeH, autoResize, hiding, hidden, todoHideDone, todoAutoTransfer, twUpdateOnNewTweet, twUpdateOnFocus, twOutput, twPrevCountBelowThreshold, mailUpdateOnNewMail, mailUpdateOnFocus, hotkeyCtrl, hotkeyAlt, hotkeyShift;
+        int x, y, lineH, minH, maxH, prevH, prevX, prevY, leftMargin, chunkOffset, lastChunk, lastChunkChar, printAtOnce, autoHideDelay, tabInd, historyInd, minTweetPeriod, twSoundThreshold, hotkey, newMailCount, prevNewMailCount, mailSoundThreshold, tutorialStep;
+        bool initialized, winKey, prompt, blankLine, echo, ctrlKey, drag, resizeW, resizeH, autoResize, hiding, hidden, todoHideDone, todoAutoTransfer, twUpdateOnNewTweet, twUpdateOnFocus, twOutput, twPrevCountBelowThreshold, mailUpdateOnNewMail, mailUpdateOnFocus, hotkeyCtrl, hotkeyAlt, hotkeyShift;
         #endregion
 
 
@@ -334,11 +158,6 @@ namespace Adjutant
                     chunks[chInd++].Draw(gfx, txtCMD.Font, ref x, ref y);
                 chunks[lastChunk].Draw(gfx, txtCMD.Font, ref x, ref y, lastChunkChar);
             }
-        }
-
-        void measureLineHeight()
-        {
-            lineH = (int)grafx.Graphics.MeasureString("A", txtCMD.Font).Height;
         }
 
         int measureWidth(string txt)
@@ -859,10 +678,22 @@ namespace Adjutant
             else if (options.chkItalic.Checked)
                 style = FontStyle.Italic;
 
+            Font prevFont = lblPrompt.Font;
+
             lblPrompt.Font = new Font(options.comboFont.Text, (float)options.numFontSize.Value, style);
             txtCMD.Font = new Font(options.comboFont.Text, (float)options.numFontSize.Value, style);
             lblPrompt.ForeColor = options.picTextColor.BackColor;
             txtCMD.ForeColor = options.picTextColor.BackColor;
+
+            if (lblPrompt.Font != prevFont)
+            {
+                windowAutosize();
+
+                foreach (Chunk chunk in chunks)
+                    chunk.SetTextBounds(new Rectangle(0, 0, measureWidth(chunk.ToString()), lineH));
+
+                update();
+            }
 
             dir = options.txtStartDir.Text;
             setDelay(timerPrint, (int)options.numPrintDelay.Value);
@@ -912,7 +743,8 @@ namespace Adjutant
             windowAutosize();
             setPrompt();
 
-            gmail.ChangeLogin(mailUser, mailPass);
+            if (gmail != null)
+                gmail.ChangeLogin(mailUser, mailPass);
 
             saveOptions();
         }
@@ -1514,57 +1346,61 @@ namespace Adjutant
             grafx = context.Allocate(this.CreateGraphics(), new Rectangle(0, 0, this.Width, this.Height));
 
             //calc window height
-            measureLineHeight();
-            maxLines = txtCMD.Top / lineH;
+            lineH = (int)grafx.Graphics.MeasureString("A", txtCMD.Font).Height;
         }
 
         void jumpToLastLine()
         {
-            if (lastChunk == -1)
+            if (chunks.Count == 0 || lastChunk == -1)
                 chunkOffset = 0;
             else
-            {
                 do
                 {
+                    //go through chunks until their output wouldn't fit in the console (1 page of console output)
                     chunkOffset = lastChunk;
-                    int countedLines = 0;
 
-                    while (chunkOffset > 0 && countedLines < maxLines)
+                    //first go through last line
+                    int h = chunks[chunkOffset].GetHeight();
+
+                    while (!chunks[chunkOffset].IsNewline())
+                        chunkOffset--;
+
+                    //then go through previous lines
+                    while (chunkOffset > 0 && h + chunks[chunkOffset - 1].GetHeight() < txtCMD.Top)
                     {
                         chunkOffset--;
 
                         if (chunks[chunkOffset].IsNewline())
-                            countedLines++;
+                            h += chunks[chunkOffset].GetHeight();
 
                         //move to the first chunk in this line
                         while (chunkOffset > 0 && !chunks[chunkOffset - 1].IsNewline())
                             chunkOffset--;
                     }
 
-                    if (countedLines == maxLines && this.Height + lineH <= maxH)
+                    if (chunkOffset > 0 && h + chunks[chunkOffset - 1].GetHeight() >= txtCMD.Top && this.Height + chunks[chunkOffset - 1].GetHeight() <= maxH)
                     {
                         //increase console height by 1 line
                         autoResize = true;
-                        this.Height += lineH;
+                        this.Height += chunks[chunkOffset - 1].GetHeight();
                         windowAutosize();
                     }
-                    else 
+                    else
                     {
-                        if (this.Height + lineH > maxH && countedLines == maxLines)
-                            //skip 1 line
-                            do
-                            {
-                                if (chunkOffset == chunks.Count - 1)
-                                    break;
-                                else
-                                    chunkOffset++;
-                            }
-                            while (!chunks[chunkOffset - 1].IsNewline());
+                        //if (chunkOffset > 0 && this.Height + chunks[chunkOffset - 1].GetHeight() > maxH && h + chunks[chunkOffset - 1].GetHeight() >= txtCMD.Top)
+                        //    //skip 1 line
+                        //    do
+                        //    {
+                        //        if (chunkOffset == chunks.Count - 1)
+                        //            break;
+                        //        else
+                        //            chunkOffset++;
+                        //    }
+                        //    while (!chunks[chunkOffset - 1].IsNewline());
 
                         break; //console height is fine or can't increase it anymore, so exit the loop
                     }
                 } while (true);
-            }
 
             //ensure adjutant remains hidden
             if (hidden && hideStyle == HideStyle.ScrollUp)
@@ -1596,6 +1432,7 @@ namespace Adjutant
             update();
         }
 
+        #region Printing procedures
         void print(string txt)
         {
             print(txt, "", true, txtCMD.ForeColor, false);
@@ -1628,13 +1465,51 @@ namespace Adjutant
 
         void print(string txt, string link, bool newline, Color color)
         {
-            print(txt, link, true, color, false);
+            print(txt, link, newline, color, false);
         }
 
         void print(string txt, string link, bool newline, Color color, bool strikeout)
         {
             if (txt == "")
                 txt = " "; //blank line
+
+            while (txt.Contains("<image="))
+            {
+                //split into chunks
+                int lb = txt.IndexOf("<image=");
+
+                if (lb != 0)
+                    print(txt.Substring(0, lb), link, false, color, strikeout); //print text before image
+
+                lb += 7;
+                int ub = txt.IndexOf('>', lb);
+
+                if (ub != -1)
+                {
+                    //print img
+                    Chunk imgChunk = new Chunk(txt.Substring(lb, ub - lb), link, true, newline);
+
+                    //can img fit in current line?
+                    if (leftMargin + imgChunk.GetWidth() > this.Width && chunks.Count > 0)
+                        chunks[chunks.Count - 1].InsertNewline();
+
+                    //chunks.Add(new Chunk(txt.Substring(lb, ub - lb), link, newline && ub == txt.Length - 1, newline));
+                    chunks.Add(imgChunk);
+
+                    if (newline)
+                        leftMargin = 0;
+                    else
+                        leftMargin += 0; //todo
+
+                    showNewChunks();
+
+                    txt = txt.Substring(ub + 1);
+                    if (txt == "")
+                        return;
+                }
+                else
+                    break;
+            }
 
             if (lastChunk == -1)
                 lastChunk = 0;
@@ -1643,12 +1518,12 @@ namespace Adjutant
                 txt = txt.Replace("<pause>", "");
             else
                 txt = txt.Replace("<pause>", Environment.NewLine + "<pause>" + Environment.NewLine);
-            
+
             string[] lines = txt.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
             for (int i = 0; i < lines.Length; i++)
             {
                 bool nLine = i == lines.Length - 1 ? newline : true;
-                List<TextChunk> newChunks = TextChunk.Chunkify(lines[i], link, color, strikeout, leftMargin, this.Width, txtCMD.Font, nLine, nLine, measureWidth, lineH);
+                List<Chunk> newChunks = Chunk.Chunkify(lines[i], link, color, strikeout, leftMargin, this.Width, txtCMD.Font, nLine, nLine, measureWidth, lineH);
 
                 chunks.AddRange(newChunks);
 
@@ -1658,15 +1533,19 @@ namespace Adjutant
                 {
                     if (newChunks.Count > 1)
                         leftMargin = 0;
-                    leftMargin += measureWidth(newChunks[newChunks.Count - 1].ToString());
+
+                    //leftMargin += measureWidth(newChunks[newChunks.Count - 1].ToString());
+                    leftMargin += newChunks[newChunks.Count - 1].GetWidth();
                 }
             }
 
+            showNewChunks();
+        }
+
+        void showNewChunks()
+        {
             if (timerPrint.Interval != ZERO_DELAY)
             {
-                if (this.InvokeRequired)
-                    MessageBox.Show("error - invoke required");
-
                 jumpToLastLine();
                 timerPrint.Enabled = true;
             }
@@ -1703,7 +1582,8 @@ namespace Adjutant
             }
             else
                 print(""); //newline
-        }
+        } 
+        #endregion
 
         void flush()
         {
@@ -2594,7 +2474,9 @@ namespace Adjutant
 
         string getNextURL(string tweet, out int ind)
         {
-            string match = Regex.Match(tweet, @"((http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?)").ToString();
+            //match all URLs not preceded by <image=
+            string match = Regex.Match(tweet, @"((?<!\<image\=)(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?)").ToString();
+            //string match = Regex.Match(tweet, @"((http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?)").ToString();
 
             if (match != "")
                 ind = tweet.IndexOf(match);
@@ -2641,16 +2523,9 @@ namespace Adjutant
                 {
                     if (urlInd < mentionInd)
                     {
-                        string newUrl = url;
-                        if (newTweet.urls.Count > 0)
-                        {
-                            newUrl = newTweet.urls[0];
-                            newTweet.urls.RemoveAt(0);
-                        }
-
                         print(tweet.Substring(0, urlInd), false, twTweetColor);
-                        print(newUrl, newUrl, false, twLinkColor);
-                        twURLs.Add(newUrl);
+                        print(url, url, false, twLinkColor);
+                        twURLs.Add(url);
 
                         tweet = tweet.Remove(0, urlInd + url.Length);
                     }
@@ -3017,6 +2892,7 @@ namespace Adjutant
                 print("What is your name?");
                 inputMode = "user";
                 setPrompt();
+
                 return;
             }
 
@@ -3025,11 +2901,11 @@ namespace Adjutant
             greeting();
             todoLoad();
 
-            ////twitter init
-            //twitterInit();
+            //twitter init
+            twitterInit();
 
             ////mail init
-            //mailInit();
+            mailInit();
         }
 
         private void formMain_Activated(object sender, EventArgs e)
@@ -3046,8 +2922,6 @@ namespace Adjutant
                 initialized = true;
             }
 
-            activated = true;
-
             txtCMD.Focus();
 
             if (twitter.AnyNewTweets() && twUpdateOnFocus && DateTime.Now.Subtract(lastTwCount).TotalSeconds >= minTweetPeriod)
@@ -3059,7 +2933,6 @@ namespace Adjutant
 
         private void formMain_Deactivate(object sender, EventArgs e)
         {
-            activated = false;
             this.Opacity = opacityPassive;
         }
 
@@ -3081,13 +2954,13 @@ namespace Adjutant
                     chunks.RemoveAt(i + 1);
 
                 //need to split chunk?
-                List<TextChunk> newChunks = TextChunk.Chunkify(chunks[i].ToString(), chunks[i].GetLink(), chunks[i].GetColor(), chunks[i].GetStrikeout(), lMarg, this.Width, txtCMD.Font, true, chunks[i].IsAbsNewline(), measureWidth, lineH);
+                List<Chunk> newChunks = Chunk.Chunkify(chunks[i].ToString(), chunks[i].GetLink(), chunks[i].GetColor(), chunks[i].GetStrikeout(), lMarg, this.Width, txtCMD.Font, true, chunks[i].IsAbsNewline(), measureWidth, lineH);
 
                 if (newChunks.Count > 1)
                 {
                     chunks.RemoveAt(i);
 
-                    foreach (TextChunk chunk in newChunks)
+                    foreach (Chunk chunk in newChunks)
                         chunks.Insert(i++, chunk);
 
                     i--;
@@ -3098,7 +2971,8 @@ namespace Adjutant
                 if (chunks[i].IsNewline())
                     lMarg = 0;
                 else
-                    lMarg += measureWidth(chunks[i].ToString());
+                    //lMarg += measureWidth(chunks[i].ToString());
+                    lMarg += chunks[i].GetWidth();
             }
 
             if (lastChunk >= chunks.Count)

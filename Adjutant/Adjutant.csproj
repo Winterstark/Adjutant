@@ -74,6 +74,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="classAES.cs" />
+    <Compile Include="classChunk.cs" />
     <Compile Include="classHotkey.cs" />
     <Compile Include="classGmail.cs" />
     <Compile Include="classMisc.cs" />

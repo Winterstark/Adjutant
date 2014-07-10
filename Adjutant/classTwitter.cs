@@ -19,33 +19,96 @@ namespace Adjutant
             public string user, actualUsername, text, url; //url of the tweet
             public DateTime created;
             public long id;
-            public List<string> urls; //urls in tweet text
 
-            public Tweet(string user, string actualUsername, string text, DateTime created, long id, string urlField)
+            public Tweet(string user, string actualUsername, string text, DateTime created, long id, string urlField, string mediaField)
             {
-                this.user = user;
-                this.actualUsername = actualUsername;
-                this.text = HttpUtility.HtmlDecode(Regex.Unescape(text)).Replace("\n", Environment.NewLine);
-                this.created = created;
-                this.id = id;
+                int lb, ub;
 
-                url = "https://twitter.com/" + user + "/status/" + id;
-
-                //parse urlField
-                urls = new List<string>();
-
+                //expand urlsk
                 if (urlField != "[]")
                 {
                     if (urlField.Length > 4)
                         urlField = urlField.Substring(2, urlField.Length - 4); //remove outermost brackets [{ ... }]
 
                     foreach (string urlSegment in urlField.Split(new string[] { "},{" }, StringSplitOptions.None))
-                    {
-                        int lb = urlSegment.IndexOf("\"expanded_url\":\"") + 16;
-                        int ub = urlSegment.IndexOf("\"", lb);
+                        text = text.Replace(getField(urlSegment, "url"), getField(urlSegment, "expanded_url"));
+                }
 
-                        urls.Add(Regex.Unescape(urlSegment.Substring(lb, ub - lb)));
+                //parse mediaField
+                string textURL = "";
+
+                if (mediaField.Contains("\"url\":\""))
+                {
+                    lb = mediaField.IndexOf("\"url\":\"") + 7;
+                    ub = mediaField.IndexOf('"', lb);
+
+                    textURL = mediaField.Substring(lb, ub - lb);
+                }
+
+                if (mediaField.Contains("\"media_url\":\""))
+                {
+                    lb = mediaField.IndexOf("\"media_url\":\"") + 13;
+                    ub = mediaField.IndexOf('"', lb);
+
+                    string imgInfo = "<image=" + mediaField.Substring(lb, ub - lb) + ">";
+
+                    if (textURL != "")
+                        text = text.Replace(textURL, imgInfo);
+                    else
+                        text += " " + imgInfo;
+                }
+
+                //decode and unescape tweet text
+                text = HttpUtility.HtmlDecode(Regex.Unescape(text));
+
+                //replace instagram links with direct image links
+                if (true) //todo option to enable/disable downloading imgs for instagram
+                {
+                    ub = 0;
+
+                    while (text.IndexOf("instagram.com/p/", ub) != -1)
+                    {
+                        lb = text.IndexOf("instagram.com/p/");
+
+                        if (lb >= 4 && text.Substring(lb - 4, 4) == "www.")
+                            lb -= 4;
+                        if (lb >= 7 && text.Substring(lb - 7, 7) == "http://")
+                            lb -= 7;
+
+                        ub = text.IndexOf("/p/", lb);
+                        ub = text.IndexOf("/", ub + 3);
+
+                        if (ub != -1)
+                            text = text.Insert(ub + 1, "media>").Insert(lb, "<image="); //add "/?size=l" for large. Other sizes: m for medium and t for thumbnail (default)
+                        else
+                            ub = text.IndexOf("/p/", lb); //invalid instagram link, move on
                     }
+                }
+
+                //save tweet args
+                this.user = user;
+                this.actualUsername = actualUsername;
+                this.text = text.Replace("\n", Environment.NewLine);
+                this.created = created;
+                this.id = id;
+
+                url = "https://twitter.com/" + user + "/status/" + id;
+            }
+
+            static string getField(string response, string fieldName)
+            {
+                try
+                {
+                    string tag = "\"" + fieldName + "\":\"";
+
+                    int lb = response.IndexOf(tag) + tag.Length;
+                    int ub = response.IndexOf('"', lb);
+
+                    return response.Substring(lb, ub - lb);
+                }
+                catch
+                {
+                    return "";
                 }
             }
         }
@@ -260,7 +323,14 @@ namespace Adjutant
                     DataNode userDetails = tweetRootNode.childNodes.Find(node => node.name == "user");
 
                     //find url field
-                    string urls = tweetRootNode.childNodes.Find(node => node.name == "entities").fields["urls"];
+                    string urlField = tweetRootNode.childNodes.Find(node => node.name == "entities").fields["urls"];
+
+                    //find media field
+                    string mediaField = "";
+                    DataNode extEntities = tweetRootNode.childNodes.Find(node => node.name == "extended_entities");
+
+                    if (extEntities != null && extEntities.fields.ContainsKey("media"))
+                        mediaField = extEntities.fields["media"];
 
                     //convert created_at to DateTime
                     string created = tweetRootNode.fields["created_at"];
@@ -301,8 +371,13 @@ namespace Adjutant
                         }
                     }
 
+                    //if (text.ToLower().Contains("cis in game 1"))
+                    //{
+                    //    int xxxx = 9;
+                    //}
+                    
                     //add tweet
-                    newTweets.Add(new Tweet(userDetails.fields["name"], userDetails.fields["screen_name"], text, time, long.Parse(tweetRootNode.fields["id"]), urls));
+                    newTweets.Add(new Tweet(userDetails.fields["name"], userDetails.fields["screen_name"], text, time, long.Parse(tweetRootNode.fields["id"]), urlField, mediaField));
                 }
 
                 //add new tweets, in reverse order (oldest to newest)
