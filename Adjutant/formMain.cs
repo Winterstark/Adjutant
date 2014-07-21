@@ -1424,10 +1424,10 @@ namespace Adjutant
 
                     while (chunkInd > 0 && !chunks[chunkInd - 1].IsNewline())
                     {
+                        chunkInd--;
+
                         if (getChunkHeight(chunkInd) > h)
                             h = getChunkHeight(chunkInd);
-
-                        chunkInd--;
                     }
 
                     if (sumH + h <= txtCMD.Top)
@@ -1472,10 +1472,10 @@ namespace Adjutant
 
         int getChunkHeight(int chunkInd)
         {
-            if (printingImgs.Count > 0 && chunkInd != printingImgs[0])
-                return chunks[chunkInd].GetHeight();
-            else
+            if (printingImgs.Count > 0 && chunkInd == printingImgs[0])
                 return currImgChunkH;
+            else
+                return chunks[chunkInd].GetHeight();
         }
 
         void update()
@@ -1569,7 +1569,7 @@ namespace Adjutant
                     if (newline)
                         leftMargin = 0;
                     else
-                        leftMargin += 0; //todo
+                        leftMargin += imgChunk.GetWidth();
 
                     if (imgChunk.GetHeight() > lineH)
                     {
@@ -2976,30 +2976,32 @@ namespace Adjutant
             print("Adjutant online.<pause>");
             greeting();
             todoLoad();
-            
-            //string kappa = @"<image=C:\Users\Winterstark\Desktop\Kappa.png>";
 
-            //print(@"Grey Face - no space" + kappa + kappa + kappa);
-            //print("IT WORKS!");
-            //print(@"asdf <image=C:\Users\Winterstark\Desktop\~gypcg - Blue forest.jpg> 1234");
+            string kappa = @"<image=C:\Users\Winterstark\Desktop\Kappa.png>";
 
-            //print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
-            //print("asdfasdfasdda");
-            //print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
+            print(@"Grey Face - no space" + kappa + kappa + kappa);
+            print("IT WORKS!");
+            print(@"asdf <image=C:\Users\Winterstark\Desktop\~gypcg - Blue forest.jpg> 1234");
 
-            //print(@"Grey Face - no space" + kappa + kappa + kappa);
-            //print("IT WORKS!");
-            //print(@"asdf <image=C:\Users\Winterstark\Desktop\~gypcg - Blue forest.jpg> 1234");
+            print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
+            print("asdfasdfasdda");
+            print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
 
-            //print(@"Grey Face - no space" + kappa + kappa + kappa);
-            //print("IT WORKS!");
-            //print(@"asdf <image=C:\Users\Winterstark\Desktop\~gypcg - Blue forest.jpg> 1234");
+            print(@"Grey Face - no space" + kappa + kappa + kappa);
+            print("IT WORKS!");
+            print(@"asdf <image=C:\Users\Winterstark\Desktop\~gypcg - Blue forest.jpg> 1234");
 
-            //print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
-            //print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
-            print(@"<image=C:\dev\projex\Adjutant\Adjutant\bin\Debug\ui\loading.gif>");
+            print(@"Grey Face - no space" + kappa + kappa + kappa);
+            print("IT WORKS!");
+            print(@"asdf <image=C:\Users\Winterstark\Desktop\~gypcg - Blue forest.jpg> 1234");
 
-            //print("<image=http://i.imgur.com/e35VrD7.jpg>");
+            print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
+            print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
+
+            //print(@"<image=C:\dev\projex\Adjutant\Adjutant\bin\Debug\ui\loading.gif>", false); print(" STILL THE SAME LINE", false);
+            //print(@"<image=C:\dev\projex\Adjutant\Adjutant\bin\Debug\ui\loading.gif>", false); print(" STILL THE SAME LINE", false);
+            //print(@"<image=C:\dev\projex\Adjutant\Adjutant\bin\Debug\ui\loading.gif>", false); print(" STILL THE SAME LINE?????", false);
+
             //print("<image=http://img.moviepilot.com/assets/tarantulaV2/long_form_background_images/1378462980_korra1.jpg>");
 
             ////twitter init
