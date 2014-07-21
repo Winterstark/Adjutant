@@ -52,11 +52,12 @@ namespace Adjutant
         List<Chunk> chunks = new List<Chunk>();
         Dictionary<string, string> customCmds;
         List<string> history = new List<string>(), twURLs = new List<string>(), twMentions = new List<string>(), todo;
+        List<int> printingImgs = new List<int>();
         string[] filteredPaths;
         string python, user, dir, todoDir, inputMode, token, secret, link, mailUser, mailPass, twUsername, twSound, mailSound;
         double opacityPassive, opacityActive;
         long lastTweet;
-        int x, y, lineH, minH, maxH, prevH, prevX, prevY, leftMargin, chunkOffset, lastChunk, lastChunkChar, printAtOnce, autoHideDelay, tabInd, historyInd, minTweetPeriod, twSoundThreshold, hotkey, newMailCount, prevNewMailCount, mailSoundThreshold, tutorialStep;
+        int x, y, lineH, currImgChunkH, minH, maxH, prevH, prevX, prevY, leftMargin, yOffset, chunkOffset, lastChunk, lastChunkChar, printAtOnce, autoHideDelay, tabInd, historyInd, minTweetPeriod, twSoundThreshold, hotkey, newMailCount, prevNewMailCount, mailSoundThreshold, tutorialStep;
         bool initialized, winKey, prompt, blankLine, echo, ctrlKey, drag, resizeW, resizeH, autoResize, hiding, hidden, todoHideDone, todoAutoTransfer, twUpdateOnNewTweet, twUpdateOnFocus, twOutput, twPrevCountBelowThreshold, mailUpdateOnNewMail, mailUpdateOnFocus, hotkeyCtrl, hotkeyAlt, hotkeyShift;
         #endregion
 
@@ -101,6 +102,8 @@ namespace Adjutant
                     //get console output
                     string consoleOutput = "";
                     int ind = -1; //where console output begins on screen
+                    int h = 0; //line max height
+                    Dictionary<int, int> extraLines = new Dictionary<int, int>(); //marks how many newline chars are inserted and at what positions
 
                     for (int i = 0; i <= lastChunk && i < chunks.Count; i++)
                     {
@@ -108,6 +111,32 @@ namespace Adjutant
                             ind = consoleOutput.Length;
 
                         consoleOutput += chunks[i].GetText();
+
+                        //remember line max height
+                        if (chunks[i].GetHeight() > h)
+                            h = chunks[i].GetHeight();
+
+                        if (chunks[i].IsNewline())
+                        {
+                            h -= lineH;
+
+                            //approximate image space with blank lines
+                            while (h > lineH / 2)
+                            {
+                                consoleOutput += Environment.NewLine;
+                                h -= lineH;
+                                
+                                //remember how many extra chars are added at this position
+                                int pos = consoleOutput.Length;
+
+                                if (!extraLines.ContainsKey(pos))
+                                    extraLines.Add(pos, Environment.NewLine.Length);
+                                else
+                                    extraLines[pos] += Environment.NewLine.Length;
+                            }
+
+                            h = 0;
+                        }
                     }
 
                     //display in txtbox
@@ -128,6 +157,24 @@ namespace Adjutant
                     //scroll to end
                     txtSelection.Select(txtSelection.Text.Length, 0);
                     txtSelection.ScrollToCaret();
+
+                    //take into account extra blank lines inserted to approximate image chunks space
+                    int extraChars = 0;
+
+                    foreach (var extraLine in extraLines)
+                        if (extraLine.Key <= ind)
+                            extraChars += extraLine.Value;
+                        else
+                            break;
+
+                    //take into account yOffset
+                    while (yOffset < lineH / 2)
+                    {
+                        extraChars += Environment.NewLine.Length;
+                        yOffset += lineH;
+                    }
+
+                    ind += extraChars;
 
                     //then scroll back where console output begins on screen
                     txtSelection.Select(ind, 0);
@@ -151,12 +198,12 @@ namespace Adjutant
 
             if (chunks.Count > 0)
             {
-                int x = 0, y = 0;
+                int x = 0, y = yOffset, h = 0;
                 int chInd = chunkOffset;
 
                 while (chInd < lastChunk && y < txtCMD.Top)
-                    chunks[chInd++].Draw(gfx, txtCMD.Font, ref x, ref y);
-                chunks[lastChunk].Draw(gfx, txtCMD.Font, ref x, ref y, lastChunkChar);
+                    chunks[chInd++].Draw(gfx, txtCMD.Font, ref x, ref y, ref h);
+                chunks[lastChunk].Draw(gfx, txtCMD.Font, ref x, ref y, ref h, lastChunkChar);
             }
         }
 
@@ -687,7 +734,7 @@ namespace Adjutant
 
             if (lblPrompt.Font != prevFont)
             {
-                windowAutosize();
+                this.OnResize(new EventArgs());
 
                 foreach (Chunk chunk in chunks)
                     chunk.SetTextBounds(new Rectangle(0, 0, measureWidth(chunk.ToString()), lineH));
@@ -1351,60 +1398,84 @@ namespace Adjutant
 
         void jumpToLastLine()
         {
-            if (chunks.Count == 0 || lastChunk == -1)
+            yOffset = 0;
+
+            if (chunks.Count == 0 || lastChunk <= 0)
                 chunkOffset = 0;
             else
-                do
+            {
+                //go through chunks until their output wouldn't fit in the console (1 page of console output)
+                chunkOffset = lastChunk;
+
+                int chunkInd = chunkOffset + 1;
+                int h = 0; //used for tracking the largest (tallest) chunk in a line
+                int sumH = 0; //used for tracking the total height of processed lines
+
+                while (h == 0) //h will become nonzero when a line doesn't fit into the console window (and the console window height cannot be increased)
                 {
-                    //go through chunks until their output wouldn't fit in the console (1 page of console output)
-                    chunkOffset = lastChunk;
+                    //any more lines?
+                    chunkInd--;
 
-                    //first go through last line
-                    int h = chunks[chunkOffset].GetHeight();
+                    if (chunkInd < 0)
+                        break;
 
-                    while (!chunks[chunkOffset].IsNewline())
-                        chunkOffset--;
+                    //scan through next line to find out its height and starting chunk
+                    h = getChunkHeight(chunkInd);
 
-                    //then go through previous lines
-                    while (chunkOffset > 0 && h + chunks[chunkOffset - 1].GetHeight() < txtCMD.Top)
+                    while (chunkInd > 0 && !chunks[chunkInd - 1].IsNewline())
                     {
-                        chunkOffset--;
+                        if (getChunkHeight(chunkInd) > h)
+                            h = getChunkHeight(chunkInd);
 
-                        if (chunks[chunkOffset].IsNewline())
-                            h += chunks[chunkOffset].GetHeight();
-
-                        //move to the first chunk in this line
-                        while (chunkOffset > 0 && !chunks[chunkOffset - 1].IsNewline())
-                            chunkOffset--;
+                        chunkInd--;
                     }
 
-                    if (chunkOffset > 0 && h + chunks[chunkOffset - 1].GetHeight() >= txtCMD.Top && this.Height + chunks[chunkOffset - 1].GetHeight() <= maxH)
+                    if (sumH + h <= txtCMD.Top)
                     {
-                        //increase console height by 1 line
-                        autoResize = true;
-                        this.Height += chunks[chunkOffset - 1].GetHeight();
-                        windowAutosize();
+                        //this line fits into console window
+                        sumH += h;
+                        h = 0;
+
+                        chunkOffset = chunkInd;
                     }
                     else
                     {
-                        //if (chunkOffset > 0 && this.Height + chunks[chunkOffset - 1].GetHeight() > maxH && h + chunks[chunkOffset - 1].GetHeight() >= txtCMD.Top)
-                        //    //skip 1 line
-                        //    do
-                        //    {
-                        //        if (chunkOffset == chunks.Count - 1)
-                        //            break;
-                        //        else
-                        //            chunkOffset++;
-                        //    }
-                        //    while (!chunks[chunkOffset - 1].IsNewline());
+                        //is it possible to increase console window height?
+                        int dH = sumH + h - txtCMD.Top;
 
-                        break; //console height is fine or can't increase it anymore, so exit the loop
+                        if (this.Height + dH <= maxH)
+                        {
+                            //enlarge window
+                            autoResize = true;
+                            this.Height += dH;
+                            windowAutosize();
+
+                            //accept line
+                            chunkOffset = chunkInd;
+                            sumH += h;
+                            h = 0;
+                        }
+                        else if (sumH < txtCMD.Top && h > lineH) //if there is empty space left and the line that doesn't fit contains images
+                        {
+                            //draw the line that doesn't fit with an offset (so the lower parts of the images will be visible)
+                            chunkOffset = chunkInd;
+                            yOffset = -h + (txtCMD.Top - sumH);
+                        }
                     }
-                } while (true);
+                }
+            }
 
             //ensure adjutant remains hidden
             if (hidden && hideStyle == HideStyle.ScrollUp)
                 this.Top = -this.Height + 1;
+        }
+
+        int getChunkHeight(int chunkInd)
+        {
+            if (printingImgs.Count > 0 && chunkInd != printingImgs[0])
+                return chunks[chunkInd].GetHeight();
+            else
+                return currImgChunkH;
         }
 
         void update()
@@ -1487,19 +1558,25 @@ namespace Adjutant
                 if (ub != -1)
                 {
                     //print img
-                    Chunk imgChunk = new Chunk(txt.Substring(lb, ub - lb), link, true, newline);
+                    Chunk imgChunk = new Chunk(txt.Substring(lb, ub - lb), link, newline && ub == txt.Length - 1, newline);
 
                     //can img fit in current line?
                     if (leftMargin + imgChunk.GetWidth() > this.Width && chunks.Count > 0)
-                        chunks[chunks.Count - 1].InsertNewline();
+                        chunks[chunks.Count - 1].InsertNewline(); //nope, send img to next line
 
-                    //chunks.Add(new Chunk(txt.Substring(lb, ub - lb), link, newline && ub == txt.Length - 1, newline));
                     chunks.Add(imgChunk);
 
                     if (newline)
                         leftMargin = 0;
                     else
                         leftMargin += 0; //todo
+
+                    if (imgChunk.GetHeight() > lineH)
+                    {
+                        //don't print the following chunks until this image has been displayed entirely (1 line at a time)
+                        printingImgs.Add(chunks.Count - 1);
+                        currImgChunkH = lineH;
+                    }
 
                     showNewChunks();
 
@@ -1534,7 +1611,6 @@ namespace Adjutant
                     if (newChunks.Count > 1)
                         leftMargin = 0;
 
-                    //leftMargin += measureWidth(newChunks[newChunks.Count - 1].ToString());
                     leftMargin += newChunks[newChunks.Count - 1].GetWidth();
                 }
             }
@@ -2900,12 +2976,37 @@ namespace Adjutant
             print("Adjutant online.<pause>");
             greeting();
             todoLoad();
+            
+            //string kappa = @"<image=C:\Users\Winterstark\Desktop\Kappa.png>";
 
-            //twitter init
-            twitterInit();
+            //print(@"Grey Face - no space" + kappa + kappa + kappa);
+            //print("IT WORKS!");
+            //print(@"asdf <image=C:\Users\Winterstark\Desktop\~gypcg - Blue forest.jpg> 1234");
 
-            ////mail init
-            mailInit();
+            //print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
+            //print("asdfasdfasdda");
+            //print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
+
+            //print(@"Grey Face - no space" + kappa + kappa + kappa);
+            //print("IT WORKS!");
+            //print(@"asdf <image=C:\Users\Winterstark\Desktop\~gypcg - Blue forest.jpg> 1234");
+
+            //print(@"Grey Face - no space" + kappa + kappa + kappa);
+            //print("IT WORKS!");
+            //print(@"asdf <image=C:\Users\Winterstark\Desktop\~gypcg - Blue forest.jpg> 1234");
+
+            //print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
+            //print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
+            print(@"<image=C:\dev\projex\Adjutant\Adjutant\bin\Debug\ui\loading.gif>");
+
+            //print("<image=http://i.imgur.com/e35VrD7.jpg>");
+            //print("<image=http://img.moviepilot.com/assets/tarantulaV2/long_form_background_images/1378462980_korra1.jpg>");
+
+            ////twitter init
+            //twitterInit();
+
+            //////mail init
+            //mailInit();
         }
 
         private void formMain_Activated(object sender, EventArgs e)
@@ -2938,11 +3039,16 @@ namespace Adjutant
 
         private void formMain_Resize(object sender, EventArgs e)
         {
-            if (autoResize) //if Adjutant resized itself
+            if (autoResize)
             {
+                //if Adjutant resized itself do nothing here
                 autoResize = false;
                 return;
             }
+
+            //note new width
+            txtCMD.Width = this.Width;
+            Chunk.ConsoleWidth = this.Width;
 
             int lMarg = 0;
 
@@ -2955,9 +3061,12 @@ namespace Adjutant
 
                 //need to split chunk?
                 List<Chunk> newChunks = Chunk.Chunkify(chunks[i].ToString(), chunks[i].GetLink(), chunks[i].GetColor(), chunks[i].GetStrikeout(), lMarg, this.Width, txtCMD.Font, true, chunks[i].IsAbsNewline(), measureWidth, lineH);
-
+                
                 if (newChunks.Count > 1)
                 {
+                    if (lastChunk >= i) //if new chunks are inserted before lastChunk
+                        lastChunk += newChunks.Count - 1; //change lastChunk accordingly
+
                     chunks.RemoveAt(i);
 
                     foreach (Chunk chunk in newChunks)
@@ -2971,7 +3080,6 @@ namespace Adjutant
                 if (chunks[i].IsNewline())
                     lMarg = 0;
                 else
-                    //lMarg += measureWidth(chunks[i].ToString());
                     lMarg += chunks[i].GetWidth();
             }
 
@@ -2987,17 +3095,8 @@ namespace Adjutant
 
             if (context != null)
             {
-                //resize buffers, graphics, etc.
-                context.MaximumBuffer = new Size(this.Width + 1, this.Height + 1);
-
-                if (grafx != null)
-                {
-                    grafx.Dispose();
-                    grafx = null;
-                }
-
-                grafx = context.Allocate(this.CreateGraphics(), new Rectangle(0, 0, this.Width, this.Height));
-
+                windowAutosize();
+                //jumpToLastLine();
                 draw(grafx.Graphics);
                 this.Refresh();
             }
@@ -3084,34 +3183,105 @@ namespace Adjutant
                 return;
 
             //scroll up/down 3 lines
-            int i = 0;
+            int scrollLineH = 0, yToScroll = 3 * lineH;
 
             if (e.Delta < 0)
-                while (i < 3)
+                while (yToScroll > 0)
                 {
+                    //are there any more chunks?
                     if (chunkOffset == chunks.Count - 1)
                         break;
 
-                    if (chunks[chunkOffset].IsNewline())
-                        i++;
+                    //get current chunk height
+                    int h = chunks[chunkOffset].GetHeight();
 
+                    //is the chunk larger than the y amount left to scroll? (e.g. the chunk is a big image)
+                    if (h > yToScroll)
+                    {
+                        if (yOffset - yToScroll > -h)
+                        {
+                            //don't skip drawing this chunk, just push it upwards
+                            yOffset -= yToScroll;
+
+                            //and move to the start of the current line
+                            while (chunkOffset > 0 && !chunks[chunkOffset - 1].IsNewline())
+                                chunkOffset--;
+                            break;
+                        }
+                        else
+                        {
+                            //entire image chunk has been pushed upwards -> continue scrolling through chunks
+                            scrollLineH = h - (-yOffset);
+                            yOffset = 0;
+                        }
+                    }
+
+                    //is this the last chunk in current line?
+                    if (chunks[chunkOffset].IsNewline())
+                    {
+                        yToScroll -= scrollLineH;
+                        scrollLineH = 0;
+                    }
+
+                    //make note of tallest chunk in current line
+                    if (h > scrollLineH)
+                        scrollLineH = h;
+
+                    //move to next chunk
                     chunkOffset++;
                 }
             else
-                while (i < 3)
+            {
+                //move to the first chunk in this line (it probably already is, but make sure)
+                while (chunkOffset > 0 && !chunks[chunkOffset - 1].IsNewline())
+                    chunkOffset--;
+
+                while (yToScroll > 0)
                 {
+                    //are there any more chunks?
                     if (chunkOffset == 0)
                         break;
 
-                    chunkOffset--;
+                    //scan through the previous line: find out the first chunk in the line and the max height
+                    int tempChInd = chunkOffset;
+                    scrollLineH = 0;
 
-                    if (chunks[chunkOffset].IsNewline())
-                        i++;
+                    if (yOffset == 0)
+                    {
+                        do
+                        {
+                            tempChInd--;
 
-                    //move to the first chunk in this line
-                    while (chunkOffset > 0 && !chunks[chunkOffset - 1].IsNewline())
-                        chunkOffset--;
+                            if (chunks[tempChInd].GetHeight() > scrollLineH)
+                                scrollLineH = chunks[tempChInd].GetHeight();
+                        } while (tempChInd > 0 && !chunks[tempChInd - 1].IsNewline());
+                    }
+                    else
+                    {
+                        //image chunk is in the middle of being scrolled through
+                        if (yOffset + yToScroll < 0)
+                        {
+                            //image chunk partly scrolled through
+                            yOffset += yToScroll;
+                            break;
+                        }
+                        else
+                        {
+                            //entire image chunk has been scrolled through
+                            scrollLineH = -yOffset;
+                            yOffset = 0;
+                        }
+                    }
+
+                    //is the line larger than the y amount left to scroll? (e.g. the line contains a big image)
+                    if (scrollLineH > yToScroll)
+                        yOffset = -scrollLineH + yToScroll;
+
+                    //move to start of previous line
+                    chunkOffset = tempChInd;
+                    yToScroll -= scrollLineH;
                 }
+            }
 
             draw(grafx.Graphics);
             this.Refresh();
@@ -3344,6 +3514,20 @@ namespace Adjutant
 
             update();
 
+            //check if currently printing image
+            if (printingImgs.Count > 0 && lastChunk == printingImgs[0])
+            {
+                currImgChunkH += lineH;
+
+                if (currImgChunkH >= chunks[printingImgs[0]].GetHeight())
+                {
+                    printingImgs.RemoveAt(0);
+                    currImgChunkH = lineH;
+                }
+                else
+                    return;
+            }
+
             //advance to next char/chunk
             lastChunkChar += printAtOnce;
 
@@ -3369,6 +3553,9 @@ namespace Adjutant
                         update();
                         pauseEnd = DateTime.Now.AddMilliseconds(750);
                         chunks.RemoveAt(lastChunk);
+
+                        if (printingImgs.Count > 0 && lastChunk < printingImgs[0])
+                            printingImgs[0]--;
                     }
                 }
             }

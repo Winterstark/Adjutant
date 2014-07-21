@@ -10,6 +10,9 @@ namespace Adjutant
 {
     class Chunk
     {
+        public static int ConsoleWidth; //used to check if image chunks need to be resized to fit into console
+        int prevConsoleWidth; //used to detect when console has resized
+
         string text, link;
         bool newline, absNewline, mouseOver, strikeout;
         Rectangle bounds;
@@ -35,9 +38,7 @@ namespace Adjutant
                 img = Image.FromFile(imgURL);
             else
                 img = downloadImage(imgURL);
-
-            //img.Save(@"C:\Users\Winterstark\Desktop\Sheever.png");
-
+            
             this.link = link;
             this.newline = newline;
             this.absNewline = absNewline;
@@ -126,15 +127,18 @@ namespace Adjutant
             mouseOver = false;
         }
 
-        public void Draw(Graphics gfx, Font font, ref int x, ref int y)
+        public void Draw(Graphics gfx, Font font, ref int x, ref int y, ref int h)
         {
-            Draw(gfx, font, ref x, ref y, text.Length);
+            Draw(gfx, font, ref x, ref y, ref h, text.Length);
         }
 
-        public void Draw(Graphics gfx, Font font, ref int x, ref int y, int lastChar)
+        public void Draw(Graphics gfx, Font font, ref int x, ref int y, ref int h, int lastChar)
         {
             bounds.X = x;
             bounds.Y = y;
+            
+            if (bounds.Height > h)
+                h = bounds.Height;
 
             if (mouseOver)
                 gfx.DrawRectangle(new Pen(brush), bounds);
@@ -150,14 +154,34 @@ namespace Adjutant
                 gfx.DrawString(text.Substring(0, lastChar), font, brush, x, y);
             }
             else
-                //draw image 
-                gfx.DrawImage(img, x, y, img.Width, img.Height);
+            {
+                //check if console width changed
+                if (ConsoleWidth != prevConsoleWidth)
+                {
+                    bounds.Width = img.Width;
+                    bounds.Height = img.Height;
+
+                    if (x + bounds.Width > ConsoleWidth)
+                    {
+                        //image needs to be resized
+                        bounds.Width = ConsoleWidth - x;
+                        bounds.Height = (int)((float)bounds.Width / img.Width * img.Height);
+                    }
+
+                    prevConsoleWidth = ConsoleWidth;
+                }
+
+                //draw image
+                gfx.DrawImage(img, x, y, bounds.Width, bounds.Height);
+            }
 
             //advance drawing position
             if (newline)
             {
                 x = 0;
-                y += bounds.Height;
+                y += h;
+
+                h = 0;
             }
             else
                 x += bounds.Width;
@@ -225,50 +249,33 @@ namespace Adjutant
                 return false;
         }
 
-        /// <summary>
-        /// Function to download Image from website
-        /// </summary>
-        /// <param name="_URL">URL address to download image</param>
-        /// <returns>Image</returns>
-        Image downloadImage(string _URL)
+        Image downloadImage(string url)
         {
-            Image _tmpImage = null;
+            Image img = null;
 
             try
             {
-                // Open a connection
-                System.Net.HttpWebRequest _HttpWebRequest = (System.Net.HttpWebRequest)System.Net.HttpWebRequest.Create(_URL);
+                System.Net.HttpWebRequest request = (System.Net.HttpWebRequest)System.Net.HttpWebRequest.Create(url);
 
-                _HttpWebRequest.AllowWriteStreamBuffering = true;
+                request.AllowWriteStreamBuffering = true;
 
-                // You can also specify additional header values like the user agent or the referer: (Optional)
-                _HttpWebRequest.UserAgent = "c#";
-                _HttpWebRequest.Referer = "http://www.google.com/";
+                request.UserAgent = "c#";
+                request.Referer = "http://www.google.com/";
+                request.Timeout = 20000;
 
-                // set timeout for 20 seconds (Optional)
-                _HttpWebRequest.Timeout = 20000;
+                System.Net.WebResponse response = request.GetResponse();
+                System.IO.Stream stream = response.GetResponseStream();
+                img = Image.FromStream(stream);
 
-                // Request response:
-                System.Net.WebResponse _WebResponse = _HttpWebRequest.GetResponse();
-
-                // Open data stream:
-                System.IO.Stream _WebStream = _WebResponse.GetResponseStream();
-
-                // convert webstream to image
-                _tmpImage = Image.FromStream(_WebStream);
-
-                // Cleanup
-                _WebResponse.Close();
-                _WebResponse.Close();
+                response.Close();
+                response.Close();
             }
-            catch (Exception _Exception)
+            catch
             {
-                // Error
-                Console.WriteLine("Exception caught in process: {0}", _Exception.ToString());
                 return null;
             }
 
-            return _tmpImage;
+            return img;
         }
     }
 }
