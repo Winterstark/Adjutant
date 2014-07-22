@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 
 namespace Adjutant
@@ -100,6 +101,12 @@ namespace Adjutant
         public int GetHeight()
         {
             return bounds.Height;
+        }
+
+        public void AnimateGIF(EventHandler onFrameChangedEvent)
+        {
+            if (img.GetFrameCount(new FrameDimension(img.FrameDimensionsList[0])) > 1)
+                ImageAnimator.Animate(img, onFrameChangedEvent);
         }
 
         public void SetTextBounds(Rectangle bounds)

@@ -1578,6 +1578,8 @@ namespace Adjutant
                         currImgChunkH = lineH;
                     }
 
+                    imgChunk.AnimateGIF(new EventHandler(this.OnFrameChanged)); //if gif prepare animation
+
                     showNewChunks();
 
                     txt = txt.Substring(ub + 1);
@@ -2880,7 +2882,14 @@ namespace Adjutant
 
         protected override void OnPaint(PaintEventArgs e)
         {
+            ImageAnimator.UpdateFrames();
+            draw(grafx.Graphics);
             grafx.Render(e.Graphics);
+        }
+
+        private void OnFrameChanged(object o, EventArgs e)
+        {
+            this.Invalidate(); //force OnPaint
         }
 
         void ActivityHook_KeyDown(object sender, KeyEventArgs e)
@@ -2977,26 +2986,30 @@ namespace Adjutant
             greeting();
             todoLoad();
 
-            string kappa = @"<image=C:\Users\Winterstark\Desktop\Kappa.png>";
+            //string kappa = @"<image=C:\Users\Winterstark\Desktop\Kappa.png>";
 
-            print(@"Grey Face - no space" + kappa + kappa + kappa);
-            print("IT WORKS!");
-            print(@"asdf <image=C:\Users\Winterstark\Desktop\~gypcg - Blue forest.jpg> 1234");
+            //print(@"Grey Face - no space" + kappa + kappa + kappa);
+            //print("IT WORKS!");
+            //print(@"asdf <image=C:\Users\Winterstark\Desktop\~gypcg - Blue forest.jpg> 1234");
 
-            print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
-            print("asdfasdfasdda");
-            print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
+            //print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
+            //print("asdfasdfasdda");
+            //print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
 
-            print(@"Grey Face - no space" + kappa + kappa + kappa);
-            print("IT WORKS!");
-            print(@"asdf <image=C:\Users\Winterstark\Desktop\~gypcg - Blue forest.jpg> 1234");
+            //print(@"Grey Face - no space" + kappa + kappa + kappa);
+            //print("IT WORKS!");
+            //print(@"asdf <image=C:\Users\Winterstark\Desktop\~gypcg - Blue forest.jpg> 1234");
 
-            print(@"Grey Face - no space" + kappa + kappa + kappa);
-            print("IT WORKS!");
-            print(@"asdf <image=C:\Users\Winterstark\Desktop\~gypcg - Blue forest.jpg> 1234");
+            //print(@"Grey Face - no space" + kappa + kappa + kappa);
+            //print("IT WORKS!");
+            //print(@"asdf <image=C:\Users\Winterstark\Desktop\~gypcg - Blue forest.jpg> 1234");
 
-            print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
-            print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
+            //print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
+            //print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
+
+
+            //print(@"<image=C:\dev\projex\Adjutant\Adjutant\bin\Debug\ui\loading.gif>");
+            //print(@"<image=C:\Users\Winterstark\Desktop\saeOX53.gif>");
 
             //print(@"<image=C:\dev\projex\Adjutant\Adjutant\bin\Debug\ui\loading.gif>", false); print(" STILL THE SAME LINE", false);
             //print(@"<image=C:\dev\projex\Adjutant\Adjutant\bin\Debug\ui\loading.gif>", false); print(" STILL THE SAME LINE", false);
