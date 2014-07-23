@@ -1,9 +1,9 @@
 //window
-x=155
+x=160
 y=0
-width=437
-min_height=153
-max_height=350
+width=409
+min_height=141
+max_height=383
 global_hotkey=À
 hide_delay=10
 hide_style=ScrollUp

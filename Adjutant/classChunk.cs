@@ -2,23 +2,34 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 using System.Threading.Tasks;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.IO;
+using System.ComponentModel;
 
 namespace Adjutant
 {
     class Chunk
     {
+        public static Func<string, int> MeasureWidth; //link to MeasureWidth() in formMain
+        public static Action UpdateConsole; //used to call update() in formMain.cs after image changes
+        public static Font Font; //current console font
+        public static bool InstantOutput; //if true then imgs don't have an output animation
+        public static int PrintAtOnce; //how many chars does the console print together
+        public static int LineH; //line height using the current console font
         public static int ConsoleWidth; //used to check if image chunks need to be resized to fit into console
         int prevConsoleWidth; //used to detect when console has resized
+
+        BackgroundWorker imgDownloader;
+        bool newImg;
 
         string text, link;
         bool newline, absNewline, mouseOver, strikeout;
         Rectangle bounds;
         SolidBrush brush;
         Image img;
+        int imgW, imgH; //used for image output animation
 
 
         public Chunk(string text, string link, Color color, bool strikeout, bool newline, bool absNewline, int w, int h)
@@ -36,10 +47,36 @@ namespace Adjutant
         public Chunk(string imgURL, string link, bool newline, bool absNewline)
         {
             if (File.Exists(imgURL))
+            {
                 img = Image.FromFile(imgURL);
+
+                if (InstantOutput)
+                {
+                    imgW = bounds.Width;
+                    imgH = bounds.Height;
+                }
+                else
+                {
+                    imgW = Math.Min(PrintAtOnce * MeasureWidth("A"), img.Width);
+                    imgH = Math.Min(LineH, img.Height);
+                }
+            }
             else
-                img = downloadImage(imgURL);
-            
+            {
+                //display loading animation while downloading image
+                string loadingGIF = System.Windows.Forms.Application.StartupPath + "\\ui\\loading.gif";
+
+                if (File.Exists(loadingGIF))
+                    img = Image.FromFile(loadingGIF);
+
+                //prepare worker to dl image
+                imgDownloader = new BackgroundWorker();
+                imgDownloader.DoWork += new DoWorkEventHandler(imgDownloader_DoWork);
+                imgDownloader.RunWorkerCompleted += new RunWorkerCompletedEventHandler(imgDownloader_RunWorkerCompleted);
+
+                imgDownloader.RunWorkerAsync(imgURL);
+            }
+
             this.link = link;
             this.newline = newline;
             this.absNewline = absNewline;
@@ -49,6 +86,48 @@ namespace Adjutant
             text = "";
             strikeout = false;
             brush = new SolidBrush(Color.White);
+        }
+
+        private void imgDownloader_DoWork(object sender, DoWorkEventArgs e)
+        {
+            try
+            {
+                e.Result = downloadImage((string)e.Argument);
+            }
+            catch (Exception exc)
+            {
+                e.Result = exc.Message;
+            }
+        }
+
+        private void imgDownloader_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            //System.Windows.Forms.MessageBox.Show("download complete");
+
+            //if (img != null)
+            //    img.Dispose();
+
+            if (e.Result is Image)
+            {
+                //success
+                img = (Image)e.Result;
+
+                bounds.Width = img.Width;
+                bounds.Height = img.Height;
+
+                if (InstantOutput)
+                {
+                    imgW = bounds.Width;
+                    imgH = bounds.Height;
+                }
+
+                newImg = true;
+            }
+            else
+                //convert chunk into text chunk with the error message as text
+                text = "Error while downloading image: " + (string)e.Result;
+
+            UpdateConsole();
         }
 
         public override string ToString()
@@ -95,18 +174,43 @@ namespace Adjutant
 
         public int GetWidth()
         {
-            return bounds.Width;
+            if (IsImgExpanding())
+                return imgW;
+            else
+                return bounds.Width;
         }
 
         public int GetHeight()
         {
-            return bounds.Height;
+            if (IsImgExpanding())
+                return imgH;
+            else
+                return bounds.Height;
+        }
+
+        public bool IsImgExpanding()
+        {
+            return img != null && (imgW < bounds.Width || imgH < bounds.Height);
         }
 
         public void AnimateGIF(EventHandler onFrameChangedEvent)
         {
-            if (img.GetFrameCount(new FrameDimension(img.FrameDimensionsList[0])) > 1)
+            if (img != null && img.GetFrameCount(new FrameDimension(img.FrameDimensionsList[0])) > 1)
                 ImageAnimator.Animate(img, onFrameChangedEvent);
+        }
+
+        public void DisposeResources(EventHandler onFrameChangedEvent)
+        {
+            if (img != null)
+            {
+                if (img.GetFrameCount(new FrameDimension(img.FrameDimensionsList[0])) > 1)
+                    ImageAnimator.StopAnimate(img, onFrameChangedEvent);
+
+                img.Dispose();
+            }
+
+            if (brush != null)
+                brush.Dispose();
         }
 
         public void SetTextBounds(Rectangle bounds)
@@ -162,8 +266,9 @@ namespace Adjutant
             }
             else
             {
-                //check if console width changed
+                //check if console width changed or the image changed
                 if (ConsoleWidth != prevConsoleWidth)
+                //if (ConsoleWidth != prevConsoleWidth || newImg)
                 {
                     bounds.Width = img.Width;
                     bounds.Height = img.Height;
@@ -176,10 +281,21 @@ namespace Adjutant
                     }
 
                     prevConsoleWidth = ConsoleWidth;
+                    newImg = false;
                 }
 
                 //draw image
-                gfx.DrawImage(img, x, y, bounds.Width, bounds.Height);
+                Rectangle destRect = new Rectangle(x, y, imgW, imgH);
+                Rectangle srcRect = new Rectangle(0, 0, (int)((float)imgW / bounds.Width * img.Width), (int)((float)imgH / bounds.Height * img.Height));
+
+                //gfx.DrawImage(img, x, y, bounds.Width, bounds.Height);
+                gfx.DrawImage(img, destRect, srcRect, GraphicsUnit.Pixel);
+
+                //is img expanding?)
+                if (imgW < bounds.Width)
+                    imgW = Math.Min(imgW + PrintAtOnce * MeasureWidth("A"), bounds.Width); //img first grows horizontally to a full-width line
+                else if (imgH < bounds.Height)
+                    imgH = Math.Min(imgH + LineH, bounds.Height); //then it grows vertically
             }
 
             //advance drawing position
@@ -194,7 +310,7 @@ namespace Adjutant
                 x += bounds.Width;
         }
 
-        public static List<Chunk> Chunkify(string text, string link, Color color, bool strikeout, int leftMargin, int maxWidth, Font font, bool newline, bool absNewline, Func<string, int> MeasureWidth, int lineH)
+        public static List<Chunk> Chunkify(string text, string link, Color color, bool strikeout, int leftMargin, bool newline, bool absNewline)
         {
             List<Chunk> chunks = new List<Chunk>();
 
@@ -206,7 +322,7 @@ namespace Adjutant
                 int len = text.Length;
                 int segmentW = MeasureWidth(text.Substring(0, len));
 
-                while (len > 1 && leftMargin + segmentW > maxWidth)
+                while (len > 1 && leftMargin + segmentW > ConsoleWidth)
                 {
                     if (text.LastIndexOf(' ', len - 1) < 1)
                     {
@@ -214,7 +330,7 @@ namespace Adjutant
                         len--;
                         segmentW = MeasureWidth(text.Substring(0, len));
 
-                        while (len > 1 && leftMargin + segmentW > maxWidth)
+                        while (len > 1 && leftMargin + segmentW > ConsoleWidth)
                         {
                             len--;
                             segmentW = MeasureWidth(text.Substring(0, len));
@@ -229,7 +345,7 @@ namespace Adjutant
                     }
                 }
 
-                chunks.Add(new Chunk(text.Substring(0, len), link, color, strikeout, absNewline || text.Length != len, absNewline && text.Length == len, segmentW, lineH));
+                chunks.Add(new Chunk(text.Substring(0, len), link, color, strikeout, absNewline || text.Length != len, absNewline && text.Length == len, segmentW, LineH));
                 text = text.Substring(len);
 
                 if (len < text.Length)
@@ -239,11 +355,11 @@ namespace Adjutant
             return chunks;
         }
 
-        public bool JoinChunk(Chunk nextChunk, int leftMargin, int maxWidth, Font font, Func<string, int> MeasureWidth)
+        public bool JoinChunk(Chunk nextChunk, int leftMargin)
         {
             int newWidth = MeasureWidth(text + nextChunk.text);
 
-            if (!absNewline && leftMargin + newWidth <= maxWidth && brush.Color == nextChunk.brush.Color && strikeout == nextChunk.strikeout)
+            if (!absNewline && leftMargin + newWidth <= ConsoleWidth && brush.Color == nextChunk.brush.Color && strikeout == nextChunk.strikeout)
             {
                 text += nextChunk.text;
                 bounds.Width = newWidth;
@@ -275,7 +391,7 @@ namespace Adjutant
                 img = Image.FromStream(stream);
 
                 response.Close();
-                response.Close();
+                //response.Close();
             }
             catch
             {

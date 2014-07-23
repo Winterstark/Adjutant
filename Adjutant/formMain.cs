@@ -52,12 +52,11 @@ namespace Adjutant
         List<Chunk> chunks = new List<Chunk>();
         Dictionary<string, string> customCmds;
         List<string> history = new List<string>(), twURLs = new List<string>(), twMentions = new List<string>(), todo;
-        List<int> printingImgs = new List<int>();
         string[] filteredPaths;
         string python, user, dir, todoDir, inputMode, token, secret, link, mailUser, mailPass, twUsername, twSound, mailSound;
         double opacityPassive, opacityActive;
         long lastTweet;
-        int x, y, lineH, currImgChunkH, minH, maxH, prevH, prevX, prevY, leftMargin, yOffset, chunkOffset, lastChunk, lastChunkChar, printAtOnce, autoHideDelay, tabInd, historyInd, minTweetPeriod, twSoundThreshold, hotkey, newMailCount, prevNewMailCount, mailSoundThreshold, tutorialStep;
+        int x, y, lineH, minH, maxH, prevH, prevX, prevY, leftMargin, yOffset, chunkOffset, lastChunk, lastChunkChar, printAtOnce, autoHideDelay, tabInd, historyInd, minTweetPeriod, twSoundThreshold, hotkey, newMailCount, prevNewMailCount, mailSoundThreshold, tutorialStep;
         bool initialized, winKey, prompt, blankLine, echo, ctrlKey, drag, resizeW, resizeH, autoResize, hiding, hidden, todoHideDone, todoAutoTransfer, twUpdateOnNewTweet, twUpdateOnFocus, twOutput, twPrevCountBelowThreshold, mailUpdateOnNewMail, mailUpdateOnFocus, hotkeyCtrl, hotkeyAlt, hotkeyShift;
         #endregion
 
@@ -451,6 +450,11 @@ namespace Adjutant
 
                 File.Delete(Application.StartupPath + "\\temp.dat");
             }
+
+            //update static values in Chunk
+            Chunk.Font = txtCMD.Font;
+            Chunk.PrintAtOnce = printAtOnce;
+            Chunk.InstantOutput = timerPrint.Interval == ZERO_DELAY;
         }
 
         void saveOptions()
@@ -782,6 +786,10 @@ namespace Adjutant
             mailSummaryColor = options.picMailSummaryColor.BackColor;
 
             //apply changes & save
+            Chunk.Font = txtCMD.Font;
+            Chunk.PrintAtOnce = printAtOnce;
+            Chunk.InstantOutput = timerPrint.Interval == ZERO_DELAY;
+
             Hotkey.RegisterHotKey(this, hotkey, hotkeyCtrl, hotkeyAlt, hotkeyShift);
 
             this.Top = y;
@@ -1394,13 +1402,14 @@ namespace Adjutant
 
             //calc window height
             lineH = (int)grafx.Graphics.MeasureString("A", txtCMD.Font).Height;
+            Chunk.LineH = lineH;
         }
 
         void jumpToLastLine()
         {
             yOffset = 0;
 
-            if (chunks.Count == 0 || lastChunk <= 0)
+            if (chunks.Count == 0 || lastChunk == -1)
                 chunkOffset = 0;
             else
             {
@@ -1420,14 +1429,14 @@ namespace Adjutant
                         break;
 
                     //scan through next line to find out its height and starting chunk
-                    h = getChunkHeight(chunkInd);
+                    h = chunks[chunkInd].GetHeight();
 
                     while (chunkInd > 0 && !chunks[chunkInd - 1].IsNewline())
                     {
                         chunkInd--;
 
-                        if (getChunkHeight(chunkInd) > h)
-                            h = getChunkHeight(chunkInd);
+                        if (chunks[chunkInd].GetHeight() > h)
+                            h = chunks[chunkInd].GetHeight();
                     }
 
                     if (sumH + h <= txtCMD.Top)
@@ -1470,14 +1479,6 @@ namespace Adjutant
                 this.Top = -this.Height + 1;
         }
 
-        int getChunkHeight(int chunkInd)
-        {
-            if (printingImgs.Count > 0 && chunkInd == printingImgs[0])
-                return currImgChunkH;
-            else
-                return chunks[chunkInd].GetHeight();
-        }
-
         void update()
         {
             jumpToLastLine();
@@ -1491,12 +1492,19 @@ namespace Adjutant
 
         void cls()
         {
+            //stop any current output
             timerPrint.Enabled = false;
 
+            //cleanup chunk resources
+            foreach (Chunk chunk in chunks)
+                chunk.DisposeResources(new EventHandler(this.OnFrameChanged));
+            
+            //clear chunks
             chunks.Clear();
             lastChunk = 0;
             lastChunkChar = 0;
 
+            //reset window height
             this.Height = minH;
             
             windowAutosize();
@@ -1544,6 +1552,9 @@ namespace Adjutant
             if (txt == "")
                 txt = " "; //blank line
 
+            if (lastChunk == -1)
+                lastChunk = 0;
+
             while (txt.Contains("<image="))
             {
                 //split into chunks
@@ -1571,13 +1582,6 @@ namespace Adjutant
                     else
                         leftMargin += imgChunk.GetWidth();
 
-                    if (imgChunk.GetHeight() > lineH)
-                    {
-                        //don't print the following chunks until this image has been displayed entirely (1 line at a time)
-                        printingImgs.Add(chunks.Count - 1);
-                        currImgChunkH = lineH;
-                    }
-
                     imgChunk.AnimateGIF(new EventHandler(this.OnFrameChanged)); //if gif prepare animation
 
                     showNewChunks();
@@ -1590,9 +1594,6 @@ namespace Adjutant
                     break;
             }
 
-            if (lastChunk == -1)
-                lastChunk = 0;
-
             if (timerPrint.Interval == ZERO_DELAY)
                 txt = txt.Replace("<pause>", "");
             else
@@ -1602,7 +1603,7 @@ namespace Adjutant
             for (int i = 0; i < lines.Length; i++)
             {
                 bool nLine = i == lines.Length - 1 ? newline : true;
-                List<Chunk> newChunks = Chunk.Chunkify(lines[i], link, color, strikeout, leftMargin, this.Width, txtCMD.Font, nLine, nLine, measureWidth, lineH);
+                List<Chunk> newChunks = Chunk.Chunkify(lines[i], link, color, strikeout, leftMargin, nLine, nLine);
 
                 chunks.AddRange(newChunks);
 
@@ -2940,6 +2941,10 @@ namespace Adjutant
 
             loadCustomCmds();
 
+            //setup Chunk delegates and init other stuff
+            Chunk.MeasureWidth = measureWidth;
+            Chunk.UpdateConsole = update;
+
             txtSelection.MouseWheel += new System.Windows.Forms.MouseEventHandler(txtSelection_MouseWheel);
 
             link = "";
@@ -2982,9 +2987,9 @@ namespace Adjutant
             }
 
             //print intro
-            print("Adjutant online.<pause>");
-            greeting();
-            todoLoad();
+            //print("Adjutant online.");
+            //greeting();
+            //todoLoad();
 
             //string kappa = @"<image=C:\Users\Winterstark\Desktop\Kappa.png>";
 
@@ -3006,8 +3011,7 @@ namespace Adjutant
 
             //print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
             //print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
-
-
+            
             //print(@"<image=C:\dev\projex\Adjutant\Adjutant\bin\Debug\ui\loading.gif>");
             //print(@"<image=C:\Users\Winterstark\Desktop\saeOX53.gif>");
 
@@ -3016,6 +3020,11 @@ namespace Adjutant
             //print(@"<image=C:\dev\projex\Adjutant\Adjutant\bin\Debug\ui\loading.gif>", false); print(" STILL THE SAME LINE?????", false);
 
             //print("<image=http://img.moviepilot.com/assets/tarantulaV2/long_form_background_images/1378462980_korra1.jpg>");
+            //print("<image=http://static.tumblr.com/zgzs1gz/8xdm3yhuj/pabu.gif>");
+            //print("<image=http://data3.whicdn.com/images/82571930/thumb.jpg>");
+            //print("<image=http://fc09.deviantart.net/fs71/i/2014/073/7/4/windranger_and_juggernaut___dota_2_by_junkazama15-d7a4qr3.jpg>");
+
+            print(@"<image=C:\Users\Winterstark\Desktop\pabu.gif>");
 
             ////twitter init
             //twitterInit();
@@ -3071,11 +3080,11 @@ namespace Adjutant
             for (int i = 0; i < chunks.Count; i++)
             {
                 //can join with next chunk(s)?
-                while (i < chunks.Count - 1 && chunks[i].JoinChunk(chunks[i + 1], lMarg, this.Width, txtCMD.Font, measureWidth))
+                while (i < chunks.Count - 1 && chunks[i].JoinChunk(chunks[i + 1], lMarg))
                     chunks.RemoveAt(i + 1);
 
                 //need to split chunk?
-                List<Chunk> newChunks = Chunk.Chunkify(chunks[i].ToString(), chunks[i].GetLink(), chunks[i].GetColor(), chunks[i].GetStrikeout(), lMarg, this.Width, txtCMD.Font, true, chunks[i].IsAbsNewline(), measureWidth, lineH);
+                List<Chunk> newChunks = Chunk.Chunkify(chunks[i].ToString(), chunks[i].GetLink(), chunks[i].GetColor(), chunks[i].GetStrikeout(), lMarg, true, chunks[i].IsAbsNewline());
                 
                 if (newChunks.Count > 1)
                 {
@@ -3198,17 +3207,22 @@ namespace Adjutant
                 return;
 
             //scroll up/down 3 lines
-            int scrollLineH = 0, yToScroll = 3 * lineH;
+            int scrollLineH = 0, yToScroll = 3 * lineH, h;
 
             if (e.Delta < 0)
                 while (yToScroll > 0)
                 {
-                    //are there any more chunks?
-                    if (chunkOffset == chunks.Count - 1)
-                        break;
-
                     //get current chunk height
-                    int h = chunks[chunkOffset].GetHeight();
+                    h = chunks[chunkOffset].GetHeight();
+
+                    if (chunkOffset == chunks.Count - 1)
+                    {
+                        //no more chunks; check if last chunk is larger than the console
+                        if (h > txtCMD.Top)
+                            yOffset = Math.Max(yOffset - yToScroll, txtCMD.Top - h);
+                        
+                        break;
+                    }
 
                     //is the chunk larger than the y amount left to scroll? (e.g. the chunk is a big image)
                     if (h > yToScroll)
@@ -3253,9 +3267,21 @@ namespace Adjutant
 
                 while (yToScroll > 0)
                 {
-                    //are there any more chunks?
                     if (chunkOffset == 0)
+                    {
+                        //can't scroll past first chunk; check if it is larger than the console
+                        h = chunks[0].GetHeight();
+
+                        if (h > txtCMD.Top)
+                        {
+                            if (yOffset == 0)
+                                yOffset = -h + yToScroll;
+                            else
+                                yOffset = Math.Min(yOffset + yToScroll, 1); //yOffset will become max. 1 (instead of the more logical 0) because if yOffset becomes 0 it will scroll through the first chunk endlessly
+                        }
+
                         break;
+                    }
 
                     //scan through the previous line: find out the first chunk in the line and the max height
                     int tempChInd = chunkOffset;
@@ -3530,18 +3556,9 @@ namespace Adjutant
             update();
 
             //check if currently printing image
-            if (printingImgs.Count > 0 && lastChunk == printingImgs[0])
-            {
-                currImgChunkH += lineH;
-
-                if (currImgChunkH >= chunks[printingImgs[0]].GetHeight())
-                {
-                    printingImgs.RemoveAt(0);
-                    currImgChunkH = lineH;
-                }
-                else
-                    return;
-            }
+            if (chunks[lastChunk].IsImgExpanding())
+                //don't advance to next chunk until this image chunk stops expanding
+                return;
 
             //advance to next char/chunk
             lastChunkChar += printAtOnce;
@@ -3569,8 +3586,13 @@ namespace Adjutant
                         pauseEnd = DateTime.Now.AddMilliseconds(750);
                         chunks.RemoveAt(lastChunk);
 
-                        if (printingImgs.Count > 0 && lastChunk < printingImgs[0])
-                            printingImgs[0]--;
+                        if (lastChunk == chunks.Count)
+                        {
+                            //no more output
+                            lastChunk--;
+                            lastChunkChar = chunks[lastChunkChar].ToString().Length;
+                            timerPrint.Enabled = false;
+                        }
                     }
                 }
             }
