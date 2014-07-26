@@ -61,6 +61,17 @@ namespace Adjutant
         #endregion
 
 
+        void initGrafx()
+        {
+            int maxWindowW = this.Width, maxWindowH = this.Height;
+
+            if (maxH > maxWindowH)
+                maxWindowH = maxH;
+
+            context.MaximumBuffer = new Size(maxWindowW + 1, maxWindowH + 1);
+            grafx = context.Allocate(this.CreateGraphics(), new Rectangle(0, 0, maxWindowW, maxWindowH));
+        }
+
         void activateConsole() //or hide if already active
         {   
             if (hideStyle == HideStyle.Disappear)
@@ -209,6 +220,7 @@ namespace Adjutant
         int measureWidth(string txt)
         {
             return (int)grafx.Graphics.MeasureString(txt, txtCMD.Font, int.MaxValue, new StringFormat(StringFormatFlags.MeasureTrailingSpaces)).Width;
+            //return (int)Math.Ceiling(grafx.Graphics.MeasureString(txt, txtCMD.Font, int.MaxValue, new StringFormat(StringFormatFlags.MeasureTrailingSpaces)).Width);
         }
 
         string getWindowText(IntPtr handle)
@@ -789,12 +801,14 @@ namespace Adjutant
             Chunk.Font = txtCMD.Font;
             Chunk.PrintAtOnce = printAtOnce;
             Chunk.InstantOutput = timerPrint.Interval == ZERO_DELAY;
+            Chunk.ErrorColor = errorColor;
 
             Hotkey.RegisterHotKey(this, hotkey, hotkeyCtrl, hotkeyAlt, hotkeyShift);
 
             this.Top = y;
             this.Left = x;
 
+            initGrafx();
             windowAutosize();
             setPrompt();
 
@@ -858,36 +872,29 @@ namespace Adjutant
 
         void setPrompt()
         {
-            if (prompt)
-            {
-                if (twOutput)
-                    lblPrompt.Text = "Twitter>";
-                else if (inputMode == "twitter pin")
-                    lblPrompt.Text = "Twitter PIN:";
-                else if (inputMode == "user")
-                    lblPrompt.Text = "Username: ";
-                else
-                    lblPrompt.Text = dir + ">";
-
-                lblPrompt.Visible = true;
-                lblPrompt.Top = txtCMD.Top;
-                txtCMD.Left = lblPrompt.Width;
-            }
+            string newPrompt;
+            if (twOutput)
+                newPrompt = "Twitter>";
+            else if (inputMode == "twitter pin")
+                newPrompt = "Twitter PIN:";
+            else if (inputMode == "user")
+                newPrompt = "Username: ";
             else
-            {
-                lblPrompt.Visible = false;
-                txtCMD.Left = 0;
-            }
+                newPrompt = dir + ">";
+
+            setPrompt(newPrompt);
         }
 
-        void setPrompt(string custom)
+        void setPrompt(string newPrompt)
         {
             if (prompt)
             {
-                lblPrompt.Text = custom + ">";
+                lblPrompt.Text = newPrompt;
 
                 lblPrompt.Visible = true;
                 lblPrompt.Top = txtCMD.Top;
+                lblPrompt.Height = txtCMD.Height;
+                lblPrompt.Width = measureWidth(lblPrompt.Text + "a"); //for some reason measureWidth's result is 1 character too short (for lblPrompt)
                 txtCMD.Left = lblPrompt.Width;
             }
             else
@@ -1396,13 +1403,11 @@ namespace Adjutant
 
             this.Height = txtCMD.Top + txtCMD.Height;
 
-            //init buffer & gfx
-            context.MaximumBuffer = new Size(this.Width + 1, this.Height + 1);
-            grafx = context.Allocate(this.CreateGraphics(), new Rectangle(0, 0, this.Width, this.Height));
-
-            //calc window height
+            //calc line height
             lineH = (int)grafx.Graphics.MeasureString("A", txtCMD.Font).Height;
+            
             Chunk.LineH = lineH;
+            Chunk.ConsoleWidth = this.Width;
         }
 
         void jumpToLastLine()
@@ -1490,6 +1495,14 @@ namespace Adjutant
                 this.Invoke(new MethodInvoker(this.Refresh));
         }
 
+        void updateImages()
+        {
+            //one or more image chunks have finished downloading images
+            //update only if not printing (otherwise update will be called as usual)
+            if (!timerPrint.Enabled)
+                jumpToLastLine();
+        }
+
         void cls()
         {
             //stop any current output
@@ -1497,7 +1510,7 @@ namespace Adjutant
 
             //cleanup chunk resources
             foreach (Chunk chunk in chunks)
-                chunk.DisposeResources(new EventHandler(this.OnFrameChanged));
+                chunk.DisposeResources();
             
             //clear chunks
             chunks.Clear();
@@ -1581,8 +1594,6 @@ namespace Adjutant
                         leftMargin = 0;
                     else
                         leftMargin += imgChunk.GetWidth();
-
-                    imgChunk.AnimateGIF(new EventHandler(this.OnFrameChanged)); //if gif prepare animation
 
                     showNewChunks();
 
@@ -1684,10 +1695,7 @@ namespace Adjutant
                 dir += "\\";
 
             if (lblPrompt.Visible)
-            {
-                lblPrompt.Text = dir + ">";
-                txtCMD.Left = lblPrompt.Width;
-            }
+                setPrompt(dir + ">");
         }
 
         void runProcess(string cmd)
@@ -2037,6 +2045,7 @@ namespace Adjutant
             if (drag || resizeW || resizeH)
             {
                 saveOptions();
+                initGrafx();
 
                 if (ctrlKey)
                 {
@@ -2932,18 +2941,24 @@ namespace Adjutant
             //tray context menu
             trayIcon.ContextMenuStrip = contextMenu;
 
-            //buffer context
+            //init buffer & gfx
             context = BufferedGraphicsManager.Current;
 
-            //load options; init window & gfx
+            initGrafx(); //initializes grafx to current window size (this call is required because loadOptions needs grafx to be initialized)
+
+            //load options; init window & grafx
             loadOptions();
+            initGrafx(); //initGrafx() is repeated here so the buffer size can be increased to max potential size (the value of which was loaded with other options)
+
             windowAutosize();
 
             loadCustomCmds();
 
             //setup Chunk delegates and init other stuff
             Chunk.MeasureWidth = measureWidth;
-            Chunk.UpdateConsole = update;
+            Chunk.UpdateImages = updateImages;
+            Chunk.OnFrameChangedEvent = new EventHandler(this.OnFrameChanged);
+            Chunk.ErrorColor = errorColor;
 
             txtSelection.MouseWheel += new System.Windows.Forms.MouseEventHandler(txtSelection_MouseWheel);
 
@@ -3020,16 +3035,16 @@ namespace Adjutant
             //print(@"<image=C:\dev\projex\Adjutant\Adjutant\bin\Debug\ui\loading.gif>", false); print(" STILL THE SAME LINE?????", false);
 
             //print("<image=http://img.moviepilot.com/assets/tarantulaV2/long_form_background_images/1378462980_korra1.jpg>");
-            //print("<image=http://static.tumblr.com/zgzs1gz/8xdm3yhuj/pabu.gif>");
+            print("<image=http://static.tumblr.com/zgzs1gz/8xdm3yhuj/pabu.gif>");
             //print("<image=http://data3.whicdn.com/images/82571930/thumb.jpg>");
             //print("<image=http://fc09.deviantart.net/fs71/i/2014/073/7/4/windranger_and_juggernaut___dota_2_by_junkazama15-d7a4qr3.jpg>");
 
-            print(@"<image=C:\Users\Winterstark\Desktop\pabu.gif>");
+            //print(@"<image=C:\Users\Winterstark\Desktop\pabu.gif>");
 
             ////twitter init
             //twitterInit();
 
-            //////mail init
+            ////mail init
             //mailInit();
         }
 
@@ -3049,7 +3064,7 @@ namespace Adjutant
 
             txtCMD.Focus();
 
-            if (twitter.AnyNewTweets() && twUpdateOnFocus && DateTime.Now.Subtract(lastTwCount).TotalSeconds >= minTweetPeriod)
+            if (twitter != null && twitter.AnyNewTweets() && twUpdateOnFocus && DateTime.Now.Subtract(lastTwCount).TotalSeconds >= minTweetPeriod)
                 tweetCount();
 
             if (mailUpdateOnFocus && newMailCount > 0)
@@ -3069,10 +3084,6 @@ namespace Adjutant
                 autoResize = false;
                 return;
             }
-
-            //note new width
-            txtCMD.Width = this.Width;
-            Chunk.ConsoleWidth = this.Width;
 
             int lMarg = 0;
 

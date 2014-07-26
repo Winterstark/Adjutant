@@ -13,8 +13,10 @@ namespace Adjutant
     class Chunk
     {
         public static Func<string, int> MeasureWidth; //link to MeasureWidth() in formMain
-        public static Action UpdateConsole; //used to call update() in formMain.cs after image changes
+        public static Action UpdateImages; //used to call update() in formMain.cs after image changes
+        public static EventHandler OnFrameChangedEvent; //used for animated gifs
         public static Font Font; //current console font
+        public static Color ErrorColor; //error output color
         public static bool InstantOutput; //if true then imgs don't have an output animation
         public static int PrintAtOnce; //how many chars does the console print together
         public static int LineH; //line height using the current console font
@@ -46,88 +48,58 @@ namespace Adjutant
 
         public Chunk(string imgURL, string link, bool newline, bool absNewline)
         {
-            if (File.Exists(imgURL))
+            try
             {
-                img = Image.FromFile(imgURL);
-
-                if (InstantOutput)
+                if (File.Exists(imgURL))
                 {
-                    imgW = bounds.Width;
-                    imgH = bounds.Height;
+                    img = Image.FromFile(imgURL);
+
+                    if (InstantOutput)
+                    {
+                        imgW = bounds.Width;
+                        imgH = bounds.Height;
+                    }
+                    else
+                    {
+                        imgW = Math.Min(PrintAtOnce * MeasureWidth("A"), img.Width);
+                        imgH = Math.Min(LineH, img.Height);
+                    }
                 }
                 else
                 {
-                    imgW = Math.Min(PrintAtOnce * MeasureWidth("A"), img.Width);
-                    imgH = Math.Min(LineH, img.Height);
+                    //display loading animation while downloading image
+                    string loadingGIF = System.Windows.Forms.Application.StartupPath + "\\ui\\loading.gif";
+
+                    if (File.Exists(loadingGIF))
+                        img = Image.FromFile(loadingGIF);
+
+                    //prepare worker to dl image
+                    imgDownloader = new BackgroundWorker();
+                    imgDownloader.DoWork += new DoWorkEventHandler(imgDownloader_DoWork);
+                    imgDownloader.RunWorkerCompleted += new RunWorkerCompletedEventHandler(imgDownloader_RunWorkerCompleted);
+
+                    imgDownloader.RunWorkerAsync(imgURL);
                 }
-            }
-            else
-            {
-                //display loading animation while downloading image
-                string loadingGIF = System.Windows.Forms.Application.StartupPath + "\\ui\\loading.gif";
 
-                if (File.Exists(loadingGIF))
-                    img = Image.FromFile(loadingGIF);
+                animateGIF();
 
-                //prepare worker to dl image
-                imgDownloader = new BackgroundWorker();
-                imgDownloader.DoWork += new DoWorkEventHandler(imgDownloader_DoWork);
-                imgDownloader.RunWorkerCompleted += new RunWorkerCompletedEventHandler(imgDownloader_RunWorkerCompleted);
+                this.link = link;
+                this.newline = newline;
+                this.absNewline = absNewline;
 
-                imgDownloader.RunWorkerAsync(imgURL);
-            }
+                bounds = new Rectangle(0, 0, img.Width, img.Height);
 
-            this.link = link;
-            this.newline = newline;
-            this.absNewline = absNewline;
-
-            bounds = new Rectangle(0, 0, img.Width, img.Height);
-
-            text = "";
-            strikeout = false;
-            brush = new SolidBrush(Color.White);
-        }
-
-        private void imgDownloader_DoWork(object sender, DoWorkEventArgs e)
-        {
-            try
-            {
-                e.Result = downloadImage((string)e.Argument);
+                text = "";
+                strikeout = false;
+                brush = new SolidBrush(Color.White);
             }
             catch (Exception exc)
             {
-                e.Result = exc.Message;
-            }
-        }
-
-        private void imgDownloader_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            //System.Windows.Forms.MessageBox.Show("download complete");
-
-            //if (img != null)
-            //    img.Dispose();
-
-            if (e.Result is Image)
-            {
-                //success
-                img = (Image)e.Result;
-
-                bounds.Width = img.Width;
-                bounds.Height = img.Height;
-
-                if (InstantOutput)
-                {
-                    imgW = bounds.Width;
-                    imgH = bounds.Height;
-                }
-
-                newImg = true;
-            }
-            else
                 //convert chunk into text chunk with the error message as text
-                text = "Error while downloading image: " + (string)e.Result;
-
-            UpdateConsole();
+                text = "Error while displaying image: " + exc.Message;
+                brush = new SolidBrush(ErrorColor);
+                img = null;
+            }
         }
 
         public override string ToString()
@@ -193,18 +165,12 @@ namespace Adjutant
             return img != null && (imgW < bounds.Width || imgH < bounds.Height);
         }
 
-        public void AnimateGIF(EventHandler onFrameChangedEvent)
-        {
-            if (img != null && img.GetFrameCount(new FrameDimension(img.FrameDimensionsList[0])) > 1)
-                ImageAnimator.Animate(img, onFrameChangedEvent);
-        }
-
-        public void DisposeResources(EventHandler onFrameChangedEvent)
+        public void DisposeResources()
         {
             if (img != null)
             {
                 if (img.GetFrameCount(new FrameDimension(img.FrameDimensionsList[0])) > 1)
-                    ImageAnimator.StopAnimate(img, onFrameChangedEvent);
+                    ImageAnimator.StopAnimate(img, OnFrameChangedEvent);
 
                 img.Dispose();
             }
@@ -244,7 +210,7 @@ namespace Adjutant
         }
 
         public void Draw(Graphics gfx, Font font, ref int x, ref int y, ref int h, int lastChar)
-        {
+       { 
             bounds.X = x;
             bounds.Y = y;
             
@@ -267,8 +233,7 @@ namespace Adjutant
             else
             {
                 //check if console width changed or the image changed
-                if (ConsoleWidth != prevConsoleWidth)
-                //if (ConsoleWidth != prevConsoleWidth || newImg)
+                if (ConsoleWidth != prevConsoleWidth || newImg)
                 {
                     bounds.Width = img.Width;
                     bounds.Height = img.Height;
@@ -288,14 +253,17 @@ namespace Adjutant
                 Rectangle destRect = new Rectangle(x, y, imgW, imgH);
                 Rectangle srcRect = new Rectangle(0, 0, (int)((float)imgW / bounds.Width * img.Width), (int)((float)imgH / bounds.Height * img.Height));
 
-                //gfx.DrawImage(img, x, y, bounds.Width, bounds.Height);
                 gfx.DrawImage(img, destRect, srcRect, GraphicsUnit.Pixel);
 
-                //is img expanding?)
-                if (imgW < bounds.Width)
-                    imgW = Math.Min(imgW + PrintAtOnce * MeasureWidth("A"), bounds.Width); //img first grows horizontally to a full-width line
-                else if (imgH < bounds.Height)
-                    imgH = Math.Min(imgH + LineH, bounds.Height); //then it grows vertically
+                if (IsImgExpanding())
+                {
+                    if (imgW < bounds.Width)
+                        imgW = Math.Min(imgW + PrintAtOnce * MeasureWidth("A"), bounds.Width); //img first grows horizontally to a full-width line
+                    else if (imgH < bounds.Height)
+                        imgH = Math.Min(imgH + LineH, bounds.Height); //then it grows vertically
+
+                    UpdateImages();
+                }
             }
 
             //advance drawing position
@@ -372,6 +340,49 @@ namespace Adjutant
                 return false;
         }
 
+        void imgDownloader_DoWork(object sender, DoWorkEventArgs e)
+        {
+            try
+            {
+                e.Result = downloadImage((string)e.Argument);
+            }
+            catch (Exception exc)
+            {
+                e.Result = exc.Message;
+            }
+        }
+
+        void imgDownloader_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Result is Image)
+            {
+                //success
+                img = (Image)e.Result;
+
+                bounds.Width = img.Width;
+                bounds.Height = img.Height;
+
+                if (InstantOutput)
+                {
+                    imgW = bounds.Width;
+                    imgH = bounds.Height;
+                }
+
+                animateGIF();
+
+                newImg = true;
+            }
+            else
+            {
+                //convert chunk into text chunk with the error message as text
+                text = "Error while downloading image: " + (string)e.Result;
+                brush = new SolidBrush(ErrorColor);
+                img = null;
+            }
+
+            UpdateImages();
+        }
+
         Image downloadImage(string url)
         {
             Image img = null;
@@ -391,7 +402,6 @@ namespace Adjutant
                 img = Image.FromStream(stream);
 
                 response.Close();
-                //response.Close();
             }
             catch
             {
@@ -399,6 +409,12 @@ namespace Adjutant
             }
 
             return img;
+        }
+
+        void animateGIF()
+        {
+            if (img.GetFrameCount(new FrameDimension(img.FrameDimensionsList[0])) > 1)
+                ImageAnimator.Animate(img, OnFrameChangedEvent);
         }
     }
 }

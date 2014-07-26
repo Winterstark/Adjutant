@@ -94,7 +94,6 @@
             // 
             // lblPrompt
             // 
-            this.lblPrompt.AutoSize = true;
             this.lblPrompt.Location = new System.Drawing.Point(0, 54);
             this.lblPrompt.Name = "lblPrompt";
             this.lblPrompt.Size = new System.Drawing.Size(10, 13);
