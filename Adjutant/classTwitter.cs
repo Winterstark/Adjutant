@@ -62,7 +62,7 @@ namespace Adjutant
                 text = HttpUtility.HtmlDecode(Regex.Unescape(text));
 
                 //replace instagram links with direct image links
-                if (true) //todo option to enable/disable downloading imgs for instagram
+                if (DisplayInstagrams)
                 {
                     ub = 0;
 
@@ -129,6 +129,8 @@ namespace Adjutant
 
         const string consumerKey = "bQp3ytw07Ld9bmEBU4RI4w";
         const string consumerSecret = "IXS35cJodk8aUVQO26vTYUb61kYbIV6cznOYBd7k7AI";
+
+        public static bool DisplayInstagrams;
 
         string oauthToken, oauthTokenSecret;
         List<Tweet> tweets;

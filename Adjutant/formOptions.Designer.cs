@@ -172,6 +172,7 @@
             this.diagFont = new System.Windows.Forms.FontDialog();
             this.folderDiag = new System.Windows.Forms.FolderBrowserDialog();
             this.fileDiag = new System.Windows.Forms.OpenFileDialog();
+            this.chkTwDisplayInstagrams = new System.Windows.Forms.CheckBox();
             this.tabs.SuspendLayout();
             this.tabWindow.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numAutoHideDelay)).BeginInit();
@@ -1083,6 +1084,7 @@
             // 
             // tabTwitter
             // 
+            this.tabTwitter.Controls.Add(this.chkTwDisplayInstagrams);
             this.tabTwitter.Controls.Add(this.label54);
             this.tabTwitter.Controls.Add(this.numTwSoundThreshold);
             this.tabTwitter.Controls.Add(this.buttTwSoundBrowse);
@@ -1343,11 +1345,11 @@
             // label23
             // 
             this.label23.AutoSize = true;
-            this.label23.Location = new System.Drawing.Point(277, 136);
+            this.label23.Location = new System.Drawing.Point(194, 157);
             this.label23.Name = "label23";
-            this.label23.Size = new System.Drawing.Size(47, 13);
+            this.label23.Size = new System.Drawing.Size(53, 13);
             this.label23.TabIndex = 5;
-            this.label23.Text = "seconds";
+            this.label23.Text = "(seconds)";
             // 
             // numTwCountMinPeriod
             // 
@@ -1703,6 +1705,16 @@
             // 
             this.folderDiag.RootFolder = System.Environment.SpecialFolder.MyComputer;
             // 
+            // chkTwDisplayInstagrams
+            // 
+            this.chkTwDisplayInstagrams.Location = new System.Drawing.Point(330, 125);
+            this.chkTwDisplayInstagrams.Name = "chkTwDisplayInstagrams";
+            this.chkTwDisplayInstagrams.Size = new System.Drawing.Size(110, 36);
+            this.chkTwDisplayInstagrams.TabIndex = 41;
+            this.chkTwDisplayInstagrams.Text = "Display instagram pictures";
+            this.chkTwDisplayInstagrams.UseVisualStyleBackColor = true;
+            this.chkTwDisplayInstagrams.CheckedChanged += new System.EventHandler(this.checkForChanges);
+            // 
             // formOptions
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1911,5 +1923,6 @@
         public System.Windows.Forms.TextBox txtMailSound;
         private System.Windows.Forms.OpenFileDialog fileDiag;
         private System.Windows.Forms.CheckBox chkRunAtStartup;
+        public System.Windows.Forms.CheckBox chkTwDisplayInstagrams;
     }
 }

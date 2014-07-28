@@ -59,7 +59,7 @@ namespace Adjutant
         double opacityPassive, opacityActive;
         long lastTweet;
         int x, y, lineH, minH, maxH, prevH, prevX, prevY, leftMargin, yOffset, chunkOffset, lastChunk, lastChunkChar, printAtOnce, autoHideDelay, tabInd, historyInd, minTweetPeriod, twSoundThreshold, hotkey, newMailCount, prevNewMailCount, mailSoundThreshold, tutorialStep;
-        bool initialized, winKey, prompt, blankLine, echo, ctrlKey, drag, resizeW, resizeH, autoResize, hiding, hidden, todoHideDone, todoAutoTransfer, twUpdateOnNewTweet, twUpdateOnFocus, twOutput, twPrevCountBelowThreshold, mailUpdateOnNewMail, mailUpdateOnFocus, hotkeyCtrl, hotkeyAlt, hotkeyShift;
+        bool initialized, winKey, prompt, blankLine, echo, ctrlKey, drag, resizeW, resizeH, autoResize, hiding, hidden, todoHideDone, todoAutoTransfer, twUpdateOnNewTweet, twUpdateOnFocus, twOutput, twPrevCountBelowThreshold, twDisplayInstagrams, mailUpdateOnNewMail, mailUpdateOnFocus, hotkeyCtrl, hotkeyAlt, hotkeyShift;
         #endregion
 
 
@@ -406,6 +406,9 @@ namespace Adjutant
                         case "min_tweet_period":
                             minTweetPeriod = int.Parse(args[1]);
                             break;
+                        case "display_instagrams":
+                            twDisplayInstagrams = bool.Parse(args[1]);
+                            break;
                         case "tw_sound":
                             twSound = args[1];
                             break;
@@ -520,7 +523,7 @@ namespace Adjutant
             file.WriteLine("error_color=" + errorColor.ToArgb());
             file.WriteLine();
 
-            file.WriteLine("//todo module");
+            file.WriteLine("//todo");
             file.WriteLine("todo_dir=" + todoDir);
             file.WriteLine("todo_hide_done=" + todoHideDone);
             file.WriteLine("todo_auto_transfer=" + todoAutoTransfer);
@@ -529,13 +532,14 @@ namespace Adjutant
             file.WriteLine("todo_done_color=" + todoDoneColor.ToArgb());
             file.WriteLine();
             
-            file.WriteLine("//twitter module");
+            file.WriteLine("//twitter");
             file.WriteLine("token=" + token);
             file.WriteLine("secret=" + secret);
             file.WriteLine("last_tweet=" + lastTweet);
             file.WriteLine("update_on_new_tweet=" + twUpdateOnNewTweet);
             file.WriteLine("update_on_focus=" + twUpdateOnFocus);
             file.WriteLine("min_tweet_period=" + minTweetPeriod);
+            file.WriteLine("display_instagrams=" + twDisplayInstagrams);
             file.WriteLine("tw_sound=" + twSound);
             file.WriteLine("tw_sound_threshold=" + twSoundThreshold);
             file.WriteLine("tw_user_color=" + twUserColor.ToArgb());
@@ -635,6 +639,7 @@ namespace Adjutant
                 options.chkTwCountOnNewTweet.Tag = twUpdateOnNewTweet;
                 options.chkTwCountOnFocus.Tag = twUpdateOnFocus;
                 options.numTwCountMinPeriod.Tag = minTweetPeriod;
+                options.chkTwDisplayInstagrams.Tag = twDisplayInstagrams;
                 options.txtTwSound.Tag = twSound;
                 options.numTwSoundThreshold.Tag = twSoundThreshold;
                 options.picTwUsernameColor.Tag = twUserColor;
@@ -693,6 +698,7 @@ namespace Adjutant
                 options.chkTwCountOnNewTweet.Checked = twUpdateOnNewTweet;
                 options.chkTwCountOnFocus.Checked = twUpdateOnFocus;
                 options.numTwCountMinPeriod.Value = minTweetPeriod;
+                options.chkTwDisplayInstagrams.Checked = twDisplayInstagrams;
                 options.txtTwSound.Text = twSound;
                 options.numTwSoundThreshold.Value = twSoundThreshold;
                 options.picTwUsernameColor.BackColor = twUserColor;
@@ -791,6 +797,7 @@ namespace Adjutant
             twUpdateOnNewTweet = options.chkTwCountOnNewTweet.Checked;
             twUpdateOnFocus = options.chkTwCountOnFocus.Checked;
             minTweetPeriod = (int)options.numTwCountMinPeriod.Value;
+            twDisplayInstagrams = options.chkTwDisplayInstagrams.Checked;
             twSound = options.txtTwSound.Text;
             twSoundThreshold = (int)options.numTwSoundThreshold.Value;
             twUserColor = options.picTwUsernameColor.BackColor;
@@ -818,6 +825,8 @@ namespace Adjutant
             Chunk.ErrorColor = errorColor;
 
             Hotkey.RegisterHotKey(this, hotkey, hotkeyCtrl, hotkeyAlt, hotkeyShift);
+
+            Twitter.DisplayInstagrams = twDisplayInstagrams;
 
             this.Top = y;
             this.Left = x;
@@ -2611,6 +2620,8 @@ namespace Adjutant
             if (token != "?" && secret != "?")
             {
                 twitter = new Twitter(token, secret, lastTweet);
+
+                Twitter.DisplayInstagrams = twDisplayInstagrams;
                 twPrevCountBelowThreshold = true;
 
                 if (!twitter.VerifyCredentials())

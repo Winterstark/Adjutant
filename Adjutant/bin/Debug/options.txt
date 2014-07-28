@@ -28,7 +28,7 @@ echo=True
 echo_color=-4144960
 error_color=-65536
 
-//todo module
+//todo
 todo_dir=C:\Users\Winterstark\Dropbox\logs\todos\
 todo_hide_done=False
 todo_auto_transfer=True
@@ -36,13 +36,14 @@ todo_misc_color=-1
 todo_item_color=-33024
 todo_done_color=-14436096
 
-//twitter module
+//twitter
 token=18160045-m6CI9FSXK5zhItM7QWJixujVJRR7aP0Io4v2hIGEg
 secret=7q763i5QxPn1oBE9OgNIqMrTJaqEjwASdcIdvT4Jj8
-last_tweet=492434332385292289
+last_tweet=493850782194601986
 update_on_new_tweet=True
 update_on_focus=True
 min_tweet_period=30
+display_instagrams=False
 tw_sound=C:\dev\projex\Adjutant\Adjutant\bin\Debug\sounds\twitter.wav
 tw_sound_threshold=1
 tw_user_color=-16743244
