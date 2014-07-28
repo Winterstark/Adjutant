@@ -1510,9 +1510,9 @@ namespace Adjutant
                     }
                 }
             }
-
+            
             //ensure adjutant remains hidden
-            if (hidden && hideStyle == HideStyle.ScrollUp)
+            if (hidden && hideStyle == HideStyle.ScrollUp && !timerShowHide.Enabled)
                 this.Top = -this.Height + 1;
         }
 
