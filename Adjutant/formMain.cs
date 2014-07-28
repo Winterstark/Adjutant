@@ -1317,6 +1317,7 @@ namespace Adjutant
                             printHelp("Press \"o\" to open all URLs in the tweet.");
                             printHelp("Press \"m\" to open all mentions and hashtags in the tweet.");
                             printHelp("Press \"u\" to open the user's profile.");
+                            printHelp("Press \"t\" to open the tweet page.");
                             printHelp("Note that you can also click on usernames, URLs, hashtags, etc, to open them in your browser.");
                             printHelp("");
                             printHelp("Press \"j\" to read the next tweet.");
@@ -3139,8 +3140,8 @@ namespace Adjutant
             todoLoad();
 
             //init modules
-            //twitterInit();
-            //mailInit();
+            twitterInit();
+            mailInit();
         }
 
         private void formMain_Activated(object sender, EventArgs e)
@@ -3518,6 +3519,12 @@ namespace Adjutant
                         Process.Start("https://www.twitter.com/" + twUsername);
 
                         if (txtCMD.Text.ToLower() == "u")
+                            txtCMD.Text = "";
+                        break;
+                    case Keys.T:
+                        Process.Start("https://www.twitter.com/" + twUsername + "/status/" + lastTweet);
+
+                        if (txtCMD.Text.ToLower() == "t")
                             txtCMD.Text = "";
                         break;
                     case Keys.Escape:
