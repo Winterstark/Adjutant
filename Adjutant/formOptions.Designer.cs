@@ -109,6 +109,7 @@
             this.label32 = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
             this.tabTwitter = new System.Windows.Forms.TabPage();
+            this.chkTwDisplayInstagrams = new System.Windows.Forms.CheckBox();
             this.label54 = new System.Windows.Forms.Label();
             this.numTwSoundThreshold = new System.Windows.Forms.NumericUpDown();
             this.buttTwSoundBrowse = new System.Windows.Forms.Button();
@@ -172,7 +173,7 @@
             this.diagFont = new System.Windows.Forms.FontDialog();
             this.folderDiag = new System.Windows.Forms.FolderBrowserDialog();
             this.fileDiag = new System.Windows.Forms.OpenFileDialog();
-            this.chkTwDisplayInstagrams = new System.Windows.Forms.CheckBox();
+            this.chkTwDisplayPictures = new System.Windows.Forms.CheckBox();
             this.tabs.SuspendLayout();
             this.tabWindow.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numAutoHideDelay)).BeginInit();
@@ -1084,6 +1085,7 @@
             // 
             // tabTwitter
             // 
+            this.tabTwitter.Controls.Add(this.chkTwDisplayPictures);
             this.tabTwitter.Controls.Add(this.chkTwDisplayInstagrams);
             this.tabTwitter.Controls.Add(this.label54);
             this.tabTwitter.Controls.Add(this.numTwSoundThreshold);
@@ -1124,6 +1126,17 @@
             this.tabTwitter.Text = "Twitter";
             this.tabTwitter.UseVisualStyleBackColor = true;
             // 
+            // chkTwDisplayInstagrams
+            // 
+            this.chkTwDisplayInstagrams.AutoSize = true;
+            this.chkTwDisplayInstagrams.Location = new System.Drawing.Point(326, 153);
+            this.chkTwDisplayInstagrams.Name = "chkTwDisplayInstagrams";
+            this.chkTwDisplayInstagrams.Size = new System.Drawing.Size(114, 17);
+            this.chkTwDisplayInstagrams.TabIndex = 41;
+            this.chkTwDisplayInstagrams.Text = "Display Instagrams";
+            this.chkTwDisplayInstagrams.UseVisualStyleBackColor = true;
+            this.chkTwDisplayInstagrams.CheckedChanged += new System.EventHandler(this.checkForChanges);
+            // 
             // label54
             // 
             this.label54.AutoSize = true;
@@ -1162,7 +1175,7 @@
             // picTwLinkColor
             // 
             this.picTwLinkColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.picTwLinkColor.Location = new System.Drawing.Point(141, 284);
+            this.picTwLinkColor.Location = new System.Drawing.Point(141, 292);
             this.picTwLinkColor.Name = "picTwLinkColor";
             this.picTwLinkColor.Size = new System.Drawing.Size(186, 23);
             this.picTwLinkColor.TabIndex = 31;
@@ -1171,7 +1184,7 @@
             // 
             // buttPickTwLinkColor
             // 
-            this.buttPickTwLinkColor.Location = new System.Drawing.Point(342, 284);
+            this.buttPickTwLinkColor.Location = new System.Drawing.Point(342, 292);
             this.buttPickTwLinkColor.Name = "buttPickTwLinkColor";
             this.buttPickTwLinkColor.Size = new System.Drawing.Size(87, 23);
             this.buttPickTwLinkColor.TabIndex = 11;
@@ -1182,7 +1195,7 @@
             // label30
             // 
             this.label30.AutoSize = true;
-            this.label30.Location = new System.Drawing.Point(84, 289);
+            this.label30.Location = new System.Drawing.Point(84, 297);
             this.label30.Name = "label30";
             this.label30.Size = new System.Drawing.Size(51, 13);
             this.label30.TabIndex = 29;
@@ -1191,7 +1204,7 @@
             // picTwCountColor
             // 
             this.picTwCountColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.picTwCountColor.Location = new System.Drawing.Point(141, 342);
+            this.picTwCountColor.Location = new System.Drawing.Point(141, 350);
             this.picTwCountColor.Name = "picTwCountColor";
             this.picTwCountColor.Size = new System.Drawing.Size(186, 23);
             this.picTwCountColor.TabIndex = 28;
@@ -1200,7 +1213,7 @@
             // 
             // buttPickTwCountColor
             // 
-            this.buttPickTwCountColor.Location = new System.Drawing.Point(342, 342);
+            this.buttPickTwCountColor.Location = new System.Drawing.Point(342, 350);
             this.buttPickTwCountColor.Name = "buttPickTwCountColor";
             this.buttPickTwCountColor.Size = new System.Drawing.Size(87, 23);
             this.buttPickTwCountColor.TabIndex = 13;
@@ -1211,7 +1224,7 @@
             // label29
             // 
             this.label29.AutoSize = true;
-            this.label29.Location = new System.Drawing.Point(65, 347);
+            this.label29.Location = new System.Drawing.Point(65, 355);
             this.label29.Name = "label29";
             this.label29.Size = new System.Drawing.Size(70, 13);
             this.label29.TabIndex = 26;
@@ -1220,7 +1233,7 @@
             // picTwTimestampColor
             // 
             this.picTwTimestampColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.picTwTimestampColor.Location = new System.Drawing.Point(141, 313);
+            this.picTwTimestampColor.Location = new System.Drawing.Point(141, 321);
             this.picTwTimestampColor.Name = "picTwTimestampColor";
             this.picTwTimestampColor.Size = new System.Drawing.Size(186, 23);
             this.picTwTimestampColor.TabIndex = 25;
@@ -1229,7 +1242,7 @@
             // 
             // buttPickTwTimestampColor
             // 
-            this.buttPickTwTimestampColor.Location = new System.Drawing.Point(342, 313);
+            this.buttPickTwTimestampColor.Location = new System.Drawing.Point(342, 321);
             this.buttPickTwTimestampColor.Name = "buttPickTwTimestampColor";
             this.buttPickTwTimestampColor.Size = new System.Drawing.Size(87, 23);
             this.buttPickTwTimestampColor.TabIndex = 12;
@@ -1240,7 +1253,7 @@
             // label28
             // 
             this.label28.AutoSize = true;
-            this.label28.Location = new System.Drawing.Point(74, 318);
+            this.label28.Location = new System.Drawing.Point(74, 326);
             this.label28.Name = "label28";
             this.label28.Size = new System.Drawing.Size(61, 13);
             this.label28.TabIndex = 23;
@@ -1249,7 +1262,7 @@
             // picTwTweetColor
             // 
             this.picTwTweetColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.picTwTweetColor.Location = new System.Drawing.Point(141, 255);
+            this.picTwTweetColor.Location = new System.Drawing.Point(141, 263);
             this.picTwTweetColor.Name = "picTwTweetColor";
             this.picTwTweetColor.Size = new System.Drawing.Size(186, 23);
             this.picTwTweetColor.TabIndex = 22;
@@ -1258,7 +1271,7 @@
             // 
             // buttPickTwTweetColor
             // 
-            this.buttPickTwTweetColor.Location = new System.Drawing.Point(342, 255);
+            this.buttPickTwTweetColor.Location = new System.Drawing.Point(342, 263);
             this.buttPickTwTweetColor.Name = "buttPickTwTweetColor";
             this.buttPickTwTweetColor.Size = new System.Drawing.Size(87, 23);
             this.buttPickTwTweetColor.TabIndex = 10;
@@ -1269,7 +1282,7 @@
             // label27
             // 
             this.label27.AutoSize = true;
-            this.label27.Location = new System.Drawing.Point(95, 260);
+            this.label27.Location = new System.Drawing.Point(95, 268);
             this.label27.Name = "label27";
             this.label27.Size = new System.Drawing.Size(40, 13);
             this.label27.TabIndex = 20;
@@ -1278,7 +1291,7 @@
             // picTwMiscColor
             // 
             this.picTwMiscColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.picTwMiscColor.Location = new System.Drawing.Point(141, 226);
+            this.picTwMiscColor.Location = new System.Drawing.Point(141, 234);
             this.picTwMiscColor.Name = "picTwMiscColor";
             this.picTwMiscColor.Size = new System.Drawing.Size(186, 23);
             this.picTwMiscColor.TabIndex = 19;
@@ -1287,7 +1300,7 @@
             // 
             // buttPickTwMiscColor
             // 
-            this.buttPickTwMiscColor.Location = new System.Drawing.Point(342, 226);
+            this.buttPickTwMiscColor.Location = new System.Drawing.Point(342, 234);
             this.buttPickTwMiscColor.Name = "buttPickTwMiscColor";
             this.buttPickTwMiscColor.Size = new System.Drawing.Size(87, 23);
             this.buttPickTwMiscColor.TabIndex = 9;
@@ -1298,7 +1311,7 @@
             // label26
             // 
             this.label26.AutoSize = true;
-            this.label26.Location = new System.Drawing.Point(80, 231);
+            this.label26.Location = new System.Drawing.Point(80, 239);
             this.label26.Name = "label26";
             this.label26.Size = new System.Drawing.Size(55, 13);
             this.label26.TabIndex = 17;
@@ -1307,7 +1320,7 @@
             // picTwUsernameColor
             // 
             this.picTwUsernameColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.picTwUsernameColor.Location = new System.Drawing.Point(141, 197);
+            this.picTwUsernameColor.Location = new System.Drawing.Point(141, 205);
             this.picTwUsernameColor.Name = "picTwUsernameColor";
             this.picTwUsernameColor.Size = new System.Drawing.Size(186, 23);
             this.picTwUsernameColor.TabIndex = 16;
@@ -1316,7 +1329,7 @@
             // 
             // buttPickTwUsernameColor
             // 
-            this.buttPickTwUsernameColor.Location = new System.Drawing.Point(342, 197);
+            this.buttPickTwUsernameColor.Location = new System.Drawing.Point(342, 205);
             this.buttPickTwUsernameColor.Name = "buttPickTwUsernameColor";
             this.buttPickTwUsernameColor.Size = new System.Drawing.Size(87, 23);
             this.buttPickTwUsernameColor.TabIndex = 8;
@@ -1327,7 +1340,7 @@
             // label25
             // 
             this.label25.AutoSize = true;
-            this.label25.Location = new System.Drawing.Point(77, 202);
+            this.label25.Location = new System.Drawing.Point(77, 210);
             this.label25.Name = "label25";
             this.label25.Size = new System.Drawing.Size(58, 13);
             this.label25.TabIndex = 7;
@@ -1336,7 +1349,7 @@
             // label24
             // 
             this.label24.AutoSize = true;
-            this.label24.Location = new System.Drawing.Point(21, 176);
+            this.label24.Location = new System.Drawing.Point(21, 184);
             this.label24.Name = "label24";
             this.label24.Size = new System.Drawing.Size(62, 13);
             this.label24.TabIndex = 6;
@@ -1705,15 +1718,16 @@
             // 
             this.folderDiag.RootFolder = System.Environment.SpecialFolder.MyComputer;
             // 
-            // chkTwDisplayInstagrams
+            // chkTwDisplayPictures
             // 
-            this.chkTwDisplayInstagrams.Location = new System.Drawing.Point(330, 125);
-            this.chkTwDisplayInstagrams.Name = "chkTwDisplayInstagrams";
-            this.chkTwDisplayInstagrams.Size = new System.Drawing.Size(110, 36);
-            this.chkTwDisplayInstagrams.TabIndex = 41;
-            this.chkTwDisplayInstagrams.Text = "Display instagram pictures";
-            this.chkTwDisplayInstagrams.UseVisualStyleBackColor = true;
-            this.chkTwDisplayInstagrams.CheckedChanged += new System.EventHandler(this.checkForChanges);
+            this.chkTwDisplayPictures.AutoSize = true;
+            this.chkTwDisplayPictures.Location = new System.Drawing.Point(326, 130);
+            this.chkTwDisplayPictures.Name = "chkTwDisplayPictures";
+            this.chkTwDisplayPictures.Size = new System.Drawing.Size(100, 17);
+            this.chkTwDisplayPictures.TabIndex = 42;
+            this.chkTwDisplayPictures.Text = "Display pictures";
+            this.chkTwDisplayPictures.UseVisualStyleBackColor = true;
+            this.chkTwDisplayPictures.CheckedChanged += new System.EventHandler(this.checkForChanges);
             // 
             // formOptions
             // 
@@ -1924,5 +1938,6 @@
         private System.Windows.Forms.OpenFileDialog fileDiag;
         private System.Windows.Forms.CheckBox chkRunAtStartup;
         public System.Windows.Forms.CheckBox chkTwDisplayInstagrams;
+        public System.Windows.Forms.CheckBox chkTwDisplayPictures;
     }
 }

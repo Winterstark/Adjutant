@@ -24,7 +24,7 @@ namespace Adjutant
             {
                 int lb, ub;
 
-                //expand urlsk
+                //expand urls
                 if (urlField != "[]")
                 {
                     if (urlField.Length > 4)
@@ -35,29 +35,32 @@ namespace Adjutant
                 }
 
                 //parse mediaField
-                string textURL = "";
-
-                if (mediaField.Contains("\"url\":\""))
+                if (DisplayPictures)
                 {
-                    lb = mediaField.IndexOf("\"url\":\"") + 7;
-                    ub = mediaField.IndexOf('"', lb);
+                    string textURL = "";
 
-                    textURL = mediaField.Substring(lb, ub - lb);
+                    if (mediaField.Contains("\"url\":\""))
+                    {
+                        lb = mediaField.IndexOf("\"url\":\"") + 7;
+                        ub = mediaField.IndexOf('"', lb);
+
+                        textURL = mediaField.Substring(lb, ub - lb);
+                    }
+
+                    if (mediaField.Contains("\"media_url\":\""))
+                    {
+                        lb = mediaField.IndexOf("\"media_url\":\"") + 13;
+                        ub = mediaField.IndexOf('"', lb);
+
+                        string imgInfo = "<image=" + mediaField.Substring(lb, ub - lb) + ">";
+
+                        if (textURL != "")
+                            text = text.Replace(textURL, imgInfo);
+                        else
+                            text += " " + imgInfo;
+                    }
                 }
-
-                if (mediaField.Contains("\"media_url\":\""))
-                {
-                    lb = mediaField.IndexOf("\"media_url\":\"") + 13;
-                    ub = mediaField.IndexOf('"', lb);
-
-                    string imgInfo = "<image=" + mediaField.Substring(lb, ub - lb) + ">";
-
-                    if (textURL != "")
-                        text = text.Replace(textURL, imgInfo);
-                    else
-                        text += " " + imgInfo;
-                }
-
+                
                 //decode and unescape tweet text
                 text = HttpUtility.HtmlDecode(Regex.Unescape(text));
 
@@ -130,7 +133,7 @@ namespace Adjutant
         const string consumerKey = "bQp3ytw07Ld9bmEBU4RI4w";
         const string consumerSecret = "IXS35cJodk8aUVQO26vTYUb61kYbIV6cznOYBd7k7AI";
 
-        public static bool DisplayInstagrams;
+        public static bool DisplayPictures, DisplayInstagrams;
 
         string oauthToken, oauthTokenSecret;
         List<Tweet> tweets;

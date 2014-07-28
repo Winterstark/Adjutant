@@ -73,6 +73,7 @@ namespace Adjutant
             changed |= compareValueToTag(chkTwCountOnNewTweet);
             changed |= compareValueToTag(chkTwCountOnFocus);
             changed |= compareValueToTag(numTwCountMinPeriod);
+            changed |= compareValueToTag(chkTwDisplayPictures);
             changed |= compareValueToTag(chkTwDisplayInstagrams);
             changed |= compareValueToTag(txtTwSound);
             changed |= compareValueToTag(numTwSoundThreshold);

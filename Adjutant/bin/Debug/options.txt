@@ -1,5 +1,5 @@
 //window
-x=168
+x=161
 y=0
 width=417
 min_height=131
@@ -39,11 +39,12 @@ todo_done_color=-14436096
 //twitter
 token=18160045-m6CI9FSXK5zhItM7QWJixujVJRR7aP0Io4v2hIGEg
 secret=7q763i5QxPn1oBE9OgNIqMrTJaqEjwASdcIdvT4Jj8
-last_tweet=493850782194601986
+last_tweet=493246549116612609
 update_on_new_tweet=True
 update_on_focus=True
 min_tweet_period=30
-display_instagrams=False
+display_pictures=True
+display_instagrams=True
 tw_sound=C:\dev\projex\Adjutant\Adjutant\bin\Debug\sounds\twitter.wav
 tw_sound_threshold=1
 tw_user_color=-16743244

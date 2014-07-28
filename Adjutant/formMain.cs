@@ -59,7 +59,7 @@ namespace Adjutant
         double opacityPassive, opacityActive;
         long lastTweet;
         int x, y, lineH, minH, maxH, prevH, prevX, prevY, leftMargin, yOffset, chunkOffset, lastChunk, lastChunkChar, printAtOnce, autoHideDelay, tabInd, historyInd, minTweetPeriod, twSoundThreshold, hotkey, newMailCount, prevNewMailCount, mailSoundThreshold, tutorialStep;
-        bool initialized, winKey, prompt, blankLine, echo, ctrlKey, drag, resizeW, resizeH, autoResize, hiding, hidden, todoHideDone, todoAutoTransfer, twUpdateOnNewTweet, twUpdateOnFocus, twOutput, twPrevCountBelowThreshold, twDisplayInstagrams, mailUpdateOnNewMail, mailUpdateOnFocus, hotkeyCtrl, hotkeyAlt, hotkeyShift;
+        bool initialized, winKey, prompt, blankLine, echo, ctrlKey, drag, resizeW, resizeH, autoResize, hiding, hidden, todoHideDone, todoAutoTransfer, twUpdateOnNewTweet, twUpdateOnFocus, twOutput, twPrevCountBelowThreshold, twDisplayPictures, twDisplayInstagrams, mailUpdateOnNewMail, mailUpdateOnFocus, hotkeyCtrl, hotkeyAlt, hotkeyShift;
         #endregion
 
 
@@ -406,6 +406,9 @@ namespace Adjutant
                         case "min_tweet_period":
                             minTweetPeriod = int.Parse(args[1]);
                             break;
+                        case "display_pictures":
+                            twDisplayPictures = bool.Parse(args[1]);
+                            break;
                         case "display_instagrams":
                             twDisplayInstagrams = bool.Parse(args[1]);
                             break;
@@ -539,6 +542,7 @@ namespace Adjutant
             file.WriteLine("update_on_new_tweet=" + twUpdateOnNewTweet);
             file.WriteLine("update_on_focus=" + twUpdateOnFocus);
             file.WriteLine("min_tweet_period=" + minTweetPeriod);
+            file.WriteLine("display_pictures=" + twDisplayPictures);
             file.WriteLine("display_instagrams=" + twDisplayInstagrams);
             file.WriteLine("tw_sound=" + twSound);
             file.WriteLine("tw_sound_threshold=" + twSoundThreshold);
@@ -639,6 +643,7 @@ namespace Adjutant
                 options.chkTwCountOnNewTweet.Tag = twUpdateOnNewTweet;
                 options.chkTwCountOnFocus.Tag = twUpdateOnFocus;
                 options.numTwCountMinPeriod.Tag = minTweetPeriod;
+                options.chkTwDisplayPictures.Tag = twDisplayPictures;
                 options.chkTwDisplayInstagrams.Tag = twDisplayInstagrams;
                 options.txtTwSound.Tag = twSound;
                 options.numTwSoundThreshold.Tag = twSoundThreshold;
@@ -698,6 +703,7 @@ namespace Adjutant
                 options.chkTwCountOnNewTweet.Checked = twUpdateOnNewTweet;
                 options.chkTwCountOnFocus.Checked = twUpdateOnFocus;
                 options.numTwCountMinPeriod.Value = minTweetPeriod;
+                options.chkTwDisplayPictures.Checked = twDisplayPictures;
                 options.chkTwDisplayInstagrams.Checked = twDisplayInstagrams;
                 options.txtTwSound.Text = twSound;
                 options.numTwSoundThreshold.Value = twSoundThreshold;
@@ -797,6 +803,7 @@ namespace Adjutant
             twUpdateOnNewTweet = options.chkTwCountOnNewTweet.Checked;
             twUpdateOnFocus = options.chkTwCountOnFocus.Checked;
             minTweetPeriod = (int)options.numTwCountMinPeriod.Value;
+            twDisplayPictures = options.chkTwDisplayPictures.Checked;
             twDisplayInstagrams = options.chkTwDisplayInstagrams.Checked;
             twSound = options.txtTwSound.Text;
             twSoundThreshold = (int)options.numTwSoundThreshold.Value;
@@ -826,6 +833,7 @@ namespace Adjutant
 
             Hotkey.RegisterHotKey(this, hotkey, hotkeyCtrl, hotkeyAlt, hotkeyShift);
 
+            Twitter.DisplayPictures = twDisplayPictures;
             Twitter.DisplayInstagrams = twDisplayInstagrams;
 
             this.Top = y;
@@ -2621,6 +2629,7 @@ namespace Adjutant
             {
                 twitter = new Twitter(token, secret, lastTweet);
 
+                Twitter.DisplayPictures = twDisplayPictures;
                 Twitter.DisplayInstagrams = twDisplayInstagrams;
                 twPrevCountBelowThreshold = true;
 
