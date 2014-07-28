@@ -2659,13 +2659,13 @@ namespace Adjutant
             TimeSpan diff = DateTime.Now - TimeZone.CurrentTimeZone.ToLocalTime(time);
 
             if (diff.TotalSeconds < 1)
-                return diff.Milliseconds + " ms ago";
+                return diff.Milliseconds + (diff.Milliseconds == 1 ? " msec ago" : " msecs ago");
             else if (diff.TotalMinutes < 1)
-                return diff.Seconds + " secs ago";
+                return diff.Seconds + (diff.Seconds == 1 ? " sec ago" : " secs ago");
             else if (diff.TotalHours < 1)
-                return diff.Minutes + " mins ago";
+                return diff.Minutes + (diff.Minutes == 1 ? " min ago" : " mins ago");
             else if (diff.TotalDays < 1)
-                return diff.Hours + " hrs ago";
+                return diff.Hours + (diff.Hours == 1 ? " hr ago" : " hrs ago");
             else if (diff.TotalDays < 2)
                 return "Yesterday";
             else
@@ -3138,15 +3138,8 @@ namespace Adjutant
             greeting();
             todoLoad();
 
-            
-            //print("<image=http://community.us.playstation.com/t5/image/serverpage/image-id/197305iFFF0FF7C73A77F15/image-size/original?v=mpbl-1&px=-1>", "https://www.youtube.com/watch?v=ZQk9NN0QR6k", Color.Blue);
-            print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "www.google.com", Color.Purple);
-
-
-            ////twitter init
+            //init modules
             //twitterInit();
-
-            ////mail init
             //mailInit();
         }
 
