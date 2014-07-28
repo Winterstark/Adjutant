@@ -262,9 +262,9 @@ namespace Adjutant
             }
         }
 
-        public void MouseNotOver()
+        public bool MouseNotOver(string link)
         {
-            mouseOver = false;
+            return mouseOver = this.link == link && link != "";
         }
 
         public void Draw(Graphics gfx, Font font, ref int x, ref int y, ref int h)
@@ -279,9 +279,6 @@ namespace Adjutant
             
             if (bounds.Height > h)
                 h = bounds.Height;
-
-            if (mouseOver)
-                gfx.DrawRectangle(new Pen(brush), bounds);
 
             if (dlProgress != -1)
             {
@@ -362,6 +359,10 @@ namespace Adjutant
 
                 gfx.DrawString(text.Substring(0, lastChar), font, brush, x, y);
             }
+
+            //draw selection rectangle (if mouse over)
+            if (mouseOver)
+                gfx.DrawRectangle(new Pen(brush, 2), bounds.X + 1, bounds.Y + 1, bounds.Width - 2, bounds.Height - 2);
 
             //advance drawing position
             if (newline)

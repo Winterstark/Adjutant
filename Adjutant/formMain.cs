@@ -3138,13 +3138,16 @@ namespace Adjutant
             greeting();
             todoLoad();
 
-            print("<image=http://community.us.playstation.com/t5/image/serverpage/image-id/197305iFFF0FF7C73A77F15/image-size/original?v=mpbl-1&px=-1>", "https://www.youtube.com/watch?v=ZQk9NN0QR6k", Color.Blue);
+            
+            //print("<image=http://community.us.playstation.com/t5/image/serverpage/image-id/197305iFFF0FF7C73A77F15/image-size/original?v=mpbl-1&px=-1>", "https://www.youtube.com/watch?v=ZQk9NN0QR6k", Color.Blue);
+            print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "www.google.com", Color.Purple);
 
-            //twitter init
-            twitterInit();
 
-            //mail init
-            mailInit();
+            ////twitter init
+            //twitterInit();
+
+            ////mail init
+            //mailInit();
         }
 
         private void formMain_Activated(object sender, EventArgs e)
@@ -3275,9 +3278,15 @@ namespace Adjutant
                     break;
             }
 
-            //let the other chunks know the mouse isn't over them
+            //let the other chunks know the mouse isn't over them (if they don't share the same link)
+            //go back while the chunks share the same link
+            for (int j = i - 1; j >= 0; j--)
+                if (!chunks[j].MouseNotOver(newLink))
+                    break;
+
+            //go forward till the end
             for (i++; i < chunks.Count; i++)
-                chunks[i].MouseNotOver();
+                chunks[i].MouseNotOver(newLink);
 
             //if new link update
             if (newLink != link)
