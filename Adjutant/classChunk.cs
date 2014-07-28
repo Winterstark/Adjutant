@@ -338,16 +338,6 @@ namespace Adjutant
                 Rectangle srcRect = new Rectangle(0, 0, (int)((float)imgW / bounds.Width * img.Width), (int)((float)imgH / bounds.Height * img.Height));
 
                 gfx.DrawImage(img, destRect, srcRect, GraphicsUnit.Pixel);
-
-                //if (IsImgExpanding())
-                //{
-                //    if (imgW < bounds.Width)
-                //        imgW = Math.Min(imgW + PrintAtOnce * MeasureWidth("A"), bounds.Width); //img first grows horizontally to a full-width line
-                //    else if (imgH < bounds.Height)
-                //        imgH = Math.Min(imgH + LineH, bounds.Height); //then it grows vertically
-                    
-                //    UpdateImage(this);
-                //}
             }
             else
             {
@@ -362,7 +352,7 @@ namespace Adjutant
 
             //draw selection rectangle (if mouse over)
             if (mouseOver)
-                gfx.DrawRectangle(new Pen(brush, 2), bounds.X + 1, bounds.Y + 1, bounds.Width - 2, bounds.Height - 2);
+                gfx.DrawRectangle(new Pen(brush, 1), bounds.X + 1, bounds.Y, bounds.Width - 2, bounds.Height - 2);
 
             //advance drawing position
             if (newline)

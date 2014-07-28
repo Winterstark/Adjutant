@@ -1298,6 +1298,7 @@ namespace Adjutant
                         printHelp("\"todo [task] /tomorrow\" adds a new task to tomorrow's todo list.");
                         printHelp("\"todo [task] /date=YYYY-MM-DD\" adds a new task for a specific date.");
                         printHelp("\"todo\" displays unfinished tasks for today.");
+                        printHelp("\"todo /yesterday\" displays yesterday's todo list.");
                         printHelp("\"todo /tomorrow\" displays unfinished tasks for tomorrow.");
                         printHelp("\"todo /date=YYYY-MM-DD\" displays unfinished tasks for a specific day.");
                         printHelp("\"todo /list\" displays all todo lists from this date onward.");
@@ -2291,9 +2292,8 @@ namespace Adjutant
             {
                 if (dt.Date == DateTime.Today)
                     date = "today";
-                else
-                    if (dt.Date == DateTime.Today.AddDays(1))
-                        date = "tomorrow";
+                else if (dt.Date == DateTime.Today.AddDays(1))
+                    date = "tomorrow";
             }
 
             print("To do list for " + date + ":", todoFile(date), todoMiscColor);
@@ -2332,6 +2332,8 @@ namespace Adjutant
                         todoShow(date);
                 }
             }
+            else if (cmd[1].ToLower().Contains("/y"))
+                todoShow(DateTime.Now.AddDays(-1).Date.ToString("yyyy-MM-dd"));
             else if (cmd[1].ToLower().Contains("/a"))
             {
                 foreach (string file in Directory.GetFiles(todoDir, "todo_*-*-*.txt"))
@@ -3273,14 +3275,22 @@ namespace Adjutant
             }
 
             //let the other chunks know the mouse isn't over them (if they don't share the same link)
-            //go back while the chunks share the same link
+            //go back while chunks share the same link
             for (int j = i - 1; j >= 0; j--)
                 if (!chunks[j].MouseNotOver(newLink))
                     break;
 
+            //go forward while chunks share the same link
+            for (int j = i + 1; j < chunks.Count; j++)
+                if (!chunks[j].MouseNotOver(newLink))
+                {
+                    i = j;
+                    break;
+                }
+
             //go forward till the end
             for (i++; i < chunks.Count; i++)
-                chunks[i].MouseNotOver(newLink);
+                chunks[i].MouseNotOver("");
 
             //if new link update
             if (newLink != link)
