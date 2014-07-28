@@ -1686,7 +1686,12 @@ namespace Adjutant
                 if (ub != -1)
                 {
                     //print img
-                    Chunk imgChunk = new Chunk(txt.Substring(lb, ub - lb), link, newline && ub == txt.Length - 1, newline);
+                    string imgLocation = txt.Substring(lb, ub - lb);
+
+                    if (link == "")
+                        link = imgLocation;
+
+                    Chunk imgChunk = new Chunk(imgLocation, link, newline && ub == txt.Length - 1, newline);
 
                     //can img fit in current line?
                     if (leftMargin + imgChunk.GetWidth(true) > this.Width && chunks.Count > 0)
@@ -3132,6 +3137,8 @@ namespace Adjutant
             print("Adjutant online.");
             greeting();
             todoLoad();
+
+            print("<image=http://community.us.playstation.com/t5/image/serverpage/image-id/197305iFFF0FF7C73A77F15/image-size/original?v=mpbl-1&px=-1>", "https://www.youtube.com/watch?v=ZQk9NN0QR6k", Color.Blue);
 
             //twitter init
             twitterInit();
