@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -52,6 +53,7 @@ namespace Adjutant
         List<Chunk> chunks = new List<Chunk>();
         Dictionary<string, string> customCmds;
         List<string> history = new List<string>(), twURLs = new List<string>(), twMentions = new List<string>(), todo;
+        List<Chunk> expandingChunks = new List<Chunk>();
         string[] filteredPaths;
         string python, user, dir, todoDir, inputMode, token, secret, link, mailUser, mailPass, twUsername, twSound, mailSound;
         double opacityPassive, opacityActive;
@@ -69,7 +71,9 @@ namespace Adjutant
                 maxWindowH = maxH;
 
             context.MaximumBuffer = new Size(maxWindowW + 1, maxWindowH + 1);
+
             grafx = context.Allocate(this.CreateGraphics(), new Rectangle(0, 0, maxWindowW, maxWindowH));
+            grafx.Graphics.SmoothingMode = SmoothingMode.HighQuality;
         }
 
         void activateConsole() //or hide if already active
@@ -214,6 +218,16 @@ namespace Adjutant
                 while (chInd < lastChunk && y < txtCMD.Top)
                     chunks[chInd++].Draw(gfx, txtCMD.Font, ref x, ref y, ref h);
                 chunks[lastChunk].Draw(gfx, txtCMD.Font, ref x, ref y, ref h, lastChunkChar);
+
+                //expand image chunks
+                for (int i = 0; i < expandingChunks.Count; i++)
+                {
+                    expandingChunks[i].ExpandImage();
+                    updateImage(expandingChunks[i]);
+
+                    if (!expandingChunks[i].IsImgExpanding())
+                        expandingChunks.RemoveAt(i--);
+                }
             }
         }
 
@@ -1495,12 +1509,85 @@ namespace Adjutant
                 this.Invoke(new MethodInvoker(this.Refresh));
         }
 
-        void updateImages()
+        void updateImage(Chunk chunk)
         {
-            //one or more image chunks have finished downloading images
-            //update only if not printing (otherwise update will be called as usual)
-            if (!timerPrint.Enabled)
-                jumpToLastLine();
+            //int ind = getChunkIndex(chunk);
+
+            //if (ind != -1)
+            //{
+                //one or more image chunks have finished downloading images
+                //update only if not printing (otherwise update will be called as usual)
+                if (!timerPrint.Enabled)
+                {
+                    ////only jump to last line if it contains an expanding image
+                    //int ind = chunks.Count;
+                    //bool jump = false;
+
+                    //do
+                    //{
+                    //    ind--;
+
+                    //    if (chunks[ind].IsImgExpanding())
+                    //    {
+                    //        jump = true;
+                    //        break;
+                    //    }
+                    //} while (ind > 0 && !chunks[ind - 1].IsNewline());
+
+                    //if (jump)
+                    if (chunk.IsImgExpanding())
+                        jumpToLastLine();
+
+                    //also force drawing
+                    this.Invalidate();
+                }
+            //}
+        }
+
+        void sendChunkToNewLine(Chunk chunk)
+        {
+            //make previous chunk have newline
+            int ind = getChunkIndex(chunk);
+
+            if (ind > 0)
+                chunks[ind - 1].InsertNewline();
+        }
+
+        void checkIfBully(Chunk chunk, int x)
+        {
+            //check if image chunk grew so big it pushed the next chunk out of console window bounds
+            int ind = getChunkIndex(chunk);
+
+            if (ind != -1 && ind < chunks.Count - 1)
+            {
+                if (x + chunks[ind + 1].GetWidth() > this.Width)
+                {
+                    //send the next chunk to a new line
+                    chunk.InsertNewline();
+                    //jumpToLastLine();
+                    //this.OnResize(new EventArgs());
+                }
+            }
+        }
+
+        int getChunkIndex(Chunk chunk)
+        {
+            int ind = 0;
+
+            while (ind < chunks.Count)
+            {
+                if (chunks[ind] == chunk)
+                    return ind;
+
+                ind++;
+            }
+
+            return -1;
+        }
+
+        void forceConsoleResizeEvent()
+        {
+            this.OnResize(new EventArgs());
         }
 
         void cls()
@@ -1585,15 +1672,15 @@ namespace Adjutant
                     Chunk imgChunk = new Chunk(txt.Substring(lb, ub - lb), link, newline && ub == txt.Length - 1, newline);
 
                     //can img fit in current line?
-                    if (leftMargin + imgChunk.GetWidth() > this.Width && chunks.Count > 0)
+                    if (leftMargin + imgChunk.GetWidth(true) > this.Width && chunks.Count > 0)
                         chunks[chunks.Count - 1].InsertNewline(); //nope, send img to next line
 
                     chunks.Add(imgChunk);
 
-                    if (newline)
+                    if (newline && ub == txt.Length - 1)
                         leftMargin = 0;
                     else
-                        leftMargin += imgChunk.GetWidth();
+                        leftMargin += imgChunk.GetWidth(true);
 
                     showNewChunks();
 
@@ -2956,9 +3043,29 @@ namespace Adjutant
 
             //setup Chunk delegates and init other stuff
             Chunk.MeasureWidth = measureWidth;
-            Chunk.UpdateImages = updateImages;
+            Chunk.ForceConsoleResizeEvent = forceConsoleResizeEvent;
+            Chunk.UpdateImage = updateImage;
+            Chunk.SendChunkToNewLine = sendChunkToNewLine;
+            Chunk.CheckIfBully = checkIfBully;
+            Chunk.ExpandingChunks = expandingChunks;
             Chunk.OnFrameChangedEvent = new EventHandler(this.OnFrameChanged);
             Chunk.ErrorColor = errorColor;
+
+            //calc Chunk wave colors
+            int waveR = 0, waveG = 204, waveB = 0;
+            int backR = this.BackColor.R, backG = this.BackColor.G, backB = this.BackColor.B;
+
+            Chunk.WavePen = new Pen(Color.FromArgb(waveR, waveG, waveB), 2); //pure wave color
+            Chunk.WavePen2 = new Pen(Color.FromArgb((int)((float)(waveR + backR * 2) / 3), (int)((float)(waveG + backG * 2) / 3), (int)((float)(waveB + backB * 2) / 3)), 3); //interpolate color between wave RGB and background RGB (much closer to background RGB)
+            
+            //load Chunk spinner
+            if (File.Exists(Application.StartupPath + "\\ui\\loading.gif"))
+            {
+                Chunk.Spinner = Image.FromFile(Application.StartupPath + "\\ui\\loading.gif");
+
+                if (ImageAnimator.CanAnimate(Chunk.Spinner))
+                    ImageAnimator.Animate(Chunk.Spinner, new EventHandler(this.OnFrameChanged));
+            }
 
             txtSelection.MouseWheel += new System.Windows.Forms.MouseEventHandler(txtSelection_MouseWheel);
 
@@ -3002,50 +3109,15 @@ namespace Adjutant
             }
 
             //print intro
-            //print("Adjutant online.");
-            //greeting();
-            //todoLoad();
+            print("Adjutant online.");
+            greeting();
+            todoLoad();
 
-            //string kappa = @"<image=C:\Users\Winterstark\Desktop\Kappa.png>";
+            //twitter init
+            twitterInit();
 
-            //print(@"Grey Face - no space" + kappa + kappa + kappa);
-            //print("IT WORKS!");
-            //print(@"asdf <image=C:\Users\Winterstark\Desktop\~gypcg - Blue forest.jpg> 1234");
-
-            //print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
-            //print("asdfasdfasdda");
-            //print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
-
-            //print(@"Grey Face - no space" + kappa + kappa + kappa);
-            //print("IT WORKS!");
-            //print(@"asdf <image=C:\Users\Winterstark\Desktop\~gypcg - Blue forest.jpg> 1234");
-
-            //print(@"Grey Face - no space" + kappa + kappa + kappa);
-            //print("IT WORKS!");
-            //print(@"asdf <image=C:\Users\Winterstark\Desktop\~gypcg - Blue forest.jpg> 1234");
-
-            //print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
-            //print(@"<image=C:\Users\Winterstark\Desktop\heroes.jpg>");
-            
-            //print(@"<image=C:\dev\projex\Adjutant\Adjutant\bin\Debug\ui\loading.gif>");
-            //print(@"<image=C:\Users\Winterstark\Desktop\saeOX53.gif>");
-
-            //print(@"<image=C:\dev\projex\Adjutant\Adjutant\bin\Debug\ui\loading.gif>", false); print(" STILL THE SAME LINE", false);
-            //print(@"<image=C:\dev\projex\Adjutant\Adjutant\bin\Debug\ui\loading.gif>", false); print(" STILL THE SAME LINE", false);
-            //print(@"<image=C:\dev\projex\Adjutant\Adjutant\bin\Debug\ui\loading.gif>", false); print(" STILL THE SAME LINE?????", false);
-
-            //print("<image=http://img.moviepilot.com/assets/tarantulaV2/long_form_background_images/1378462980_korra1.jpg>");
-            print("<image=http://static.tumblr.com/zgzs1gz/8xdm3yhuj/pabu.gif>");
-            //print("<image=http://data3.whicdn.com/images/82571930/thumb.jpg>");
-            //print("<image=http://fc09.deviantart.net/fs71/i/2014/073/7/4/windranger_and_juggernaut___dota_2_by_junkazama15-d7a4qr3.jpg>");
-
-            //print(@"<image=C:\Users\Winterstark\Desktop\pabu.gif>");
-
-            ////twitter init
-            //twitterInit();
-
-            ////mail init
-            //mailInit();
+            //mail init
+            mailInit();
         }
 
         private void formMain_Activated(object sender, EventArgs e)
@@ -3281,15 +3353,13 @@ namespace Adjutant
                     if (chunkOffset == 0)
                     {
                         //can't scroll past first chunk; check if it is larger than the console
-                        h = chunks[0].GetHeight();
-
-                        if (h > txtCMD.Top)
+                        if (yOffset == 0)
                         {
-                            if (yOffset == 0)
-                                yOffset = -h + yToScroll;
-                            else
-                                yOffset = Math.Min(yOffset + yToScroll, 1); //yOffset will become max. 1 (instead of the more logical 0) because if yOffset becomes 0 it will scroll through the first chunk endlessly
+                            if (chunks[0].GetHeight() > txtCMD.Top)
+                                yOffset = -chunks[0].GetHeight() + yToScroll;
                         }
+                        else
+                            yOffset = Math.Min(yOffset + yToScroll, 1); //yOffset will become max. 1 (instead of the more logical 0) because if yOffset becomes 0 it will scroll through the first chunk endlessly
 
                         break;
                     }
