@@ -109,7 +109,7 @@ namespace Adjutant
 
         void toggleSelectMode()
         {
-            if (!txtSelection.Visible)
+            if (!txtPad.Visible)
             {
                 if (chunks.Count > 0 && lastChunk != -1)
                 {
@@ -154,23 +154,23 @@ namespace Adjutant
                     }
 
                     //display in txtbox
-                    txtSelection.SelectionStart = 0;
-                    txtSelection.Text = consoleOutput;
+                    txtPad.SelectionStart = 0;
+                    txtPad.Text = consoleOutput;
 
-                    txtSelection.Font = txtCMD.Font;
-                    txtSelection.BackColor = txtCMD.BackColor;
-                    txtSelection.ForeColor = txtCMD.ForeColor;
-                    txtSelection.Width = this.Width;
-                    txtSelection.Height = txtCMD.Top;
-                    txtSelection.Visible = true;
+                    txtPad.Font = txtCMD.Font;
+                    txtPad.BackColor = txtCMD.BackColor;
+                    txtPad.ForeColor = txtCMD.ForeColor;
+                    txtPad.Width = this.Width;
+                    txtPad.Height = txtCMD.Top;
+                    txtPad.Visible = true;
                     
                     //scroll to current position
                     if (ind == -1)
                         ind = consoleOutput.Length;
 
                     //scroll to end
-                    txtSelection.Select(txtSelection.Text.Length, 0);
-                    txtSelection.ScrollToCaret();
+                    txtPad.Select(txtPad.Text.Length, 0);
+                    txtPad.ScrollToCaret();
 
                     //take into account extra blank lines inserted to approximate image chunks space
                     int extraChars = 0;
@@ -191,19 +191,24 @@ namespace Adjutant
                     ind += extraChars;
 
                     //then scroll back where console output begins on screen
-                    txtSelection.Select(ind, 0);
-                    txtSelection.ScrollToCaret();
+                    txtPad.Select(ind, 0);
+                    txtPad.ScrollToCaret();
 
-                    txtSelection.Focus();
+                    txtPad.Focus();
                 }
             }
             else
             {
                 //hide selection txtbox
-                txtSelection.Visible = false;
+                txtPad.Visible = false;
                 
                 txtCMD.Focus();
             }
+        }
+
+        void togglePadMode()
+        {
+
         }
 
         void draw(Graphics gfx)
@@ -221,13 +226,15 @@ namespace Adjutant
 
                 //expand image chunks
                 for (int i = 0; i < expandingChunks.Count; i++)
-                {
-                    expandingChunks[i].ExpandImage();
-                    updateImage(expandingChunks[i]);
+                    //expand only chunks that have been printed
+                    if (getChunkIndex(expandingChunks[i]) <= lastChunk)
+                    {
+                        expandingChunks[i].ExpandImage();
+                        updateImage(expandingChunks[i]);
 
-                    if (!expandingChunks[i].IsImgExpanding())
-                        expandingChunks.RemoveAt(i--);
-                }
+                        if (!expandingChunks[i].IsImgExpanding())
+                            expandingChunks.RemoveAt(i--);
+                    }
             }
         }
 
@@ -1198,6 +1205,9 @@ namespace Adjutant
                                 inputMode = "user";
                                 setPrompt();
                                 break;
+                            case "pad":
+
+                                break;
                             case "":
                                 flush();
                                 break;
@@ -1530,37 +1540,16 @@ namespace Adjutant
 
         void updateImage(Chunk chunk)
         {
-            //int ind = getChunkIndex(chunk);
+            //one or more image chunks have finished downloading images
+            //update only if not printing (otherwise update will be called as usual)
+            if (!timerPrint.Enabled)
+            {
+                if (timerPrint.Interval == ZERO_DELAY || chunk.IsImgExpanding())
+                    jumpToLastLine();
 
-            //if (ind != -1)
-            //{
-                //one or more image chunks have finished downloading images
-                //update only if not printing (otherwise update will be called as usual)
-                if (!timerPrint.Enabled)
-                {
-                    ////only jump to last line if it contains an expanding image
-                    //int ind = chunks.Count;
-                    //bool jump = false;
-
-                    //do
-                    //{
-                    //    ind--;
-
-                    //    if (chunks[ind].IsImgExpanding())
-                    //    {
-                    //        jump = true;
-                    //        break;
-                    //    }
-                    //} while (ind > 0 && !chunks[ind - 1].IsNewline());
-
-                    //if (jump)
-                    if (chunk.IsImgExpanding())
-                        jumpToLastLine();
-
-                    //also force drawing
-                    this.Invalidate();
-                }
-            //}
+                //also force drawing
+                this.Invalidate();
+            }
         }
 
         void sendChunkToNewLine(Chunk chunk)
@@ -3095,7 +3084,7 @@ namespace Adjutant
                     ImageAnimator.Animate(Chunk.Spinner, new EventHandler(this.OnFrameChanged));
             }
 
-            txtSelection.MouseWheel += new System.Windows.Forms.MouseEventHandler(txtSelection_MouseWheel);
+            txtPad.MouseWheel += new System.Windows.Forms.MouseEventHandler(txtPad_MouseWheel);
 
             link = "";
             helpColor = Color.Yellow;
@@ -3136,14 +3125,17 @@ namespace Adjutant
                 return;
             }
 
-            //print intro
-            print("Adjutant online.");
-            greeting();
-            todoLoad();
+            ////print intro
+            //print("Adjutant online.");
+            //greeting();
+            //todoLoad();
+
+            print("<image=http://i1.wp.com/geekdad.com/wp-content/uploads/2013/08/132772_0086.jpg>");
+            print("<image=http://community.us.playstation.com/t5/image/serverpage/image-id/197305iFFF0FF7C73A77F15/image-size/original?v=mpbl-1&px=-1>", "https://www.youtube.com/watch?v=ZQk9NN0QR6k", Color.Blue);
 
             //init modules
-            twitterInit();
-            mailInit();
+            //twitterInit();
+            //mailInit();
         }
 
         private void formMain_Activated(object sender, EventArgs e)
@@ -3245,7 +3237,7 @@ namespace Adjutant
         {
             ctrlKey = e.Control;
 
-            if (e.KeyCode == Keys.F5 || (txtSelection.Visible && e.KeyCode == Keys.Escape))
+            if (e.KeyCode == Keys.F5 || (txtPad.Visible && e.KeyCode == Keys.Escape))
                 toggleSelectMode();
         }
 
@@ -3303,6 +3295,11 @@ namespace Adjutant
 
             //perform other mouse-movement logic
             mouseMove(e.X, e.Y);
+        }
+
+        private void formMain_MouseLeave(object sender, EventArgs e)
+        {
+            this.OnMouseMove(new MouseEventArgs(System.Windows.Forms.MouseButtons.None, 0, -1, -1, 0));
         }
 
         private void formMain_MouseUp(object sender, MouseEventArgs e)
@@ -3454,9 +3451,56 @@ namespace Adjutant
             toggleSelectMode();
         }
 
-        private void txtSelection_MouseDoubleClick(object sender, MouseEventArgs e)
+        private void txtPad_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             toggleSelectMode();
+        }
+
+        private void txtPad_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            if (!txtPad.Text.Contains(Environment.NewLine))
+                return; //no lines to scroll through
+
+            int nLines = Math.Abs(e.Delta / 30); //number of lines to scroll
+            int ind = txtPad.SelectionStart;
+
+            if (e.Delta < 0)
+                for (int i = 0; i < nLines; i++)
+                {
+                    if (ind == txtPad.Text.Length)
+                        break;
+
+                    ind = txtPad.Text.IndexOf(Environment.NewLine, ind + 1);
+
+                    if (ind == -1)
+                    {
+                        ind = txtPad.Text.Length;
+                        break;
+                    }
+                }
+            else
+                for (int i = 0; i < nLines; i++)
+                {
+                    if (ind == 0)
+                        break;
+
+                    ind = txtPad.Text.LastIndexOf(Environment.NewLine, ind - 1);
+
+                    if (ind == -1)
+                    {
+                        ind = 0;
+                        break;
+                    }
+                }
+
+            txtPad.SelectionStart = ind;
+            txtPad.ScrollToCaret();
+        }
+
+        private void txtPad_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Control && e.KeyCode == Keys.A)
+                txtPad.SelectAll();
         }
 
         private void txtCMD_MouseDown(object sender, MouseEventArgs e)
@@ -3620,53 +3664,6 @@ namespace Adjutant
                         e.SuppressKeyPress = false;
                         break;
                 }
-        }
-
-        private void txtSelection_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
-        {
-            if (!txtSelection.Text.Contains(Environment.NewLine))
-                return; //no lines to scroll through
-
-            int nLines = Math.Abs(e.Delta / 30); //number of lines to scroll
-            int ind = txtSelection.SelectionStart;
-
-            if (e.Delta < 0)
-                for (int i = 0; i < nLines; i++)
-                {
-                    if (ind == txtSelection.Text.Length)
-                        break;
-
-                    ind = txtSelection.Text.IndexOf(Environment.NewLine, ind + 1);
-
-                    if (ind == -1)
-                    {
-                        ind = txtSelection.Text.Length;
-                        break;
-                    }
-                }
-            else
-                for (int i = 0; i < nLines; i++)
-                {
-                    if (ind == 0)
-                        break;
-
-                    ind = txtSelection.Text.LastIndexOf(Environment.NewLine, ind - 1);
-
-                    if (ind == -1)
-                    {
-                        ind = 0;
-                        break;
-                    }
-                }
-                
-            txtSelection.SelectionStart = ind;
-            txtSelection.ScrollToCaret();
-        }
-
-        private void txtSelection_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Control && e.KeyCode == Keys.A)
-                txtSelection.SelectAll();
         }
 
         private void timerDisableTopMost_Tick(object sender, EventArgs e)

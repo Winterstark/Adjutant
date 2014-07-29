@@ -1,5 +1,5 @@
 //window
-x=194
+x=189
 y=0
 width=417
 min_height=116
@@ -39,7 +39,7 @@ todo_done_color=-14436096
 //twitter
 token=18160045-m6CI9FSXK5zhItM7QWJixujVJRR7aP0Io4v2hIGEg
 secret=7q763i5QxPn1oBE9OgNIqMrTJaqEjwASdcIdvT4Jj8
-last_tweet=493872838105776128
+last_tweet=494039788761010176
 update_on_new_tweet=True
 update_on_focus=True
 min_tweet_period=30

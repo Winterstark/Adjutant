@@ -42,7 +42,7 @@
             this.timerShowHide = new System.Windows.Forms.Timer(this.components);
             this.timerPin = new System.Windows.Forms.Timer(this.components);
             this.timerMailCheck = new System.Windows.Forms.Timer(this.components);
-            this.txtSelection = new System.Windows.Forms.TextBox();
+            this.txtPad = new System.Windows.Forms.TextBox();
             this.contextMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -126,18 +126,18 @@
             // 
             this.timerMailCheck.Tick += new System.EventHandler(this.timerMailCheck_Tick);
             // 
-            // txtSelection
+            // txtPad
             // 
-            this.txtSelection.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.txtSelection.Location = new System.Drawing.Point(0, 0);
-            this.txtSelection.Multiline = true;
-            this.txtSelection.Name = "txtSelection";
-            this.txtSelection.ReadOnly = true;
-            this.txtSelection.Size = new System.Drawing.Size(100, 20);
-            this.txtSelection.TabIndex = 4;
-            this.txtSelection.Visible = false;
-            this.txtSelection.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtSelection_KeyDown);
-            this.txtSelection.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.txtSelection_MouseDoubleClick);
+            this.txtPad.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.txtPad.Location = new System.Drawing.Point(0, 0);
+            this.txtPad.Multiline = true;
+            this.txtPad.Name = "txtPad";
+            this.txtPad.ReadOnly = true;
+            this.txtPad.Size = new System.Drawing.Size(100, 20);
+            this.txtPad.TabIndex = 4;
+            this.txtPad.Visible = false;
+            this.txtPad.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtPad_KeyDown);
+            this.txtPad.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.txtPad_MouseDoubleClick);
             // 
             // formMain
             // 
@@ -145,7 +145,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(219, 214);
             this.ContextMenuStrip = this.contextMenu;
-            this.Controls.Add(this.txtSelection);
+            this.Controls.Add(this.txtPad);
             this.Controls.Add(this.lblPrompt);
             this.Controls.Add(this.txtCMD);
             this.DoubleBuffered = true;
@@ -166,6 +166,7 @@
             this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.formMain_KeyUp);
             this.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.formMain_MouseDoubleClick);
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.formMain_MouseDown);
+            this.MouseLeave += new System.EventHandler(this.formMain_MouseLeave);
             this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.formMain_MouseMove);
             this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.formMain_MouseUp);
             this.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.formMain_MouseWheel);
@@ -190,7 +191,7 @@
         private System.Windows.Forms.Timer timerShowHide;
         private System.Windows.Forms.Timer timerPin;
         private System.Windows.Forms.Timer timerMailCheck;
-        private System.Windows.Forms.TextBox txtSelection;
+        private System.Windows.Forms.TextBox txtPad;
     }
 }
 

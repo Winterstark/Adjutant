@@ -63,6 +63,7 @@ namespace Adjutant
                     //prepare img download
                     imgW = Spinner.Width + 20;
                     imgH = Spinner.Height + 20;
+                    bounds = new Rectangle(0, 0, imgW, imgH);
 
                     WebClient client = new WebClient();
 
@@ -75,6 +76,7 @@ namespace Adjutant
                 else if (File.Exists(imgURL))
                 {
                     img = Image.FromFile(imgURL);
+                    checkImgWidth();
 
                     if (InstantOutput)
                     {
@@ -105,8 +107,6 @@ namespace Adjutant
                 this.link = link;
                 this.newline = newline;
                 this.absNewline = absNewline;
-
-                bounds = new Rectangle(0, 0, imgW, imgH);
 
                 text = "";
                 strikeout = false;
@@ -352,7 +352,7 @@ namespace Adjutant
 
             //draw selection rectangle (if mouse over)
             if (mouseOver)
-                gfx.DrawRectangle(new Pen(brush, 1), bounds.X + 1, bounds.Y, bounds.Width - 2, bounds.Height - 2);
+                gfx.DrawRectangle(new Pen(brush), bounds.X, bounds.Y, bounds.Width - 1, bounds.Height - 1);
 
             //advance drawing position
             if (newline)
