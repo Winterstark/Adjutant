@@ -1680,7 +1680,12 @@ namespace Adjutant
                     string imgLocation = txt.Substring(lb, ub - lb);
 
                     if (link == "")
+                    {
                         link = imgLocation;
+
+                        if (link.Contains("pbs.twimg.com"))
+                            link += ":large"; //open large versions of Twitter images
+                    }
 
                     Chunk imgChunk = new Chunk(imgLocation, link, newline && ub == txt.Length - 1, newline);
 
@@ -3125,17 +3130,14 @@ namespace Adjutant
                 return;
             }
 
-            ////print intro
-            //print("Adjutant online.");
-            //greeting();
-            //todoLoad();
-
-            print("<image=http://i1.wp.com/geekdad.com/wp-content/uploads/2013/08/132772_0086.jpg>");
-            print("<image=http://community.us.playstation.com/t5/image/serverpage/image-id/197305iFFF0FF7C73A77F15/image-size/original?v=mpbl-1&px=-1>", "https://www.youtube.com/watch?v=ZQk9NN0QR6k", Color.Blue);
+            //print intro
+            print("Adjutant online.");
+            greeting();
+            todoLoad();
 
             //init modules
-            //twitterInit();
-            //mailInit();
+            twitterInit();
+            mailInit();
         }
 
         private void formMain_Activated(object sender, EventArgs e)
