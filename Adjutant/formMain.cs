@@ -37,9 +37,13 @@ namespace Adjutant
         [DllImport("WinMM.dll")]
         static extern bool PlaySound(string fname, int Mod, int flag);
 
+        enum InputMode { Default, AwaitingUsername, Tutorial, ProcessRedirect, TwitterPIN };
+        enum OutputMode { Default, Selection, Pad };
         enum HideStyle { Disappear, Fade, ScrollUp, ScrollDown, ScrollLeft, ScrollRight };
-
+        InputMode inputMode;
+        OutputMode outputMode;
         HideStyle hideStyle;
+
         Gmail gmail;
         Twitter twitter;
         UserActivityHook actHook;
@@ -55,7 +59,7 @@ namespace Adjutant
         List<string> history = new List<string>(), twURLs = new List<string>(), twMentions = new List<string>(), todo;
         List<Chunk> expandingChunks = new List<Chunk>();
         string[] filteredPaths;
-        string python, user, dir, todoDir, inputMode, token, secret, link, mailUser, mailPass, twUsername, twSound, mailSound;
+        string python, user, dir, todoDir, token, secret, link, mailUser, mailPass, twUsername, twSound, mailSound;
         double opacityPassive, opacityActive;
         long lastTweet;
         int x, y, lineH, minH, maxH, prevH, prevX, prevY, leftMargin, yOffset, chunkOffset, lastChunk, lastChunkChar, printAtOnce, autoHideDelay, tabInd, historyInd, minTweetPeriod, twSoundThreshold, hotkey, newMailCount, prevNewMailCount, mailSoundThreshold, tutorialStep;
@@ -107,108 +111,106 @@ namespace Adjutant
                 SetForegroundWindow(this.Handle);
         }
 
-        void toggleSelectMode()
+        void setOutputMode(OutputMode newOutputMode)
         {
-            if (!txtPad.Visible)
+            switch (newOutputMode)
             {
-                if (chunks.Count > 0 && lastChunk != -1)
-                {
-                    //get console output
-                    string consoleOutput = "";
-                    int ind = -1; //where console output begins on screen
-                    int h = 0; //line max height
-                    Dictionary<int, int> extraLines = new Dictionary<int, int>(); //marks how many newline chars are inserted and at what positions
-
-                    for (int i = 0; i <= lastChunk && i < chunks.Count; i++)
+                case OutputMode.Default:
+                    txtPad.Visible = false;
+                    txtCMD.Focus();
+                    break;
+                case OutputMode.Selection:
+                    if (chunks.Count > 0 && lastChunk != -1)
                     {
-                        if (chunkOffset == i)
+                        //get console output
+                        string consoleOutput = "";
+                        int ind = -1; //where console output begins on screen
+                        int h = 0; //line max height
+                        Dictionary<int, int> extraLines = new Dictionary<int, int>(); //marks how many newline chars are inserted and at what positions
+
+                        for (int i = 0; i <= lastChunk && i < chunks.Count; i++)
+                        {
+                            if (chunkOffset == i)
+                                ind = consoleOutput.Length;
+
+                            consoleOutput += chunks[i].GetText();
+
+                            //remember line max height
+                            if (chunks[i].GetHeight() > h)
+                                h = chunks[i].GetHeight();
+
+                            if (chunks[i].IsNewline())
+                            {
+                                h -= lineH;
+
+                                //approximate image space with blank lines
+                                while (h > lineH / 2)
+                                {
+                                    consoleOutput += Environment.NewLine;
+                                    h -= lineH;
+
+                                    //remember how many extra chars are added at this position
+                                    int pos = consoleOutput.Length;
+
+                                    if (!extraLines.ContainsKey(pos))
+                                        extraLines.Add(pos, Environment.NewLine.Length);
+                                    else
+                                        extraLines[pos] += Environment.NewLine.Length;
+                                }
+
+                                h = 0;
+                            }
+                        }
+
+                        //display in txtbox
+                        txtPad.SelectionStart = 0;
+                        txtPad.Text = consoleOutput;
+
+                        txtPad.Font = txtCMD.Font;
+                        txtPad.BackColor = txtCMD.BackColor;
+                        txtPad.ForeColor = txtCMD.ForeColor;
+                        txtPad.Width = this.Width;
+                        txtPad.Height = txtCMD.Top;
+                        txtPad.Visible = true;
+
+                        //scroll to current position
+                        if (ind == -1)
                             ind = consoleOutput.Length;
 
-                        consoleOutput += chunks[i].GetText();
+                        //scroll to end
+                        txtPad.Select(txtPad.Text.Length, 0);
+                        txtPad.ScrollToCaret();
 
-                        //remember line max height
-                        if (chunks[i].GetHeight() > h)
-                            h = chunks[i].GetHeight();
+                        //take into account extra blank lines inserted to approximate image chunks space
+                        int extraChars = 0;
 
-                        if (chunks[i].IsNewline())
+                        foreach (var extraLine in extraLines)
+                            if (extraLine.Key <= ind)
+                                extraChars += extraLine.Value;
+                            else
+                                break;
+
+                        //take into account yOffset
+                        while (yOffset < lineH / 2)
                         {
-                            h -= lineH;
-
-                            //approximate image space with blank lines
-                            while (h > lineH / 2)
-                            {
-                                consoleOutput += Environment.NewLine;
-                                h -= lineH;
-                                
-                                //remember how many extra chars are added at this position
-                                int pos = consoleOutput.Length;
-
-                                if (!extraLines.ContainsKey(pos))
-                                    extraLines.Add(pos, Environment.NewLine.Length);
-                                else
-                                    extraLines[pos] += Environment.NewLine.Length;
-                            }
-
-                            h = 0;
+                            extraChars += Environment.NewLine.Length;
+                            yOffset += lineH;
                         }
+
+                        ind += extraChars;
+
+                        //then scroll back where console output begins on screen
+                        txtPad.Select(ind, 0);
+                        txtPad.ScrollToCaret();
+
+                        txtPad.Focus();
                     }
-
-                    //display in txtbox
-                    txtPad.SelectionStart = 0;
-                    txtPad.Text = consoleOutput;
-
-                    txtPad.Font = txtCMD.Font;
-                    txtPad.BackColor = txtCMD.BackColor;
-                    txtPad.ForeColor = txtCMD.ForeColor;
-                    txtPad.Width = this.Width;
-                    txtPad.Height = txtCMD.Top;
-                    txtPad.Visible = true;
-                    
-                    //scroll to current position
-                    if (ind == -1)
-                        ind = consoleOutput.Length;
-
-                    //scroll to end
-                    txtPad.Select(txtPad.Text.Length, 0);
-                    txtPad.ScrollToCaret();
-
-                    //take into account extra blank lines inserted to approximate image chunks space
-                    int extraChars = 0;
-
-                    foreach (var extraLine in extraLines)
-                        if (extraLine.Key <= ind)
-                            extraChars += extraLine.Value;
-                        else
-                            break;
-
-                    //take into account yOffset
-                    while (yOffset < lineH / 2)
-                    {
-                        extraChars += Environment.NewLine.Length;
-                        yOffset += lineH;
-                    }
-
-                    ind += extraChars;
-
-                    //then scroll back where console output begins on screen
-                    txtPad.Select(ind, 0);
-                    txtPad.ScrollToCaret();
-
-                    txtPad.Focus();
-                }
+                    break;
+                case OutputMode.Pad:
+                    break;
             }
-            else
-            {
-                //hide selection txtbox
-                txtPad.Visible = false;
-                
-                txtCMD.Focus();
-            }
-        }
 
-        void togglePadMode()
-        {
-
+            outputMode = newOutputMode;
         }
 
         void draw(Graphics gfx)
@@ -913,9 +915,9 @@ namespace Adjutant
             string newPrompt;
             if (twOutput)
                 newPrompt = "Twitter>";
-            else if (inputMode == "twitter pin")
+            else if (inputMode == InputMode.TwitterPIN)
                 newPrompt = "Twitter PIN:";
-            else if (inputMode == "user")
+            else if (inputMode == InputMode.AwaitingUsername)
                 newPrompt = "Username: ";
             else
                 newPrompt = dir + ">";
@@ -963,7 +965,7 @@ namespace Adjutant
 
             switch (inputMode)
             {
-                case "user": //first time running -> awaiting username
+                case InputMode.AwaitingUsername: //first time running -> awaiting username
                     bool firstRun = user == "first_run";
 
                     if (txtCMD.Text == "")
@@ -980,15 +982,15 @@ namespace Adjutant
                             print("This seems to be the first time you are running Adjutant. Would you like to run the tutorial? (y/n)");
 
                             tutorialStep = 0;
-                            inputMode = "tutorial";
+                            inputMode = InputMode.Tutorial;
                         }
                         else
-                            inputMode = "default";
+                            inputMode = InputMode.Default;
 
                         setPrompt();
                     }
                     break;
-                case "twitter pin": //authorizing Twitter
+                case InputMode.TwitterPIN: //authorizing Twitter
                     if (txtCMD.Text == "")
                         return;
 
@@ -1011,10 +1013,10 @@ namespace Adjutant
                             twitterPrint();
                     }
 
-                    inputMode = "default";
+                    inputMode = InputMode.Default;
                     setPrompt();
                     break;
-                case "process redirect": //forwarding input to external process
+                case InputMode.ProcessRedirect: //forwarding input to external process
                     print(txtCMD.Text);
 
                     if (proc != null)
@@ -1027,14 +1029,14 @@ namespace Adjutant
 
                         print("The process " + procName + " has terminated.", errorColor);
 
-                        inputMode = "default";
+                        inputMode = InputMode.Default;
                         setPrompt();
                     }
                     break;
-                case "tutorial": //starting tutorial mode
+                case InputMode.Tutorial: //starting tutorial mode
                     if (txtCMD.Text.ToLower() == "exit")
                     {
-                        inputMode = "default";
+                        inputMode = InputMode.Default;
                         setPrompt();
                         print("Tutorial canceled.");
                     }
@@ -1059,7 +1061,7 @@ namespace Adjutant
                                 }
                                 else
                                 {
-                                    inputMode = "default";
+                                    inputMode = InputMode.Default;
                                     setPrompt();
                                 }
                                 break;
@@ -1109,7 +1111,7 @@ namespace Adjutant
                                     print("If you have any questions, suggestions, or bug reports, send me an email: ", false); print("winterstark@gmail.com", "mailto:winterstark@gmail.com", Color.Blue);
                                     printHelp("Have fun using Adjutant!");
 
-                                    inputMode = "default";
+                                    inputMode = InputMode.Default;
                                     setPrompt();
                                 }
                                 break;
@@ -1190,7 +1192,7 @@ namespace Adjutant
                                 
                                 //init tutorial
                                 tutorialStep = 0;
-                                inputMode = "tutorial";
+                                inputMode = InputMode.Tutorial;
                                 setPrompt();
 
                                 print("Run the tutorial? (y/n)");
@@ -1202,7 +1204,7 @@ namespace Adjutant
                             case "user":
                                 print("Your current username: " + user);
                                 print("Enter new username: ");
-                                inputMode = "user";
+                                inputMode = InputMode.AwaitingUsername;
                                 setPrompt();
                                 break;
                             case "pad":
@@ -1854,7 +1856,7 @@ namespace Adjutant
                     {
                         procInfo = new ProcessStartInfo(@"cmd.exe", "/C \"" + procName + "\" " + args);
                         //procInfo = new ProcessStartInfo(python, " \"" + procName + "\" " + args);
-                        inputMode = "process redirect";
+                        inputMode = InputMode.ProcessRedirect;
                     }
                     else
                     {
@@ -1866,7 +1868,7 @@ namespace Adjutant
                 {
                     //it's a file (but not a vbs/py script)
                     procInfo = new ProcessStartInfo(procName, args);
-                    inputMode = "process redirect";
+                    inputMode = InputMode.ProcessRedirect;
                 }
             }
             else
@@ -1899,7 +1901,7 @@ namespace Adjutant
             procInfo.UseShellExecute = false;
             procInfo.CreateNoWindow = true;
 
-            if (inputMode == "process redirect")
+            if (inputMode == InputMode.ProcessRedirect)
             {
                 //set events for process output and redirect user input to the process
                 setPrompt(Path.GetFileNameWithoutExtension(procInfo.FileName));
@@ -1950,7 +1952,7 @@ namespace Adjutant
 
         private void proc_Exited(object sender, System.EventArgs e)
         {
-            inputMode = "default";
+            inputMode = InputMode.Default;
             setPrompt();
         }
 
@@ -2620,7 +2622,7 @@ namespace Adjutant
             {
                 Process.Start(uri.ToString());
 
-                inputMode = "twitter pin";
+                inputMode = InputMode.TwitterPIN;
                 setPrompt();
             }
         }
@@ -3124,7 +3126,7 @@ namespace Adjutant
                 //display intro
                 print("Welcome to Adjutant!<pause>");
                 print("What is your name?");
-                inputMode = "user";
+                inputMode = InputMode.AwaitingUsername;
                 setPrompt();
 
                 return;
@@ -3239,8 +3241,17 @@ namespace Adjutant
         {
             ctrlKey = e.Control;
 
-            if (e.KeyCode == Keys.F5 || (txtPad.Visible && e.KeyCode == Keys.Escape))
-                toggleSelectMode();
+            switch (outputMode)
+            {
+                case OutputMode.Default:
+                    if (e.KeyCode == Keys.F5)
+                        setOutputMode(OutputMode.Selection);
+                    break;
+                case OutputMode.Selection:
+                    if (e.KeyCode == Keys.F5 || e.KeyCode == Keys.Escape)
+                        setOutputMode(OutputMode.Default);
+                    break;
+            }
         }
 
         private void formMain_KeyUp(object sender, KeyEventArgs e)
@@ -3450,12 +3461,12 @@ namespace Adjutant
 
         private void formMain_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            toggleSelectMode();
+            setOutputMode(OutputMode.Selection);
         }
 
         private void txtPad_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            toggleSelectMode();
+            setOutputMode(OutputMode.Default);
         }
 
         private void txtPad_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
