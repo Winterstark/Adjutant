@@ -109,6 +109,7 @@
             this.label32 = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
             this.tabTwitter = new System.Windows.Forms.TabPage();
+            this.chkTwDisplayPictures = new System.Windows.Forms.CheckBox();
             this.chkTwDisplayInstagrams = new System.Windows.Forms.CheckBox();
             this.label54 = new System.Windows.Forms.Label();
             this.numTwSoundThreshold = new System.Windows.Forms.NumericUpDown();
@@ -173,7 +174,6 @@
             this.diagFont = new System.Windows.Forms.FontDialog();
             this.folderDiag = new System.Windows.Forms.FolderBrowserDialog();
             this.fileDiag = new System.Windows.Forms.OpenFileDialog();
-            this.chkTwDisplayPictures = new System.Windows.Forms.CheckBox();
             this.tabs.SuspendLayout();
             this.tabWindow.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numAutoHideDelay)).BeginInit();
@@ -1126,6 +1126,17 @@
             this.tabTwitter.Text = "Twitter";
             this.tabTwitter.UseVisualStyleBackColor = true;
             // 
+            // chkTwDisplayPictures
+            // 
+            this.chkTwDisplayPictures.AutoSize = true;
+            this.chkTwDisplayPictures.Location = new System.Drawing.Point(326, 130);
+            this.chkTwDisplayPictures.Name = "chkTwDisplayPictures";
+            this.chkTwDisplayPictures.Size = new System.Drawing.Size(100, 17);
+            this.chkTwDisplayPictures.TabIndex = 42;
+            this.chkTwDisplayPictures.Text = "Display pictures";
+            this.chkTwDisplayPictures.UseVisualStyleBackColor = true;
+            this.chkTwDisplayPictures.CheckedChanged += new System.EventHandler(this.checkForChanges);
+            // 
             // chkTwDisplayInstagrams
             // 
             this.chkTwDisplayInstagrams.AutoSize = true;
@@ -1717,17 +1728,6 @@
             // folderDiag
             // 
             this.folderDiag.RootFolder = System.Environment.SpecialFolder.MyComputer;
-            // 
-            // chkTwDisplayPictures
-            // 
-            this.chkTwDisplayPictures.AutoSize = true;
-            this.chkTwDisplayPictures.Location = new System.Drawing.Point(326, 130);
-            this.chkTwDisplayPictures.Name = "chkTwDisplayPictures";
-            this.chkTwDisplayPictures.Size = new System.Drawing.Size(100, 17);
-            this.chkTwDisplayPictures.TabIndex = 42;
-            this.chkTwDisplayPictures.Text = "Display pictures";
-            this.chkTwDisplayPictures.UseVisualStyleBackColor = true;
-            this.chkTwDisplayPictures.CheckedChanged += new System.EventHandler(this.checkForChanges);
             // 
             // formOptions
             // 

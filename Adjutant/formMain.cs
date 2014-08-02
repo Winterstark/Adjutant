@@ -13,6 +13,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Text.RegularExpressions;
 using Microsoft.Win32;
+using ScintillaNET;
 
 namespace Adjutant
 {
@@ -21,6 +22,7 @@ namespace Adjutant
         #region Declarations
         const string VERSION = "0.7";
         const string YEAR = "2014";
+        const bool RUN_WITHOUT_TWITTER_AND_GMAIL = true; //useful when debugging and repeatedly restarting Adjutant
 
         const int ZERO_DELAY = 60001;
         const int SND_ASYNC = 0x0001;
@@ -59,11 +61,22 @@ namespace Adjutant
         List<string> history = new List<string>(), twURLs = new List<string>(), twMentions = new List<string>(), todo;
         List<Chunk> expandingChunks = new List<Chunk>();
         string[] filteredPaths;
-        string python, user, dir, todoDir, token, secret, link, mailUser, mailPass, twUsername, twSound, mailSound;
+        string user, dir, todoDir, token, secret, link, mailUser, mailPass, twUsername, twSound, mailSound;
         double opacityPassive, opacityActive;
         long lastTweet;
         int x, y, lineH, minH, maxH, prevH, prevX, prevY, leftMargin, yOffset, chunkOffset, lastChunk, lastChunkChar, printAtOnce, autoHideDelay, tabInd, historyInd, minTweetPeriod, twSoundThreshold, hotkey, newMailCount, prevNewMailCount, mailSoundThreshold, tutorialStep;
         bool initialized, winKey, prompt, blankLine, echo, ctrlKey, drag, resizeW, resizeH, autoResize, hiding, hidden, todoHideDone, todoAutoTransfer, twUpdateOnNewTweet, twUpdateOnFocus, twOutput, twPrevCountBelowThreshold, twDisplayPictures, twDisplayInstagrams, mailUpdateOnNewMail, mailUpdateOnFocus, hotkeyCtrl, hotkeyAlt, hotkeyShift;
+
+        //Pad mode fields
+        Dictionary<string, string> padLanguages; //list of interpreters or compilers used for various languages
+        DateTime programStarted;
+        string padFilePath, padFileContents;
+        bool padResizingW, padResizingH;
+
+        //console sizes for special modes
+        int padW, padH;
+        //int twW, twH;
+        int consoleW, consoleH; //console size to return to
         #endregion
 
 
@@ -91,7 +104,7 @@ namespace Adjutant
             {
                 if (timerShowHide.Enabled)
                     hiding = !hiding;
-                else if (!hidden && !txtCMD.Focused)
+                else if (!hidden && !txtCMD.Focused && !txtSelection.Focused && !sciPad.Focused)
                     this.Opacity = opacityActive;
                 else
                 {
@@ -116,8 +129,16 @@ namespace Adjutant
             switch (newOutputMode)
             {
                 case OutputMode.Default:
-                    txtPad.Visible = false;
+                    txtSelection.Visible = false;
+                    sciPad.Visible = false;
+                    padMenus.Visible = false;
+
+                    lblPrompt.Visible = true;
+                    txtCMD.Visible = true;
                     txtCMD.Focus();
+
+                    if (outputMode == OutputMode.Pad)
+                        timerResizeWindow.Enabled = true;
                     break;
                 case OutputMode.Selection:
                     if (chunks.Count > 0 && lastChunk != -1)
@@ -163,23 +184,22 @@ namespace Adjutant
                         }
 
                         //display in txtbox
-                        txtPad.SelectionStart = 0;
-                        txtPad.Text = consoleOutput;
+                        txtSelection.SelectionStart = 0;
+                        txtSelection.Text = consoleOutput;
 
-                        txtPad.Font = txtCMD.Font;
-                        txtPad.BackColor = txtCMD.BackColor;
-                        txtPad.ForeColor = txtCMD.ForeColor;
-                        txtPad.Width = this.Width;
-                        txtPad.Height = txtCMD.Top;
-                        txtPad.Visible = true;
+                        txtSelection.Width = this.Width;
+                        txtSelection.Height = txtCMD.Top;
+                        txtSelection.Visible = true;
+
+                        sciPad.Visible = false;
 
                         //scroll to current position
                         if (ind == -1)
                             ind = consoleOutput.Length;
 
                         //scroll to end
-                        txtPad.Select(txtPad.Text.Length, 0);
-                        txtPad.ScrollToCaret();
+                        txtSelection.Select(txtSelection.Text.Length, 0);
+                        txtSelection.ScrollToCaret();
 
                         //take into account extra blank lines inserted to approximate image chunks space
                         int extraChars = 0;
@@ -200,13 +220,30 @@ namespace Adjutant
                         ind += extraChars;
 
                         //then scroll back where console output begins on screen
-                        txtPad.Select(ind, 0);
-                        txtPad.ScrollToCaret();
+                        txtSelection.Select(ind, 0);
+                        txtSelection.ScrollToCaret();
 
-                        txtPad.Focus();
+                        txtSelection.Focus();
                     }
                     break;
                 case OutputMode.Pad:
+                    sciPad.Width = this.Width;
+                    sciPad.Height = this.Height - padMenus.Height;
+
+                    sciPad.Visible = true;
+                    sciPad.Focus();
+
+                    txtCMD.Visible = false;
+                    txtSelection.Visible = false;
+                    lblPrompt.Visible = false;
+                    padMenus.Visible = true;
+
+                    padNewFile();
+
+                    //resize window
+                    consoleW = this.Width;
+                    consoleH = this.Height;
+                    timerResizeWindow.Enabled = true;
                     break;
             }
 
@@ -261,6 +298,9 @@ namespace Adjutant
             StreamReader file = new StreamReader("options.txt");
             string line;
             string[] args;
+            string fontFamily = "Arial";
+            int fontSize = 10;
+            bool bold = false, italic = false;
 
             while (!file.EndOfStream)
             {
@@ -307,49 +347,22 @@ namespace Adjutant
                             opacityActive = double.Parse(args[1]);
                             break;
                         case "background_color":
-                            Color backColor = Color.FromArgb(int.Parse(args[1]));
-                            this.BackColor = backColor;
-                            lblPrompt.BackColor = backColor;
-                            txtCMD.BackColor = backColor;
+                            txtCMD.BackColor = Color.FromArgb(int.Parse(args[1]));
                             break;
                         case "text_color":
-                            Color txtColor = Color.FromArgb(int.Parse(args[1]));
-                            lblPrompt.ForeColor = txtColor;
-                            txtCMD.ForeColor = txtColor;
+                            txtCMD.ForeColor = Color.FromArgb(int.Parse(args[1]));
                             break;
                         case "text_font":
-                            lblPrompt.Font = new Font(args[1], lblPrompt.Font.Size);
-                            txtCMD.Font = new Font(args[1], txtCMD.Font.Size);
+                            fontFamily = args[1];
                             break;
                         case "text_size":
-                            lblPrompt.Font = new Font(lblPrompt.Font.Name, int.Parse(args[1]));
-                            txtCMD.Font = new Font(txtCMD.Font.Name, int.Parse(args[1]));
+                            fontSize = int.Parse(args[1]);
                             break;
                         case "text_bold":
-                            if (bool.Parse(args[1]))
-                            {
-                                FontStyle style;
-                                if (txtCMD.Font.Italic)
-                                    style = FontStyle.Bold | FontStyle.Italic;
-                                else
-                                    style = FontStyle.Bold;
-
-                                lblPrompt.Font = new Font(lblPrompt.Font, style);
-                                txtCMD.Font = new Font(txtCMD.Font, style);
-                            }
+                            bold = bool.Parse(args[1]);
                             break;
                         case "text_italic":
-                            if (bool.Parse(args[1]))
-                            {
-                                FontStyle style;
-                                if (txtCMD.Font.Bold)
-                                    style = FontStyle.Bold | FontStyle.Italic;
-                                else
-                                    style = FontStyle.Italic;
-
-                                lblPrompt.Font = new Font(lblPrompt.Font, style);
-                                txtCMD.Font = new Font(txtCMD.Font, style);
-                            }
+                            italic = bool.Parse(args[1]);
                             break;
                         case "print_delay":
                             setDelay(timerPrint, int.Parse(args[1]));
@@ -469,6 +482,37 @@ namespace Adjutant
                         case "mail_summary_color":
                             mailSummaryColor = Color.FromArgb(int.Parse(args[1]));
                             break;
+                        case "pad_width":
+                            padW = int.Parse(args[1]);
+                            break;
+                        case "pad_height":
+                            padH = int.Parse(args[1]);
+                            break;
+                        case "pad_word_wrap":
+                            padMenusViewWordWrap.Checked = bool.Parse(args[1]);
+
+                            if (padMenusViewWordWrap.Checked)
+                                sciPad.LineWrapping.Mode = LineWrappingMode.Word;
+                            else
+                                sciPad.LineWrapping.Mode = LineWrappingMode.None;
+                            break;
+                        case "pad_line_numbers":
+                            padMenusViewShowLineNumbers.Checked = bool.Parse(args[1]);
+
+                            if (padMenusViewShowLineNumbers.Checked)
+                                sciPad.Margins[0].Width = 20;
+                            else
+                                sciPad.Margins[0].Width = 0;
+                            break;
+                        case "pad_languages":
+                            padLanguages = new Dictionary<string, string>();
+
+                            foreach (string lang in args[1].Split(new string[] { " / " }, StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                string[] kvPair = lang.Split('>');
+                                padLanguages.Add(kvPair[0], kvPair[1]);
+                            }
+                            break;
                         case "user":
                             user = args[1];
                             break;
@@ -477,6 +521,23 @@ namespace Adjutant
             }
 
             file.Close();
+
+            //construct and apply font
+            FontStyle fontStyle;
+
+            if (bold && italic)
+                fontStyle = FontStyle.Bold | FontStyle.Italic;
+            else if (bold)
+                fontStyle = FontStyle.Bold;
+            else if (italic)
+                fontStyle = FontStyle.Italic;
+            else
+                fontStyle = FontStyle.Regular;
+
+            txtCMD.Font = new Font(fontFamily, fontSize, fontStyle);
+
+            //apply console style to other UI controls
+            applyUIStyle();
 
             //load mail username/password
             if (File.Exists(Application.StartupPath + "\\mail_login.dat"))
@@ -500,12 +561,24 @@ namespace Adjutant
 
         void saveOptions()
         {
+            //prepare languages dictionary for writing
+            string langs = "";
+
+            if (padLanguages.Count > 0)
+            {
+                foreach (var lang in padLanguages)
+                    langs += lang.Key + ">" + lang.Value + " / ";
+
+                langs = langs.Substring(0, langs.Length - 3);
+            }
+
+            //save options
             StreamWriter file = new System.IO.StreamWriter(Application.StartupPath + "\\options.txt");
             
             file.WriteLine("//window");
             file.WriteLine("x=" + x);
             file.WriteLine("y=" + y);
-            file.WriteLine("width=" + this.Width);
+            file.WriteLine("width=" + (outputMode == OutputMode.Pad ? consoleW : this.Width));
             file.WriteLine("min_height=" + minH);
             file.WriteLine("max_height=" + maxH);
             file.WriteLine("global_hotkey=" + Hotkey.HotkeyToString(hotkey, hotkeyCtrl, hotkeyAlt, hotkeyShift));
@@ -548,6 +621,8 @@ namespace Adjutant
             file.WriteLine("token=" + token);
             file.WriteLine("secret=" + secret);
             file.WriteLine("last_tweet=" + lastTweet);
+            //file.WriteLine("tw_width=" + twW);
+            //file.WriteLine("tw_height=" + twH);
             file.WriteLine("update_on_new_tweet=" + twUpdateOnNewTweet);
             file.WriteLine("update_on_focus=" + twUpdateOnFocus);
             file.WriteLine("min_tweet_period=" + minTweetPeriod);
@@ -572,6 +647,14 @@ namespace Adjutant
             file.WriteLine("mail_count_color=" + mailCountColor.ToArgb());
             file.WriteLine("mail_header_color=" + mailHeaderColor.ToArgb());
             file.WriteLine("mail_summary_color=" + mailSummaryColor.ToArgb());
+            file.WriteLine();
+
+            file.WriteLine("//pad");
+            file.WriteLine("pad_width=" + padW);
+            file.WriteLine("pad_height=" + padH);
+            file.WriteLine("pad_word_wrap=" + padMenusViewWordWrap.Checked);
+            file.WriteLine("pad_line_numbers=" + padMenusViewShowLineNumbers.Checked);
+            file.WriteLine("pad_languages=" + langs);
             file.WriteLine();
 
             file.WriteLine("//other");
@@ -765,22 +848,21 @@ namespace Adjutant
             opacityActive = (double)options.numOpacityActive.Value / 100;
             opacityPassive = (double)options.numOpacityPassive.Value / 100;
 
-            this.BackColor = options.picBackColor.BackColor;
             txtCMD.BackColor = options.picBackColor.BackColor;
 
-            FontStyle style = FontStyle.Regular;
+            FontStyle style;
             if (options.chkBold.Checked && options.chkItalic.Checked)
                 style = FontStyle.Bold | FontStyle.Italic;
             else if (options.chkBold.Checked)
                 style = FontStyle.Bold;
             else if (options.chkItalic.Checked)
                 style = FontStyle.Italic;
+            else
+                style = FontStyle.Regular;
 
             Font prevFont = lblPrompt.Font;
 
-            lblPrompt.Font = new Font(options.comboFont.Text, (float)options.numFontSize.Value, style);
             txtCMD.Font = new Font(options.comboFont.Text, (float)options.numFontSize.Value, style);
-            lblPrompt.ForeColor = options.picTextColor.BackColor;
             txtCMD.ForeColor = options.picTextColor.BackColor;
 
             if (lblPrompt.Font != prevFont)
@@ -792,6 +874,8 @@ namespace Adjutant
 
                 update();
             }
+
+            applyUIStyle();
 
             dir = options.txtStartDir.Text;
             setDelay(timerPrint, (int)options.numPrintDelay.Value);
@@ -858,6 +942,26 @@ namespace Adjutant
             saveOptions();
         }
 
+        void applyUIStyle()
+        {
+            lblPrompt.Font = txtCMD.Font;
+            txtSelection.Font = txtCMD.Font;
+            sciPad.Font = txtCMD.Font;
+            sciPad.Styles.LineNumber.Font = txtCMD.Font;
+
+            lblPrompt.ForeColor = txtCMD.ForeColor;
+            txtSelection.ForeColor = txtCMD.ForeColor;
+            sciPad.ForeColor = txtCMD.ForeColor;
+            sciPad.Caret.Color = txtCMD.ForeColor;
+            sciPad.Styles.LineNumber.ForeColor = txtCMD.ForeColor;
+
+            lblPrompt.BackColor = txtCMD.BackColor;
+            txtSelection.BackColor = txtCMD.BackColor;
+            sciPad.BackColor = txtCMD.BackColor;
+            sciPad.Styles.LineNumber.BackColor = txtCMD.BackColor;
+            this.BackColor = txtCMD.BackColor;
+        }
+
         void loadCustomCmds()
         {
             customCmds = new Dictionary<string, string>();
@@ -913,6 +1017,7 @@ namespace Adjutant
         void setPrompt()
         {
             string newPrompt;
+
             if (twOutput)
                 newPrompt = "Twitter>";
             else if (inputMode == InputMode.TwitterPIN)
@@ -927,6 +1032,9 @@ namespace Adjutant
 
         void setPrompt(string newPrompt)
         {
+            if (outputMode == OutputMode.Pad)
+                return; //disable prompt when running programs from Pad
+
             if (prompt)
             {
                 lblPrompt.Text = newPrompt;
@@ -1208,7 +1316,7 @@ namespace Adjutant
                                 setPrompt();
                                 break;
                             case "pad":
-
+                                cmdPad(cmd);
                                 break;
                             case "":
                                 flush();
@@ -1240,7 +1348,7 @@ namespace Adjutant
             if (cmd.Length == 1)
             {
                 print("List of Adjutant commands: " + Environment.NewLine);
-                foreach (string command in new string[] { "about", "calc", "cd", "cls", "custom", "date", "done", "exit", "help", "mail", "prompt", "time", "todo", "tutorial", "twitter", "user" })
+                foreach (string command in new string[] { "about", "calc", "cd", "cls", "custom", "date", "done", "exit", "help", "mail", "pad", "prompt", "time", "todo", "tutorial", "twitter", "user" })
                     print(command, helpColor);
 
                 printHelp("For more information on a specific command, type \"help [COMMAND]\"<pause>");
@@ -1336,7 +1444,7 @@ namespace Adjutant
                             printHelp("Press \"j\" to read the next tweet.");
                             printHelp("Press \"k\" to go back to the previous tweet.");
                             printHelp("Press \"a\" to print all tweets at once.");
-                            printHelp("Press \"Escape\" to exit Twitter mode and enable standard input again.");
+                            printHelp("Press \"Esc\" to exit Twitter mode and enable standard input again.");
                             printHelp("");
                             printHelp("You can also print out all tweets with the following command: \"twitter /all\"");
                             printHelp("");
@@ -1358,6 +1466,10 @@ namespace Adjutant
                         break;
                     case "options":
                         printHelp("Opens the options window.");
+                        break;
+                    case "pad":
+                        printHelp("The \"pad\" command turns Adjutant into a simple text editor.<pause>");
+                        //todo
                         break;
                     case "prompt":
                         printHelp("Toggles prompt.");
@@ -1453,6 +1565,12 @@ namespace Adjutant
             
             Chunk.LineH = lineH;
             Chunk.ConsoleWidth = this.Width;
+
+            if (outputMode == OutputMode.Pad)
+            {
+                sciPad.Width = this.Width;
+                sciPad.Height = this.Height - padMenus.Height;
+            }
         }
 
         void jumpToLastLine()
@@ -1852,17 +1970,17 @@ namespace Adjutant
                 if (Path.GetExtension(procName) == ".py")
                 {
                     //it's a python script
-                    if (python != "")
-                    {
+                    //if (padLanguages[".py"] != "")
+                    //{
                         procInfo = new ProcessStartInfo(@"cmd.exe", "/C \"" + procName + "\" " + args);
                         //procInfo = new ProcessStartInfo(python, " \"" + procName + "\" " + args);
                         inputMode = InputMode.ProcessRedirect;
-                    }
-                    else
-                    {
-                        print("Could not start script.<pause>Python was not found on your system.", errorColor);
-                        return;
-                    }
+                    //}
+                    //else
+                    //{
+                    //    print("Could not start script.<pause>Python was not found on your system.", errorColor);
+                    //    return;
+                    //}
                 }
                 else
                 {
@@ -1905,7 +2023,9 @@ namespace Adjutant
             {
                 //set events for process output and redirect user input to the process
                 setPrompt(Path.GetFileNameWithoutExtension(procInfo.FileName));
+                print("");
 
+                programStarted = DateTime.Now;
                 proc = Process.Start(procInfo);
 
                 proc.OutputDataReceived += new DataReceivedEventHandler(proc_DataReceived);
@@ -1953,9 +2073,13 @@ namespace Adjutant
         private void proc_Exited(object sender, System.EventArgs e)
         {
             inputMode = InputMode.Default;
-            setPrompt();
-        }
 
+            if (outputMode == OutputMode.Pad)
+                print("[Finished in " + Math.Round(DateTime.Now.Subtract(programStarted).TotalSeconds, 1).ToString().Replace(',', '.') + "s. Press Esc to return to Pad]", echoColor);
+            else
+                setPrompt();
+        }
+         
         string getFilteredPaths(string txt, bool prev)
         {
             //autocomplete filename
@@ -2044,32 +2168,54 @@ namespace Adjutant
 
         void mouseDown(int mx, int my)
         {
-            if (this.Cursor == Cursors.SizeNWSE)
+            if (outputMode == OutputMode.Pad)
             {
-                prevX = this.Width;
-                prevY = this.Height;
-                resizeW = true;
-                resizeH = true;
-            }
-            else if (this.Cursor == Cursors.SizeWE)
-            {
-                prevX = this.Width;
-                resizeW = true;
-            }
-            else if (this.Cursor == Cursors.SizeNS)
-            {
-                prevY = this.Height;
-                resizeH = true;
+                //pad's menu strip interferes with resizing so it's handled as a special case in ActivityHook_OnMouseActivity
+                if (this.Cursor == Cursors.SizeNWSE)
+                {
+                    padResizingW = true;
+                    padResizingH = true;
+                }
+                else if (this.Cursor == Cursors.SizeWE)
+                    padResizingW = true;
+                else if (this.Cursor == Cursors.SizeNS)
+                    padResizingH = true;
+                else
+                {
+                    prevX = mx;
+                    prevY = my;
+                    drag = true;
+                }
             }
             else
             {
-                prevX = mx;
-                prevY = my;
-                drag = true;
-            }
+                if (this.Cursor == Cursors.SizeNWSE)
+                {
+                    prevX = this.Width;
+                    prevY = this.Height;
+                    resizeW = true;
+                    resizeH = true;
+                }
+                else if (this.Cursor == Cursors.SizeWE)
+                {
+                    prevX = this.Width;
+                    resizeW = true;
+                }
+                else if (this.Cursor == Cursors.SizeNS)
+                {
+                    prevY = this.Height;
+                    resizeH = true;
+                }
+                else
+                {
+                    prevX = mx;
+                    prevY = my;
+                    drag = true;
+                }
 
-            if (resizeH)
-                prevH = this.Height;
+                if (resizeH)
+                    prevH = this.Height;
+            }
         }
 
         void mouseMove(int mx, int my)
@@ -2113,7 +2259,7 @@ namespace Adjutant
                     if (Math.Abs(this.Top + my - Screen.PrimaryScreen.WorkingArea.Height) < 10)
                         this.Height = Screen.PrimaryScreen.WorkingArea.Height - this.Top;
                     else
-                        this.Height = my;
+                        this.Height = my + (outputMode == OutputMode.Pad ? 0 : 0); //dragging in pad mode is problematic for some reason and needs a little extra wiggle room
                 }
 
                 draw(grafx.Graphics);
@@ -2128,13 +2274,26 @@ namespace Adjutant
                 else if (my > this.Height - 5)
                     this.Cursor = Cursors.SizeNS;
                 else
-                    this.Cursor = Cursors.Default;
+                    this.Cursor = outputMode == OutputMode.Pad ? Cursors.IBeam : Cursors.Default;
             }
         }
 
         void mouseUp(int mx, int my)
         {
-            if (resizeH)
+            if (drag)
+            {
+                x = this.Left;
+                y = this.Top;
+            }
+            else if (outputMode == OutputMode.Pad)
+            {
+                padW = this.Width;
+                padH = this.Height;
+
+                if (resizeH)
+                    windowAutosize();
+            }
+            else if (resizeH)
             {
                 if (!ctrlKey)
                     minH = this.Height;
@@ -2142,11 +2301,6 @@ namespace Adjutant
                     maxH = this.Height;
 
                 windowAutosize();
-            }
-            else if (drag)
-            {
-                x = this.Left;
-                y = this.Top;
             }
 
             if (drag || resizeW || resizeH)
@@ -2292,7 +2446,10 @@ namespace Adjutant
                     date = "tomorrow";
             }
 
-            print("To do list for " + date + ":", todoFile(date), todoMiscColor);
+            if (date == DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd"))
+                print("Todo list for yesterday:", todoFile(date), todoMiscColor);                
+            else
+                print("Todo list for " + date + ":", todoFile(date), todoMiscColor);
 
             List<string> tasks = tasklist(todoFile(date));
 
@@ -2974,6 +3131,319 @@ namespace Adjutant
         }
         #endregion
 
+        #region Pad Module
+        void cmdPad(string[] cmd)
+        {
+            //first finish any remaining outputs (which may include the "pad" command echo)
+            flush();
+            jumpToLastLine();
+            
+            //then set pad mode
+            setOutputMode(OutputMode.Pad);
+            
+            //load file?
+            if (cmd.Length > 1)
+            {
+                //remove any quotes from path
+                if (cmd[1].Length > 0 && cmd[1][0] == '"')
+                    cmd[1] = cmd[1].Substring(1);
+                if (cmd[1].Length > 0 && cmd[1][cmd[1].Length - 1] == '"')
+                    cmd[1] = cmd[1].Substring(0, cmd[1].Length - 1);
+
+                //path missing directory?
+                if (!File.Exists(cmd[1]) && File.Exists(dir + cmd[1]))
+                    cmd[1] = dir + cmd[1];
+
+                //try to open file
+                if (!padOpenFile(cmd[1]))
+                {
+                    print("Specified file doesn't exist.", errorColor);
+                    setOutputMode(OutputMode.Default);
+                }
+            }
+        }
+
+        void padNewFile()
+        {
+            padFilePath = "";
+            padFileContents = "";
+            sciPad.Text = "";
+            padMenusFilename.Text = "Untitled";
+        }
+
+        bool padCloseFile()
+        {
+            if (sciPad.Text != padFileContents)
+                switch (MessageBox.Show("Do you want to save changes to " + padMenusFilename.Text, "Adjutant_Pad", MessageBoxButtons.YesNoCancel, MessageBoxIcon.None))
+                {
+                    case DialogResult.Yes:
+                        return padSaveFile(false); //close the file only if the user saves it
+                    case DialogResult.No:
+                        return true;
+                    case DialogResult.Cancel:
+                        return false;
+                    default:
+                        return false;
+                }
+            else
+                return true;
+        }
+
+        bool padSaveFile(bool saveAs)
+        {
+            if (padFilePath == "" || saveAs)
+            {
+                //show save dialog
+                saveDiagPad.ShowDialog();
+                this.Opacity = opacityActive;
+
+                if (saveDiagPad.FileName != "")
+                    padFilePath = saveDiagPad.FileName;
+                else
+                    return false;
+            }
+
+            //save contents to file
+            StreamWriter file = new StreamWriter(padFilePath);
+            file.Write(sciPad.Text);
+            file.Close();
+
+            padSetSyntax();
+
+            return true;
+        }
+
+        bool padOpenFile(string filePath)
+        {
+            if (File.Exists(filePath))
+            {
+                padFilePath = filePath;
+
+                StreamReader file = new StreamReader(padFilePath);
+                sciPad.Text = file.ReadToEnd();
+                file.Close();
+
+                padFileContents = sciPad.Text;
+                padMenusFilename.Text = Path.GetFileName(padFilePath);
+
+                padSetSyntax();
+
+                return true;
+            }
+            else
+                return false;
+        }
+
+        void padSetSyntax()
+        {
+            //set syntax to current language
+            switch (Path.GetExtension(padFilePath))
+            {
+                case ".py":
+                    padMenusViewSyntaxPython.PerformClick();
+                    break;
+                default:
+                    break;
+            }
+
+            padFileContents = sciPad.Text;
+            padMenusFilename.Text = Path.GetFileName(padFilePath);
+        }
+
+        private void padMenusFileNew_Click(object sender, EventArgs e)
+        {
+            if (padCloseFile())
+                padNewFile();
+        }
+
+        private void padMenusFileOpen_Click(object sender, EventArgs e)
+        {
+            if (padCloseFile())
+            {
+                if (File.Exists(padFilePath))
+                    openDiagPad.InitialDirectory = Path.GetDirectoryName(padFilePath);
+
+                openDiagPad.ShowDialog();
+                this.Opacity = opacityActive;
+
+                padOpenFile(openDiagPad.FileName);
+            }
+        }
+
+        private void padMenusFileSave_Click(object sender, EventArgs e)
+        {
+            padSaveFile(false);
+        }
+
+        private void padMenusFileSaveAs_Click(object sender, EventArgs e)
+        {
+            padSaveFile(true);
+        }
+
+        private void padMenusFileExitPad_Click(object sender, EventArgs e)
+        {
+            if (padCloseFile())
+                setOutputMode(OutputMode.Default);
+        }
+
+        private void padMenusViewWordWrap_Click(object sender, EventArgs e)
+        {
+            padMenusViewWordWrap.Checked = !padMenusViewWordWrap.Checked;
+
+            if (padMenusViewWordWrap.Checked)
+                sciPad.LineWrapping.Mode = LineWrappingMode.Word;
+            else
+                sciPad.LineWrapping.Mode = LineWrappingMode.None;
+
+            saveOptions();
+        }
+
+        private void padMenusViewShowLineNumbers_Click(object sender, EventArgs e)
+        {
+            padMenusViewShowLineNumbers.Checked = !padMenusViewShowLineNumbers.Checked;
+
+            if (padMenusViewShowLineNumbers.Checked)
+                sciPad.Margins[0].Width = 20;
+            else
+                sciPad.Margins[0].Width = 0;
+
+            saveOptions();
+        }
+
+        private void padMenusViewSyntax_SelectLanguage_Click(object sender, EventArgs e)
+        {
+            ToolStripMenuItem menuSender = (ToolStripMenuItem)sender;
+
+            //deactivate other languages
+            padMenusViewSyntaxAssembly.Checked = false;
+            padMenusViewSyntaxCS.Checked = false;
+            padMenusViewSyntaxHTML.Checked = false;
+            padMenusViewSyntaxJavaScript.Checked = false;
+            padMenusViewSyntaxMSSQL.Checked = false;
+            padMenusViewSyntaxPostgreSQL.Checked = false;
+            padMenusViewSyntaxPython.Checked = false;
+            padMenusViewSyntaxVBScript.Checked = false;
+            padMenusViewSyntaxXML.Checked = false;
+
+            //activate this language
+            menuSender.Checked = true;
+
+            bool monokai = false;
+
+            switch (menuSender.Text)
+            {
+                case "Plain Text":
+                    foreach (var style in sciPad.Lexing.StyleNameMap)
+                    {
+                        sciPad.Styles[style.Value].BackColor = sciPad.BackColor;
+                        sciPad.Styles[style.Value].ForeColor = sciPad.ForeColor;
+                    }
+                    return;
+                case "Assembly":
+                    sciPad.ConfigurationManager.Language = "asm";
+                    break;
+                case "C#":
+                    sciPad.ConfigurationManager.Language = "cs";
+                    monokai = true;
+                    break;
+                case "HTML":
+                    sciPad.ConfigurationManager.Language = "html";
+                    break;
+                case "JavaScript":
+                    sciPad.ConfigurationManager.Language = "js";
+                    break;
+                case "MS SQL":
+                    sciPad.ConfigurationManager.Language = "mssql";
+                    break;
+                case "Postgre SQL":
+                    sciPad.ConfigurationManager.Language = "psql";
+                    break;
+                case "Python":
+                    sciPad.ConfigurationManager.Language = "python";
+                    monokai = true;
+                    break;
+                case "VB Script":
+                    sciPad.ConfigurationManager.Language = "vbscript";
+                    break;
+                case "XML":
+                    sciPad.ConfigurationManager.Language = "xml";
+                    break;
+            }
+
+            //customize colors
+            if (sciPad.Lexing.StyleNameMap.ContainsKey("LINENUMBER"))
+            {
+                sciPad.Styles[sciPad.Lexing.StyleNameMap["LINENUMBER"]].ForeColor = sciPad.ForeColor;
+                sciPad.Styles[sciPad.Lexing.StyleNameMap["LINENUMBER"]].BackColor = sciPad.BackColor;
+            }
+
+            if (monokai)
+            {
+                //set Monokai color scheme
+                sciPad.Styles[sciPad.Lexing.StyleNameMap["DOCUMENT_DEFAULT"]].ForeColor = sciPad.ForeColor;
+                sciPad.Styles[sciPad.Lexing.StyleNameMap["NUMBER"]].ForeColor = Color.FromArgb(190, 132, 255);
+                sciPad.Styles[sciPad.Lexing.StyleNameMap["WORD"]].ForeColor = Color.FromArgb(249, 38, 114);
+                sciPad.Styles[sciPad.Lexing.StyleNameMap["WORD2"]].ForeColor = Color.FromArgb(102, 217, 239);
+                sciPad.Styles[sciPad.Lexing.StyleNameMap["STRING"]].ForeColor = Color.FromArgb(230, 219, 116);
+                sciPad.Styles[sciPad.Lexing.StyleNameMap["CHARACTER"]].ForeColor = Color.FromArgb(230, 219, 116);
+
+                if (sciPad.Lexing.StyleNameMap.ContainsKey("PREPROCESSOR"))
+                    sciPad.Styles[sciPad.Lexing.StyleNameMap["PREPROCESSOR"]].ForeColor = Color.FromArgb(190, 132, 255);
+
+                sciPad.Styles[sciPad.Lexing.StyleNameMap["OPERATOR"]].ForeColor = Color.FromArgb(249, 38, 114);
+                sciPad.Styles[sciPad.Lexing.StyleNameMap["IDENTIFIER"]].ForeColor = sciPad.ForeColor;
+
+                if (sciPad.Lexing.StyleNameMap.ContainsKey("COMMENT"))
+                    sciPad.Styles[sciPad.Lexing.StyleNameMap["COMMENT"]].ForeColor = Color.FromArgb(101, 121, 164);
+                if (sciPad.Lexing.StyleNameMap.ContainsKey("COMMENTLINE"))
+                    sciPad.Styles[sciPad.Lexing.StyleNameMap["COMMENTLINE"]].ForeColor = Color.FromArgb(101, 121, 164);
+                if (sciPad.Lexing.StyleNameMap.ContainsKey("COMMENTBLOCK"))
+                    sciPad.Styles[sciPad.Lexing.StyleNameMap["COMMENTBLOCK"]].ForeColor = Color.FromArgb(101, 121, 164);
+
+                if (sciPad.Lexing.StyleNameMap.ContainsKey("GLOBALCLASS"))
+                    sciPad.Styles[sciPad.Lexing.StyleNameMap["GLOBALCLASS"]].ForeColor = Color.FromArgb(166, 226, 46);
+                if (sciPad.Lexing.StyleNameMap.ContainsKey("CLASSNAME"))
+                    sciPad.Styles[sciPad.Lexing.StyleNameMap["CLASSNAME"]].ForeColor = Color.FromArgb(166, 226, 46);
+                if (sciPad.Lexing.StyleNameMap.ContainsKey("DEFNAME"))
+                    sciPad.Styles[sciPad.Lexing.StyleNameMap["DEFNAME"]].ForeColor = Color.FromArgb(166, 226, 46);
+            }
+        }
+
+        private void padMenusRun_Click(object sender, EventArgs e)
+        {
+            if (padSaveFile(false))
+            {
+                //check if padLanguages contains valid entry for this file
+                if (!padLanguages.ContainsKey(Path.GetExtension(padFilePath)))
+                {
+                    if (MessageBox.Show("Do you want to browse for the interpreter/compiler?", "Adjutant doesn't know how to run this file type", MessageBoxButtons.OKCancel, MessageBoxIcon.Error) == DialogResult.OK)
+                    {
+                        openDiagPad.ShowDialog();
+
+                        if (File.Exists(openDiagPad.FileName))
+                            padLanguages.Add(Path.GetExtension(padFilePath), openDiagPad.FileName);
+                        else
+                            return;
+                    }
+                    else
+                        return;
+                }
+
+                //run
+                runProcess(padFilePath);
+
+                //show console
+                sciPad.Visible = false;
+            }
+        }
+
+        private void padMenusFilename_Click(object sender, EventArgs e)
+        {
+            if (File.Exists(padFilePath))
+                Process.Start(padFilePath);
+        }
+        #endregion
+
 
         public formMain()
         {
@@ -3038,19 +3508,46 @@ namespace Adjutant
 
             if (this.Bounds.Contains(e.Location))
             {
-                //timerShowHide.Enabled = false;
-
                 this.Opacity = opacityActive;
                 autohideTrigger();
             }
             else if (!txtCMD.Focused)
-                this.Opacity = opacityPassive;
+                    this.Opacity = opacityPassive;
+
+            if (padResizingW || padResizingH)
+            {
+                if (e.Delta == Misc.MOUSE_UP_CODE)
+                {
+                    //user has stopped resizing
+                    padResizingW = false;
+                    padResizingH = false;
+
+                    padW = this.Width;
+                    padH = this.Height;
+
+                    saveOptions();
+                    initGrafx();
+                    windowAutosize();
+                }
+                else
+                {
+                    if (padResizingW)
+                        this.Width = e.X - this.Left;
+
+                    if (padResizingH)
+                        this.Height = e.Y - this.Top;
+                }
+            }
         }
 
         private void formMain_Load(object sender, EventArgs e)
         {
             //tray context menu
             trayIcon.ContextMenuStrip = contextMenu;
+
+            //setup dialogs
+            openDiagPad.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            saveDiagPad.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
             //init buffer & gfx
             context = BufferedGraphicsManager.Current;
@@ -3081,7 +3578,7 @@ namespace Adjutant
 
             Chunk.WavePen = new Pen(Color.FromArgb(waveR, waveG, waveB), 2); //pure wave color
             Chunk.WavePen2 = new Pen(Color.FromArgb((int)((float)(waveR + backR * 2) / 3), (int)((float)(waveG + backG * 2) / 3), (int)((float)(waveB + backB * 2) / 3)), 3); //interpolate color between wave RGB and background RGB (much closer to background RGB)
-            
+
             //load Chunk spinner
             if (File.Exists(Application.StartupPath + "\\ui\\loading.gif"))
             {
@@ -3091,28 +3588,30 @@ namespace Adjutant
                     ImageAnimator.Animate(Chunk.Spinner, new EventHandler(this.OnFrameChanged));
             }
 
-            txtPad.MouseWheel += new System.Windows.Forms.MouseEventHandler(txtPad_MouseWheel);
+            txtSelection.MouseWheel += new System.Windows.Forms.MouseEventHandler(txtPad_MouseWheel);
 
             link = "";
             helpColor = Color.Yellow;
 
             //get python exe path
-            RegistryKey pyKey = Registry.ClassesRoot.OpenSubKey(@"Python.File\shell\open\command");
-
-            if (pyKey != null)
-                python = pyKey.GetValue("", "").ToString();
-            else
-                python = "";
-
-            if (python != "")
+            if (!padLanguages.ContainsKey(".py"))
             {
-                if (python[0] == '"' && python.IndexOf('"', 1) != -1)
-                    python = python.Substring(1, python.IndexOf('"', 1) - 1);
-                else
+                RegistryKey pyKey = Registry.ClassesRoot.OpenSubKey(@"Python.File\shell\open\command");
+
+                if (pyKey != null)
                 {
-                    python = python.Replace("%1", "").Replace("%*", "");
-                    python = python.Replace("\"\"", "");
-                    python = python.Replace("  ", " ");
+                    string python = pyKey.GetValue("", "").ToString();
+
+                    if (python[0] == '"' && python.IndexOf('"', 1) != -1)
+                        python = python.Substring(1, python.IndexOf('"', 1) - 1);
+                    else
+                    {
+                        python = python.Replace("%1", "").Replace("%*", "");
+                        python = python.Replace("\"\"", "");
+                        python = python.Replace("  ", " ");
+                    }
+
+                    padLanguages.Add(".py", python);
                 }
             }
 
@@ -3138,8 +3637,11 @@ namespace Adjutant
             todoLoad();
 
             //init modules
-            twitterInit();
-            mailInit();
+            if (!RUN_WITHOUT_TWITTER_AND_GMAIL)
+            {
+                twitterInit();
+                mailInit();
+            }
         }
 
         private void formMain_Activated(object sender, EventArgs e)
@@ -3147,7 +3649,7 @@ namespace Adjutant
             if (!initialized)
             {
                 //global hotkey & mouse tracker
-                //this is initialized here instead of in Form_Load becase there it causes major mouse lag and general slowiness
+                //this is initialized here instead of in Form_Load because there it causes major mouse lag and general slowiness
                 actHook = new UserActivityHook();
                 actHook.KeyDown += new KeyEventHandler(ActivityHook_KeyDown);
                 actHook.KeyUp += new KeyEventHandler(ActivityHook_KeyUp);
@@ -3237,6 +3739,33 @@ namespace Adjutant
             Hotkey.UnregisterHotKey(this);
         }
 
+        private void formMain_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                e.Effect = DragDropEffects.Link;
+            else
+                e.Effect = DragDropEffects.None;
+        }
+
+        private void formMain_DragDrop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                //concatenate all paths
+                string paths = "";
+
+                foreach (string path in (string[])(e.Data.GetData(DataFormats.FileDrop)))
+                    paths += path + " ";
+
+                //remove last space
+                if (paths.Length > 0)
+                    paths = paths.Substring(0, paths.Length - 1);
+
+                //paste into txtCMD
+                txtCMD.Text += paths;
+            }
+        }
+
         private void formMain_KeyDown(object sender, KeyEventArgs e)
         {
             ctrlKey = e.Control;
@@ -3244,12 +3773,28 @@ namespace Adjutant
             switch (outputMode)
             {
                 case OutputMode.Default:
-                    if (e.KeyCode == Keys.F5)
+                    if (e.KeyCode == Keys.F2)
                         setOutputMode(OutputMode.Selection);
                     break;
                 case OutputMode.Selection:
-                    if (e.KeyCode == Keys.F5 || e.KeyCode == Keys.Escape)
+                    if (e.KeyCode == Keys.F2 || e.KeyCode == Keys.Escape)
                         setOutputMode(OutputMode.Default);
+                    else if (e.Control && e.KeyCode == Keys.A)
+                        txtSelection.SelectAll();
+                    break;
+                case OutputMode.Pad:
+                    if (e.KeyCode == Keys.Escape)
+                    {
+                        if (sciPad.Visible)
+                            padMenusFileExitPad.PerformClick(); //exit pad mode
+                        else
+                            sciPad.Visible = true; //return from console after running program
+                    }
+                    else if (e.Control && e.KeyCode == Keys.A)
+                    {
+                        txtSelection.SelectAll();
+                        e.SuppressKeyPress = true;
+                    }
                     break;
             }
         }
@@ -3464,30 +4009,25 @@ namespace Adjutant
             setOutputMode(OutputMode.Selection);
         }
 
-        private void txtPad_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            setOutputMode(OutputMode.Default);
-        }
-
         private void txtPad_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
         {
-            if (!txtPad.Text.Contains(Environment.NewLine))
+            if (!txtSelection.Text.Contains(Environment.NewLine))
                 return; //no lines to scroll through
 
             int nLines = Math.Abs(e.Delta / 30); //number of lines to scroll
-            int ind = txtPad.SelectionStart;
+            int ind = txtSelection.SelectionStart;
 
             if (e.Delta < 0)
                 for (int i = 0; i < nLines; i++)
                 {
-                    if (ind == txtPad.Text.Length)
+                    if (ind == txtSelection.Text.Length)
                         break;
 
-                    ind = txtPad.Text.IndexOf(Environment.NewLine, ind + 1);
+                    ind = txtSelection.Text.IndexOf(Environment.NewLine, ind + 1);
 
                     if (ind == -1)
                     {
-                        ind = txtPad.Text.Length;
+                        ind = txtSelection.Text.Length;
                         break;
                     }
                 }
@@ -3497,7 +4037,7 @@ namespace Adjutant
                     if (ind == 0)
                         break;
 
-                    ind = txtPad.Text.LastIndexOf(Environment.NewLine, ind - 1);
+                    ind = txtSelection.Text.LastIndexOf(Environment.NewLine, ind - 1);
 
                     if (ind == -1)
                     {
@@ -3506,31 +4046,37 @@ namespace Adjutant
                     }
                 }
 
-            txtPad.SelectionStart = ind;
-            txtPad.ScrollToCaret();
+            txtSelection.SelectionStart = ind;
+            txtSelection.ScrollToCaret();
         }
 
-        private void txtPad_KeyDown(object sender, KeyEventArgs e)
+        private void txtPad_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            if (e.Control && e.KeyCode == Keys.A)
-                txtPad.SelectAll();
+            if (outputMode == OutputMode.Selection)
+                setOutputMode(OutputMode.Default);
         }
 
-        private void txtCMD_MouseDown(object sender, MouseEventArgs e)
+        private void UIElement_MouseDown(object sender, MouseEventArgs e)
         {
+            Control control = (Control)sender;
+            
             if (e.Button == System.Windows.Forms.MouseButtons.Left)
-                mouseDown(txtCMD.Left + e.X, txtCMD.Top + e.Y);
+                mouseDown(control.Left + e.X, control.Top + e.Y);
         }
 
-        private void txtCMD_MouseMove(object sender, MouseEventArgs e)
+        private void UIElement_MouseMove(object sender, MouseEventArgs e)
         {
-            mouseMove(txtCMD.Left + e.X, txtCMD.Top + e.Y);
+            Control control = (Control)sender;
+
+            mouseMove(control.Left + e.X, control.Top + e.Y);
         }
 
-        private void txtCMD_MouseUp(object sender, MouseEventArgs e)
+        private void UIElement_MouseUp(object sender, MouseEventArgs e)
         {
+            Control control = (Control)sender;
+
             if (e.Button == System.Windows.Forms.MouseButtons.Left)
-                mouseUp(txtCMD.Left + e.X, txtCMD.Top + e.Y);
+                mouseUp(control.Left + e.X, control.Top + e.Y);
         }
 
         private void txtCMD_KeyDown(object sender, KeyEventArgs e)
@@ -3622,7 +4168,7 @@ namespace Adjutant
                                     lb--;
                                 while (lb > 0 && char.IsLetterOrDigit(txtCMD.Text[lb - 1]))
                                     lb--;
-
+                                
                                 txtCMD.Text = txtCMD.Text.Remove(lb, ub - lb);
                                 txtCMD.SelectionStart = lb;
                             }
@@ -3874,6 +4420,43 @@ namespace Adjutant
             }
         }
 
+        private void timerResizeWindow_Tick(object sender, EventArgs e)
+        {
+            int targetW, targetH;
+
+            switch (outputMode)
+            {
+                default:
+                case OutputMode.Default:
+                    targetW = consoleW;
+                    targetH = consoleH;
+                    break;
+                case OutputMode.Pad:
+                    targetW = padW;
+                    targetH = padH;
+                    break;
+            }
+
+            //resize console by step (20)
+            this.Width += Math.Sign((targetW - this.Width)) * 20;
+            this.Height += Math.Sign((targetH - this.Height)) * 20;
+
+            //reached final width or height?
+            if (Math.Abs(targetW - this.Width) <= 10)
+                this.Width = targetW;
+            if (Math.Abs(targetH - this.Height) <= 10)
+                this.Height = targetH;
+
+            //job's done?
+            if (this.Width == targetW && this.Height == targetH)
+            {
+                if (outputMode == OutputMode.Default)
+                    jumpToLastLine();
+
+                timerResizeWindow.Enabled = false;
+            }
+        }
+
         private void timerMailCheck_Tick(object sender, EventArgs e)
         {
             getNewMailCount(MailCheckAction.TimerCheck);
@@ -3892,6 +4475,11 @@ namespace Adjutant
         private void trayIcon_DoubleClick(object sender, EventArgs e)
         {
             activateConsole();
+        }
+
+        private void sciPad_KeyDown(object sender, KeyEventArgs e)
+        {
+            this.Opacity = opacityActive;
         }
     }
 }

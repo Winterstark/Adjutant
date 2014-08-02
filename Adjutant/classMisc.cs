@@ -11,6 +11,8 @@ namespace Adjutant
 
     class Misc
     {
+        public const int MOUSE_UP_CODE = -8472;
+
         public static int GetNextDelimiter(string txt, int lb, char delimiter1, char delimiter2)
         {
             int delimiterInd1 = txt.IndexOf(delimiter1, lb);

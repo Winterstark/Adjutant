@@ -652,13 +652,20 @@ namespace Adjutant
 
                 //detect button clicked
                 MouseButtons button = MouseButtons.None;
+                bool buttonUp = false;
                 short mouseDelta = 0;
+
                 switch (wParam)
                 {
                     case WM_LBUTTONDOWN:
                         //case WM_LBUTTONUP: 
                         //case WM_LBUTTONDBLCLK: 
                         button = MouseButtons.Left;
+                        break;
+                    case WM_LBUTTONUP:
+                        //Adjutant need to detect mouse button up event so it knows when to stop resizing itself in pad mode
+                        button = MouseButtons.Left;
+                        buttonUp = true;
                         break;
                     case WM_RBUTTONDOWN:
                         //case WM_RBUTTONUP: 
@@ -684,6 +691,12 @@ namespace Adjutant
                     if (wParam == WM_LBUTTONDBLCLK || wParam == WM_RBUTTONDBLCLK) clickCount = 2;
                     else clickCount = 1;
 
+                if (buttonUp)
+                {
+                    //MouseEventArgs doesn't indicate if a button has been depressed so we need to send that information through mouseDelta
+                    mouseDelta = Misc.MOUSE_UP_CODE;
+                }
+                
                 //generate event 
                  MouseEventArgs e = new MouseEventArgs(
                                                     button,
