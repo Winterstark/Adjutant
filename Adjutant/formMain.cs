@@ -15,6 +15,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Win32;
 using ScintillaNET;
 
+
 namespace Adjutant
 {
     public partial class formMain : Form
@@ -39,7 +40,7 @@ namespace Adjutant
         [DllImport("WinMM.dll")]
         static extern bool PlaySound(string fname, int Mod, int flag);
 
-        enum InputMode { Default, AwaitingUsername, Tutorial, ProcessRedirect, TwitterPIN };
+        enum InputMode { Default, AwaitingUsername, Tutorial, ProcessRedirect, Twitter, TwitterPIN, Reddit };
         enum OutputMode { Default, Selection, Pad };
         enum HideStyle { Disappear, Fade, ScrollUp, ScrollDown, ScrollLeft, ScrollRight };
         InputMode inputMode;
@@ -48,13 +49,16 @@ namespace Adjutant
 
         Gmail gmail;
         Twitter twitter;
+        Reddit reddit;
+        Reddit.Post lastPost;
+
         UserActivityHook actHook;
         formOptions options;
         Process proc;
         BufferedGraphicsContext context;
         BufferedGraphics grafx;
         Brush brush = Brushes.White;
-        Color echoColor, errorColor, helpColor, todoMiscColor, todoItemColor, todoDoneColor, twUserColor, twMiscColor, twTweetColor, twLinkColor, twTimeColor, twCountColor, mailCountColor, mailHeaderColor, mailSummaryColor;
+        Color echoColor, errorColor, helpColor, todoMiscColor, todoItemColor, todoDoneColor, mailCountColor, mailHeaderColor, mailSummaryColor, twUserColor, twMiscColor, twTweetColor, twLinkColor, twTimeColor, twCountColor, redditLinkColor, redditMiscColor;
         DateTime autoHide, pauseEnd, lastTwCount;
         List<Chunk> chunks = new List<Chunk>();
         Dictionary<string, string> customCmds;
@@ -65,17 +69,15 @@ namespace Adjutant
         double opacityPassive, opacityActive;
         long lastTweet;
         int x, y, lineH, minH, maxH, prevH, prevX, prevY, leftMargin, yOffset, chunkOffset, lastChunk, lastChunkChar, printAtOnce, autoHideDelay, tabInd, historyInd, minTweetPeriod, twSoundThreshold, hotkey, newMailCount, prevNewMailCount, mailSoundThreshold, tutorialStep;
-        bool initialized, winKey, prompt, blankLine, echo, ctrlKey, drag, resizeW, resizeH, autoResize, hiding, hidden, todoHideDone, todoAutoTransfer, twUpdateOnNewTweet, twUpdateOnFocus, twOutput, twPrevCountBelowThreshold, twDisplayPictures, twDisplayInstagrams, mailUpdateOnNewMail, mailUpdateOnFocus, hotkeyCtrl, hotkeyAlt, hotkeyShift;
+        bool initialized, winKey, prompt, blankLine, echo, ctrlKey, drag, resizeW, resizeH, autoResize, hiding, hidden, todoHideDone, todoAutoTransfer, twUpdateOnNewTweet, twUpdateOnFocus, twPrevCountBelowThreshold, twDisplayPictures, twDisplayInstagrams, mailUpdateOnNewMail, mailUpdateOnFocus, hotkeyCtrl, hotkeyAlt, hotkeyShift;
 
         //Pad mode fields
         Dictionary<string, string> padLanguages; //list of interpreters or compilers used for various languages
         DateTime programStarted;
         string padFilePath, padFileContents;
+        int padW, padH; //console size when in Pad mode
         bool padResizingW, padResizingH;
 
-        //console sizes for special modes
-        int padW, padH;
-        //int twW, twH;
         int consoleW, consoleH; //console size to return to
         #endregion
 
@@ -376,7 +378,6 @@ namespace Adjutant
                             break;
                         case "prompt":
                             prompt = bool.Parse(args[1]);
-                            setPrompt();
                             break;
                         case "blank_line":
                             blankLine = bool.Parse(args[1]);
@@ -434,6 +435,30 @@ namespace Adjutant
                         case "display_instagrams":
                             twDisplayInstagrams = bool.Parse(args[1]);
                             break;
+                        case "mail_period":
+                            timerMailCheck.Interval = int.Parse(args[1]) * 60000; //convert from minutes to miliseconds
+                            break;
+                        case "mail_update_on_new_mail":
+                            mailUpdateOnNewMail = bool.Parse(args[1]);
+                            break;
+                        case "mail_update_on_focus":
+                            mailUpdateOnFocus = bool.Parse(args[1]);
+                            break;
+                        case "mail_sound":
+                            mailSound = args[1];
+                            break;
+                        case "mail_sound_threshold":
+                            mailSoundThreshold = int.Parse(args[1]);
+                            break;
+                        case "mail_count_color":
+                            mailCountColor = Color.FromArgb(int.Parse(args[1]));
+                            break;
+                        case "mail_header_color":
+                            mailHeaderColor = Color.FromArgb(int.Parse(args[1]));
+                            break;
+                        case "mail_summary_color":
+                            mailSummaryColor = Color.FromArgb(int.Parse(args[1]));
+                            break;
                         case "tw_sound":
                             twSound = args[1];
                             break;
@@ -458,29 +483,11 @@ namespace Adjutant
                         case "tw_count_color":
                             twCountColor = Color.FromArgb(int.Parse(args[1]));
                             break;
-                        case "mail_period":
-                            timerMailCheck.Interval = int.Parse(args[1]) * 60000; //convert from minutes to miliseconds
+                        case "reddit_link_color":
+                            redditLinkColor = Color.FromArgb(int.Parse(args[1]));
                             break;
-                        case "mail_update_on_new_mail":
-                            mailUpdateOnNewMail = bool.Parse(args[1]);
-                            break;
-                        case "mail_update_on_focus":
-                            mailUpdateOnFocus = bool.Parse(args[1]);
-                            break;
-                        case "mail_sound":
-                            mailSound = args[1];
-                            break;
-                        case "mail_sound_threshold":
-                            mailSoundThreshold = int.Parse(args[1]);
-                            break;
-                        case "mail_count_color":
-                            mailCountColor = Color.FromArgb(int.Parse(args[1]));
-                            break;
-                        case "mail_header_color":
-                            mailHeaderColor = Color.FromArgb(int.Parse(args[1]));
-                            break;
-                        case "mail_summary_color":
-                            mailSummaryColor = Color.FromArgb(int.Parse(args[1]));
+                        case "reddit_misc_color":
+                            redditMiscColor = Color.FromArgb(int.Parse(args[1]));
                             break;
                         case "pad_width":
                             padW = int.Parse(args[1]);
@@ -538,6 +545,8 @@ namespace Adjutant
 
             //apply console style to other UI controls
             applyUIStyle();
+
+            setPrompt();
 
             //load mail username/password
             if (File.Exists(Application.StartupPath + "\\mail_login.dat"))
@@ -616,13 +625,22 @@ namespace Adjutant
             file.WriteLine("todo_item_color=" + todoItemColor.ToArgb());
             file.WriteLine("todo_done_color=" + todoDoneColor.ToArgb());
             file.WriteLine();
-            
+
+            file.WriteLine("//mail");
+            file.WriteLine("mail_period=" + (timerMailCheck.Interval / 60000)); //convert from miliseconds to minutes
+            file.WriteLine("mail_update_on_new_mail=" + mailUpdateOnNewMail);
+            file.WriteLine("mail_update_on_focus=" + mailUpdateOnFocus);
+            file.WriteLine("mail_sound=" + mailSound);
+            file.WriteLine("mail_sound_threshold=" + mailSoundThreshold);
+            file.WriteLine("mail_count_color=" + mailCountColor.ToArgb());
+            file.WriteLine("mail_header_color=" + mailHeaderColor.ToArgb());
+            file.WriteLine("mail_summary_color=" + mailSummaryColor.ToArgb());
+            file.WriteLine();
+
             file.WriteLine("//twitter");
             file.WriteLine("token=" + token);
             file.WriteLine("secret=" + secret);
             file.WriteLine("last_tweet=" + lastTweet);
-            //file.WriteLine("tw_width=" + twW);
-            //file.WriteLine("tw_height=" + twH);
             file.WriteLine("update_on_new_tweet=" + twUpdateOnNewTweet);
             file.WriteLine("update_on_focus=" + twUpdateOnFocus);
             file.WriteLine("min_tweet_period=" + minTweetPeriod);
@@ -638,15 +656,9 @@ namespace Adjutant
             file.WriteLine("tw_count_color=" + twCountColor.ToArgb());
             file.WriteLine();
 
-            file.WriteLine("//mail");
-            file.WriteLine("mail_period=" + (timerMailCheck.Interval / 60000)); //convert from miliseconds to minutes
-            file.WriteLine("mail_update_on_new_mail=" + mailUpdateOnNewMail);
-            file.WriteLine("mail_update_on_focus=" + mailUpdateOnFocus);
-            file.WriteLine("mail_sound=" + mailSound);
-            file.WriteLine("mail_sound_threshold=" + mailSoundThreshold);
-            file.WriteLine("mail_count_color=" + mailCountColor.ToArgb());
-            file.WriteLine("mail_header_color=" + mailHeaderColor.ToArgb());
-            file.WriteLine("mail_summary_color=" + mailSummaryColor.ToArgb());
+            file.WriteLine("//reddit");
+            file.WriteLine("reddit_link_color=" + redditLinkColor.ToArgb());
+            file.WriteLine("reddit_misc_color=" + redditMiscColor.ToArgb());
             file.WriteLine();
 
             file.WriteLine("//pad");
@@ -732,6 +744,17 @@ namespace Adjutant
                 options.picTodoItemColor.Tag = todoItemColor;
                 options.picTodoDoneColor.Tag = todoDoneColor;
 
+                options.txtUser.Tag = mailUser;
+                options.txtPass.Tag = mailPass;
+                options.chkMailCountOnNewMail.Tag = mailUpdateOnNewMail;
+                options.chkMailCountOnFocus.Tag = mailUpdateOnFocus;
+                options.numMailCheckPeriod.Tag = timerMailCheck.Interval / 60000;
+                options.txtMailSound.Tag = mailSound;
+                options.numMailSoundThreshold.Tag = mailSoundThreshold;
+                options.picMailCountColor.Tag = mailCountColor;
+                options.picMailHeaderColor.Tag = mailHeaderColor;
+                options.picMailSummaryColor.Tag = mailSummaryColor;
+
                 options.chkTwCountOnNewTweet.Tag = twUpdateOnNewTweet;
                 options.chkTwCountOnFocus.Tag = twUpdateOnFocus;
                 options.numTwCountMinPeriod.Tag = minTweetPeriod;
@@ -746,16 +769,8 @@ namespace Adjutant
                 options.picTwTimestampColor.Tag = twTimeColor;
                 options.picTwCountColor.Tag = twCountColor;
 
-                options.txtUser.Tag = mailUser;
-                options.txtPass.Tag = mailPass;
-                options.chkMailCountOnNewMail.Tag = mailUpdateOnNewMail;
-                options.chkMailCountOnFocus.Tag = mailUpdateOnFocus;
-                options.numMailCheckPeriod.Tag = timerMailCheck.Interval / 60000;
-                options.txtMailSound.Tag = mailSound;
-                options.numMailSoundThreshold.Tag = mailSoundThreshold;
-                options.picMailCountColor.Tag = mailCountColor;
-                options.picMailHeaderColor.Tag = mailHeaderColor;
-                options.picMailSummaryColor.Tag = mailSummaryColor;
+                options.picRedditLinkColor.Tag = redditLinkColor;
+                options.picRedditMiscColor.Tag = redditMiscColor;
 
                 //set current values
                 options.numX.Value = x;
@@ -792,6 +807,17 @@ namespace Adjutant
                 options.picTodoItemColor.BackColor = todoItemColor;
                 options.picTodoDoneColor.BackColor = todoDoneColor;
 
+                options.txtUser.Text = mailUser;
+                options.txtPass.Text = mailPass;
+                options.chkMailCountOnNewMail.Checked = mailUpdateOnNewMail;
+                options.chkMailCountOnFocus.Checked = mailUpdateOnFocus;
+                options.numMailCheckPeriod.Value = timerMailCheck.Interval / 60000;
+                options.txtMailSound.Text = mailSound;
+                options.numMailSoundThreshold.Value = mailSoundThreshold;
+                options.picMailCountColor.BackColor = mailCountColor;
+                options.picMailHeaderColor.BackColor = mailHeaderColor;
+                options.picMailSummaryColor.BackColor = mailSummaryColor;
+
                 options.chkTwCountOnNewTweet.Checked = twUpdateOnNewTweet;
                 options.chkTwCountOnFocus.Checked = twUpdateOnFocus;
                 options.numTwCountMinPeriod.Value = minTweetPeriod;
@@ -806,16 +832,8 @@ namespace Adjutant
                 options.picTwTimestampColor.BackColor = twTimeColor;
                 options.picTwCountColor.BackColor = twCountColor;
 
-                options.txtUser.Text = mailUser;
-                options.txtPass.Text = mailPass;
-                options.chkMailCountOnNewMail.Checked = mailUpdateOnNewMail;
-                options.chkMailCountOnFocus.Checked = mailUpdateOnFocus;
-                options.numMailCheckPeriod.Value = timerMailCheck.Interval / 60000;
-                options.txtMailSound.Text = mailSound;
-                options.numMailSoundThreshold.Value = mailSoundThreshold;
-                options.picMailCountColor.BackColor = mailCountColor;
-                options.picMailHeaderColor.BackColor = mailHeaderColor;
-                options.picMailSummaryColor.BackColor = mailSummaryColor;
+                options.picRedditLinkColor.BackColor = redditLinkColor;
+                options.picRedditMiscColor.BackColor = redditMiscColor;
 
                 options.starting = false;
 
@@ -893,6 +911,17 @@ namespace Adjutant
             todoItemColor = options.picTodoItemColor.BackColor;
             todoDoneColor = options.picTodoDoneColor.BackColor;
 
+            mailUser = options.txtUser.Text;
+            mailPass = options.txtPass.Text;
+            mailUpdateOnNewMail = options.chkMailCountOnNewMail.Checked;
+            mailUpdateOnFocus = options.chkMailCountOnFocus.Checked;
+            timerMailCheck.Interval = (int)options.numMailCheckPeriod.Value * 60000;
+            mailSound = options.txtMailSound.Text;
+            mailSoundThreshold = (int)options.numMailSoundThreshold.Value;
+            mailCountColor = options.picMailCountColor.BackColor;
+            mailHeaderColor = options.picMailHeaderColor.BackColor;
+            mailSummaryColor = options.picMailSummaryColor.BackColor;
+
             twUpdateOnNewTweet = options.chkTwCountOnNewTweet.Checked;
             twUpdateOnFocus = options.chkTwCountOnFocus.Checked;
             minTweetPeriod = (int)options.numTwCountMinPeriod.Value;
@@ -907,16 +936,8 @@ namespace Adjutant
             twTimeColor = options.picTwTimestampColor.BackColor;
             twCountColor = options.picTwCountColor.BackColor;
 
-            mailUser = options.txtUser.Text;
-            mailPass = options.txtPass.Text;
-            mailUpdateOnNewMail = options.chkMailCountOnNewMail.Checked;
-            mailUpdateOnFocus = options.chkMailCountOnFocus.Checked;
-            timerMailCheck.Interval = (int)options.numMailCheckPeriod.Value * 60000;
-            mailSound = options.txtMailSound.Text;
-            mailSoundThreshold = (int)options.numMailSoundThreshold.Value;
-            mailCountColor = options.picMailCountColor.BackColor;
-            mailHeaderColor = options.picMailHeaderColor.BackColor;
-            mailSummaryColor = options.picMailSummaryColor.BackColor;
+            redditLinkColor = options.picRedditLinkColor.BackColor;
+            redditMiscColor = options.picRedditMiscColor.BackColor;
 
             //apply changes & save
             Chunk.Font = txtCMD.Font;
@@ -1018,14 +1039,24 @@ namespace Adjutant
         {
             string newPrompt;
 
-            if (twOutput)
-                newPrompt = "Twitter>";
-            else if (inputMode == InputMode.TwitterPIN)
-                newPrompt = "Twitter PIN:";
-            else if (inputMode == InputMode.AwaitingUsername)
-                newPrompt = "Username: ";
-            else
-                newPrompt = dir + ">";
+            switch (inputMode)
+            {
+                case InputMode.Reddit:
+                    newPrompt = "Reddit>";
+                    break;
+                case InputMode.Twitter:
+                    newPrompt = "Twitter>";
+                    break;
+                case InputMode.TwitterPIN:
+                    newPrompt = "Twitter PIN:";
+                    break;
+                case InputMode.AwaitingUsername:
+                    newPrompt = "Username: ";
+                    break;
+                default:
+                    newPrompt = dir + ">";
+                    break;
+            }
 
             setPrompt(newPrompt);
         }
@@ -1125,8 +1156,6 @@ namespace Adjutant
                     setPrompt();
                     break;
                 case InputMode.ProcessRedirect: //forwarding input to external process
-                    print(txtCMD.Text);
-
                     if (proc != null)
                         proc.StandardInput.WriteLine(txtCMD.Text);
                     else
@@ -1318,6 +1347,9 @@ namespace Adjutant
                             case "pad":
                                 cmdPad(cmd);
                                 break;
+                            case "reddit":
+                                cmdReddit(cmd);
+                                break;
                             case "":
                                 flush();
                                 break;
@@ -1348,7 +1380,7 @@ namespace Adjutant
             if (cmd.Length == 1)
             {
                 print("List of Adjutant commands: " + Environment.NewLine);
-                foreach (string command in new string[] { "about", "calc", "cd", "cls", "custom", "date", "done", "exit", "help", "mail", "pad", "prompt", "time", "todo", "tutorial", "twitter", "user" })
+                foreach (string command in new string[] { "about", "calc", "cd", "cls", "custom", "date", "done", "exit", "help", "mail", "pad", "prompt", "reddit", "time", "todo", "tutorial", "twitter", "user" })
                     print(command, helpColor);
 
                 printHelp("For more information on a specific command, type \"help [COMMAND]\"<pause>");
@@ -1469,6 +1501,9 @@ namespace Adjutant
                         break;
                     case "pad":
                         printHelp("The \"pad\" command turns Adjutant into a simple text editor.<pause>");
+                        //todo
+                        break;
+                    case "reddit":
                         //todo
                         break;
                     case "prompt":
@@ -2006,7 +2041,8 @@ namespace Adjutant
                         cmd = "cscript " + cmd; //force vbs scripts to use cscript (so that the process output returns to Adjutant instead of being displayed as a message box)
 
                     //send it to command prompt
-                    procInfo = new ProcessStartInfo(@"cmd.exe", @"/C" + cmd);
+                    //cmd = @"c:\dev\test\Hello2.exe";
+                    procInfo = new ProcessStartInfo(@"cmd.exe", @"/C " + cmd);
                 }
             }
 
@@ -2018,12 +2054,15 @@ namespace Adjutant
             procInfo.RedirectStandardError = true;
             procInfo.UseShellExecute = false;
             procInfo.CreateNoWindow = true;
-
-            if (inputMode == InputMode.ProcessRedirect)
+            
+            //if (inputMode == InputMode.ProcessRedirect)
+            if (true)
             {
                 //set events for process output and redirect user input to the process
-                setPrompt(Path.GetFileNameWithoutExtension(procInfo.FileName));
-                print("");
+                setPrompt(Path.GetFileNameWithoutExtension(procInfo.FileName) + ">");
+
+                if (outputMode == OutputMode.Pad)
+                    print("");
 
                 programStarted = DateTime.Now;
                 proc = Process.Start(procInfo);
@@ -2259,7 +2298,7 @@ namespace Adjutant
                     if (Math.Abs(this.Top + my - Screen.PrimaryScreen.WorkingArea.Height) < 10)
                         this.Height = Screen.PrimaryScreen.WorkingArea.Height - this.Top;
                     else
-                        this.Height = my + (outputMode == OutputMode.Pad ? 0 : 0); //dragging in pad mode is problematic for some reason and needs a little extra wiggle room
+                        this.Height = my + (outputMode == OutputMode.Pad ? 0 : 0); //dragging in Pad mode is problematic for some reason and needs a little extra wiggle room
                 }
 
                 draw(grafx.Graphics);
@@ -2761,6 +2800,140 @@ namespace Adjutant
         }
         #endregion
 
+        #region Mail Module
+        void mailInit()
+        {
+            if (!string.IsNullOrEmpty(mailUser) && !string.IsNullOrEmpty(mailPass))
+            {
+                gmail = new Gmail(mailUser, mailPass, finishedCheckingMail);
+                getNewMailCount(MailCheckAction.MailInit);
+            }
+        }
+
+        void getNewMailCount(MailCheckAction action)
+        {
+            gmail.Check(action);
+        }
+
+        void displayNewMailCount()
+        {
+            if (newMailCount == prevNewMailCount)
+                return; //don't display mail count if it's already been displayed before
+
+            string output;
+
+            switch (newMailCount)
+            {
+                case -1:
+                    print("Could not check for new emails.", errorColor);
+                    print("Your Internet could be down, the mail server may be unresponsive, or the username and password that you entered previously were wrong..", errorColor);
+                    output = "error";
+                    break;
+                case 0:
+                    output = "No new mail.";
+                    break;
+                case 1:
+                    output = "1 new email.";
+                    break;
+                default:
+                    output = newMailCount + " new emails.";
+                    break;
+            }
+
+            //check last outputted line to make sure it won't be repeated
+            if (output != "error" && chunks.Count > 0 && chunks[chunks.Count - 1].ToString() != output)
+                print(output, "https://mail.google.com/mail/ca/u/0/#inbox", mailCountColor);
+
+            prevNewMailCount = newMailCount;
+
+            //play sound notification
+            if (mailSoundThreshold != 0 && newMailCount >= mailSoundThreshold && File.Exists(mailSound))
+                PlaySound(mailSound, 0, SND_ASYNC);
+        }
+
+        void displayNewMail(bool verbose)
+        {
+            if (gmail == null || gmail.emails == null)
+                return;
+
+            getNewMailCount(MailCheckAction.NoAction); //temp line
+
+            if (gmail.emails.Count == 0)
+                print("No new mail.", "https://mail.google.com/mail/ca/u/0/#inbox", mailCountColor);
+            else
+            {
+                print("Gmail - Inbox for " + mailUser, "https://mail.google.com/mail/ca/u/0/#inbox", mailHeaderColor);
+
+                foreach (string[] email in gmail.emails)
+                    if (!verbose)
+                        print(email[gmail.M_SENDER] + ": " + email[gmail.M_TITLE] + " - " + email[gmail.M_DATE], email[gmail.M_LINK], mailHeaderColor);
+                    else
+                    {
+                        print(email[gmail.M_SENDER] + ": " + email[gmail.M_TITLE] + " - " + email[gmail.M_DATE], email[gmail.M_LINK], mailHeaderColor);
+                        print(email[gmail.M_SUMMARY], mailSummaryColor);
+                    }
+            }
+        }
+
+        void cmdMail(string[] cmd)
+        {
+            if (cmd.Length >= 4 && cmd[1].Contains("/s"))
+            {
+                //setup username/password
+                mailUser = cmd[2];
+                mailPass = cmd[3];
+
+                saveOptions();
+
+                print("Updated mail username/password.");
+            }
+            else if (string.IsNullOrEmpty(mailUser) || string.IsNullOrEmpty(mailPass))
+            {
+                print("You need to setup your mail account first.", errorColor);
+                print("Use the following command: \"mail /setup [username] [password]\".", errorColor);
+            }
+            else if (cmd.Length >= 2 && cmd[1].Contains("/r"))
+                //manual recheck
+                getNewMailCount(MailCheckAction.ForceOutput);
+            else
+            {
+                bool verbose = cmd.Length > 1 && cmd[1].Contains("/v");
+                displayNewMail(verbose);
+            }
+        }
+
+        void finishedCheckingMail(int mailCountResult, MailCheckAction action)
+        {
+            newMailCount = mailCountResult;
+
+            //check if error
+            if (newMailCount == -1)
+                printError("Error while checking for new mail.", gmail.mailException);
+            else
+            {
+                //perform designated action
+                switch (action)
+                {
+                    case MailCheckAction.MailInit:
+                        if (newMailCount != -1)
+                        {
+                            displayNewMailCount();
+                            timerMailCheck.Enabled = true;
+                        }
+                        break;
+                    case MailCheckAction.TimerCheck:
+                        if (mailUpdateOnNewMail)
+                            displayNewMailCount();
+                        break;
+                    case MailCheckAction.ForceOutput:
+                        prevNewMailCount = -1; //force the mail count to display even if it's zero
+                        displayNewMailCount();
+                        break;
+                }
+            }
+        }
+        #endregion
+
         #region Twitter Module
         void twitterAuth()
         {
@@ -2796,7 +2969,8 @@ namespace Adjutant
 
                 if (!twitter.VerifyCredentials())
                 {
-                    print("Error while initializing Twitter service. To see more information about this error please type the following command: \"help twitter /init\"", errorColor);
+                    print("Error while initializing Twitter service.<pause>", errorColor);
+                    printHelp("To see more information about this error please type the following command: \"help twitter /init\"");
                     return;
                 }
 
@@ -2906,14 +3080,16 @@ namespace Adjutant
 
                 lastTweet = newTweet.id;
 
-                twOutput = twitter.AnyUnreadTweets();
-
-                if (!twOutput)
+                if (twitter.AnyUnreadTweets())
+                    inputMode = InputMode.Twitter;
+                else
                 {
+                    inputMode = InputMode.Default;
+
                     print("No more tweets.", "http://www.twitter.com/", twCountColor);
                     removeReadTweets();
                 }
-
+                
                 setPrompt();
             }
         }
@@ -2923,7 +3099,7 @@ namespace Adjutant
             do
             {
                 twitterPrint();
-            } while (twOutput);
+            } while (inputMode == InputMode.Twitter);
         }
 
         void removeReadTweets()
@@ -2953,16 +3129,14 @@ namespace Adjutant
             }
 
             if ((chunks.Count == 0 || chunks[chunks.Count - 1].ToString() != tweetCountMsg) //don't display new tweet count if it's already displayed
-                && !twOutput) //or if Adjutant is currently in Twitter mode
-            {
+                && inputMode != InputMode.Twitter) //or if Adjutant is currently in Twitter mode
                 print(tweetCountMsg, "http://www.twitter.com/", twCountColor);
 
-                //play sound notification
-                if (twSoundThreshold != 0 && tweetCount >= twSoundThreshold && twPrevCountBelowThreshold && File.Exists(twSound))
-                {
-                    PlaySound(twSound, 0, SND_ASYNC);
-                    twPrevCountBelowThreshold = false;
-                }
+            //play sound notification
+            if (twSoundThreshold != 0 && tweetCount >= twSoundThreshold && twPrevCountBelowThreshold && File.Exists(twSound))
+            {
+                PlaySound(twSound, 0, SND_ASYNC);
+                twPrevCountBelowThreshold = false;
             }
 
             lastTwCount = DateTime.Now;
@@ -2977,7 +3151,7 @@ namespace Adjutant
                 else
                 {
                     print("Twitter service is not initialized.<pause>", errorColor);
-                    print("To see more information about this error please type the following command: \"help twitter /init\"", errorColor);
+                    printHelp("To see more information about this error please type the following command: \"help twitter /init\"");
                 }
             }
             else
@@ -3000,134 +3174,41 @@ namespace Adjutant
         }
         #endregion
 
-        #region Mail Module
-        void mailInit()
+        #region Reddit Module
+        void redditInit()
         {
-            if (!string.IsNullOrEmpty(mailUser) && !string.IsNullOrEmpty(mailPass))
+            reddit = new Reddit();
+        }
+
+        void cmdReddit(string[] cmd)
+        {
+            if (cmd.Length > 1)
             {
-                gmail = new Gmail(mailUser, mailPass, finishedCheckingMail);
-                getNewMailCount(MailCheckAction.MailInit);
+                //browse subreddit
+                reddit.PreparePosts(cmd[1]);
+
+                inputMode = InputMode.Reddit;
+                setPrompt();
+                redditPrint();
             }
         }
 
-        void getNewMailCount(MailCheckAction action)
+        void redditPrint()
         {
-            gmail.Check(action);
-        }
+            lastPost = reddit.GetNextPost();
 
-        void displayNewMailCount()
-        {
-            if (newMailCount == prevNewMailCount)
-                return; //don't display mail count if it's already been displayed before
+            print(lastPost.user, "http://www.reddit.com/u/" + lastPost.user, false, redditLinkColor);
+            print(" submitted ", false, redditMiscColor);
+            print((lastPost.score > 0 ? "[+" : "[") + lastPost.score + "]", false, redditMiscColor);
+            print(lastPost.title, lastPost.url, false, redditLinkColor);
+            print(" to ", false, redditMiscColor);
+            print(lastPost.subreddit, "http://www.reddit.com" + lastPost.subreddit, false, redditLinkColor);
+            print(" " + howLongAgo(lastPost.created), false, redditMiscColor);
+            print(" (" + lastPost.nComments + " comments)", lastPost.permalink, redditLinkColor);
 
-            string output;
-
-            switch (newMailCount)
-            {
-                case -1:
-                    print("Could not check for new emails.", errorColor);
-                    print("Your Internet could be down, the mail server may be unresponsive, or the username and password that you entered previously were wrong..", errorColor);
-                    output = "error";
-                    break;
-                case 0:
-                    output = "No new mail.";
-                    break;
-                case 1:
-                    output = "1 new email.";
-                    break;
-                default:    
-                    output = newMailCount + " new emails.";
-                    break;
-            }
-            
-            //check last outputted line to make sure it won't be repeated
-            if (output != "error" && chunks.Count > 0 && chunks[chunks.Count - 1].ToString() != output)
-                print(output, "https://mail.google.com/mail/ca/u/0/#inbox", mailCountColor);
-
-            prevNewMailCount = newMailCount;
-
-            //play sound notification
-            if (mailSoundThreshold != 0 && newMailCount >= mailSoundThreshold && File.Exists(mailSound))
-                PlaySound(mailSound, 0, SND_ASYNC);
-        }
-
-        void displayNewMail(bool verbose)
-        {
-            getNewMailCount(MailCheckAction.NoAction); //temp line
-
-            if (gmail.emails.Count == 0)
-                print("No new mail.", "https://mail.google.com/mail/ca/u/0/#inbox", mailCountColor);
-            else
-            {
-                print("Gmail - Inbox for " + mailUser, "https://mail.google.com/mail/ca/u/0/#inbox", mailHeaderColor);
-
-                foreach (string[] email in gmail.emails)
-                    if (!verbose)
-                        print(email[gmail.M_SENDER] + ": " + email[gmail.M_TITLE] + " - " + email[gmail.M_DATE], email[gmail.M_LINK], mailHeaderColor);
-                    else
-                    {
-                        print(email[gmail.M_SENDER] + ": " + email[gmail.M_TITLE] + " - " + email[gmail.M_DATE], email[gmail.M_LINK], mailHeaderColor);
-                        print(email[gmail.M_SUMMARY], mailSummaryColor);
-                    }
-            }
-        }
-
-        void cmdMail(string[] cmd)
-        {
-            if (cmd.Length >= 4 && cmd[1].Contains("/s"))
-            {
-                //setup username/password
-                mailUser = cmd[2];
-                mailPass = cmd[3];
-
-                saveOptions();
-
-                print("Updated mail username/password.");
-            }
-            else if (string.IsNullOrEmpty(mailUser) || string.IsNullOrEmpty(mailPass))
-            {
-                print("You need to setup your mail account first.", errorColor);
-                print("Use the following command: \"mail /setup [username] [password]\".", errorColor);
-            }
-            else if (cmd.Length >= 2 && cmd[1].Contains("/r"))
-                //manual recheck
-                getNewMailCount(MailCheckAction.ForceOutput);
-            else
-            {
-                bool verbose = cmd.Length > 1 && cmd[1].Contains("/v");
-                displayNewMail(verbose);
-            }
-        }
-
-        void finishedCheckingMail(int mailCountResult, MailCheckAction action)
-        {
-            newMailCount = mailCountResult;
-
-            //check if error
-            if (newMailCount == -1)
-                printError("Error while checking for new mail.", gmail.mailException);
-            else
-            {
-                //perform designated action
-                switch (action)
-                {
-                    case MailCheckAction.MailInit:
-                        if (newMailCount != -1)
-                        {
-                            displayNewMailCount();
-                            timerMailCheck.Enabled = true;
-                        }
-                        break;
-                    case MailCheckAction.TimerCheck:
-                        if (mailUpdateOnNewMail)
-                            displayNewMailCount();
-                        break;
-                    case MailCheckAction.ForceOutput:
-                        prevNewMailCount = -1; //force the mail count to display even if it's zero
-                        displayNewMailCount();
-                        break;
-                }
-            }
+            //download image/thumbnail if any
+            if (lastPost.image != "")
+                print(lastPost.image, lastPost.url, redditLinkColor);
         }
         #endregion
 
@@ -3138,7 +3219,7 @@ namespace Adjutant
             flush();
             jumpToLastLine();
             
-            //then set pad mode
+            //then set Pad mode
             setOutputMode(OutputMode.Pad);
             
             //load file?
@@ -3642,6 +3723,8 @@ namespace Adjutant
                 twitterInit();
                 mailInit();
             }
+
+            redditInit();
         }
 
         private void formMain_Activated(object sender, EventArgs e)
@@ -3786,7 +3869,7 @@ namespace Adjutant
                     if (e.KeyCode == Keys.Escape)
                     {
                         if (sciPad.Visible)
-                            padMenusFileExitPad.PerformClick(); //exit pad mode
+                            padMenusFileExitPad.PerformClick(); //exit Pad mode
                         else
                             sciPad.Visible = true; //return from console after running program
                     }
@@ -4090,139 +4173,197 @@ namespace Adjutant
 
             autohideTrigger();
 
-            if (twOutput)
-                switch (e.KeyCode)
-                {
-                    case Keys.Enter:
-                        flush();
-                        break;
-                    case Keys.K:
-                        flush();
-                        twitter.GoToPreviousTweet();
-                        twitterPrint();
-                        break;
-                    case Keys.J:
-                        flush();
-                        twitterPrint();
-                        break;
-                    case Keys.A:
-                        twitterPrint(true);
-                        break;
-                    case Keys.O:
-                        foreach (string twURL in twURLs)
-                            Process.Start(twURL);
+            switch (inputMode)
+            {
+                case InputMode.Twitter:
+                    switch (e.KeyCode)
+                    {
+                        case Keys.Enter:
+                            flush();
+                            break;
+                        case Keys.K:
+                            flush();
+                            twitter.GoToPreviousTweet();
+                            twitterPrint();
+                            break;
+                        case Keys.J:
+                            flush();
+                            twitterPrint();
+                            break;
+                        case Keys.A:
+                            twitterPrint(true);
+                            break;
+                        case Keys.O:
+                            foreach (string twURL in twURLs)
+                                Process.Start(twURL);
 
-                        if (txtCMD.Text.ToLower() == "o")
-                            txtCMD.Text = "";
-                        break;
-                    case Keys.M:
-                        foreach (string twMention in twMentions)
-                        {
-                            string user = twMention;
-                            if (user.Length > 1 && user[0] == '@')
-                                user = user.Substring(1);
-
-                            Process.Start("https://www.twitter.com/" + user);
-                        }
-
-                        if (txtCMD.Text.ToLower() == "m")
-                            txtCMD.Text = "";
-                        break;
-                    case Keys.U:
-                        Process.Start("https://www.twitter.com/" + twUsername);
-
-                        if (txtCMD.Text.ToLower() == "u")
-                            txtCMD.Text = "";
-                        break;
-                    case Keys.T:
-                        Process.Start("https://www.twitter.com/" + twUsername + "/status/" + lastTweet);
-
-                        if (txtCMD.Text.ToLower() == "t")
-                            txtCMD.Text = "";
-                        break;
-                    case Keys.Escape:
-                        twOutput = false;
-                        setPrompt();
-
-                        twitter.RemoveReadTweets();
-                        tweetCount();
-                        break;
-                }
-            else
-                switch (e.KeyCode)
-                {
-                    case Keys.Enter:
-                        command();
-                        break;
-                    case Keys.Back:
-                        if (e.Control)
-                        {
-                            int ub = txtCMD.SelectionStart;
-
-                            if (ub > 0)
+                            if (txtCMD.Text.ToLower() == "o")
+                                txtCMD.Text = "";
+                            break;
+                        case Keys.M:
+                            foreach (string twMention in twMentions)
                             {
-                                //delete previous word
-                                int lb = ub;
+                                string user = twMention;
+                                if (user.Length > 1 && user[0] == '@')
+                                    user = user.Substring(1);
 
-                                while (lb > 0 && !char.IsLetterOrDigit(txtCMD.Text[lb - 1]))
-                                    lb--;
-                                while (lb > 0 && char.IsLetterOrDigit(txtCMD.Text[lb - 1]))
-                                    lb--;
-                                
-                                txtCMD.Text = txtCMD.Text.Remove(lb, ub - lb);
-                                txtCMD.SelectionStart = lb;
+                                Process.Start("https://www.twitter.com/" + user);
                             }
-                        }
-                        else
-                        {
-                            e.Handled = false;
-                            e.SuppressKeyPress = false;
-                        }
-                        break;
-                    case Keys.Tab:
-                        string cmd = "", path = txtCMD.Text;
 
-                        if (path.Contains('"'))
-                        {
-                            cmd = path.Substring(0, path.IndexOf('"'));
-                            path = path.Substring(path.IndexOf('"') + 1);
+                            if (txtCMD.Text.ToLower() == "m")
+                                txtCMD.Text = "";
+                            break;
+                        case Keys.U:
+                            Process.Start("https://www.twitter.com/" + twUsername);
+
+                            if (txtCMD.Text.ToLower() == "u")
+                                txtCMD.Text = "";
+                            break;
+                        case Keys.T:
+                            Process.Start("https://www.twitter.com/" + twUsername + "/status/" + lastTweet);
+
+                            if (txtCMD.Text.ToLower() == "t")
+                                txtCMD.Text = "";
+                            break;
+                        case Keys.Escape:
+                            inputMode = InputMode.Default;
+                            setPrompt();
+
+                            twitter.RemoveReadTweets();
+                            tweetCount();
+                            break;
+                    }
+                    break;
+                case InputMode.Reddit:
+                    switch (e.KeyCode)
+                    {
+                        case Keys.Enter:
+                            flush();
+                            break;
+                        case Keys.K:
+                            flush();
+                            reddit.GoToPreviousPost();
+                            redditPrint();
+                            break;
+                        case Keys.J:
+                            flush();
+                            redditPrint();
+                            break;
+                        case Keys.Up:
+                            //upvote todo
+                            break;
+                        case Keys.Down:
+                            //downvote todo
+                            break;
+                        case Keys.U:
+                            Process.Start("http://www.reddit.com/u/" + lastPost.user);
+
+                            if (txtCMD.Text.ToLower() == "u")
+                                txtCMD.Text = "";
+                            break;
+                        case Keys.L:
+                            Process.Start(lastPost.url);
+
+                            if (txtCMD.Text.ToLower() == "l")
+                                txtCMD.Text = "";
+                            break;
+                        case Keys.C:
+                            Process.Start(lastPost.permalink);
+
+                            if (txtCMD.Text.ToLower() == "c")
+                                txtCMD.Text = "";
+                            break;
+                        case Keys.Escape:
+                            inputMode = InputMode.Default;
+                            setPrompt();
+
+                            //twitter.RemoveReadTweets();
+                            //tweetCount();
+                            break;
+                    }
+                    break;
+                default:
+                    switch (e.KeyCode)
+                    {
+                        case Keys.Enter:
+                            command();
+                            break;
+                        case Keys.Back:
+                            if (e.Control)
+                            {
+                                int ub = txtCMD.SelectionStart;
+
+                                if (ub > 0)
+                                {
+                                    //delete previous word
+                                    int lb = ub;
+
+                                    while (lb > 0 && !char.IsLetterOrDigit(txtCMD.Text[lb - 1]))
+                                        lb--;
+                                    while (lb > 0 && char.IsLetterOrDigit(txtCMD.Text[lb - 1]))
+                                        lb--;
+
+                                    txtCMD.Text = txtCMD.Text.Remove(lb, ub - lb);
+                                    txtCMD.SelectionStart = lb;
+                                }
+                            }
+                            else
+                            {
+                                e.Handled = false;
+                                e.SuppressKeyPress = false;
+                            }
+                            break;
+                        case Keys.Tab:
+                            string cmd = "", path = txtCMD.Text;
 
                             if (path.Contains('"'))
-                                path = path.Substring(0, path.IndexOf('"'));
-                        }
-                        else if (path.Contains(' '))
-                        {
-                            cmd = path.Substring(0, path.LastIndexOf(' ') + 1);
-                            path = path.Substring(path.LastIndexOf(' ') + 1);
-                        }
+                            {
+                                cmd = path.Substring(0, path.IndexOf('"'));
+                                path = path.Substring(path.IndexOf('"') + 1);
 
-                        setCMD(cmd + getFilteredPaths(path, e.Shift));
-                        break;
-                    case Keys.Up:
-                        if (history.Count > 0)
-                        {
-                            historyInd--;
-                            if (historyInd == -1)
-                                historyInd = history.Count - 1;
+                                if (path.Contains('"'))
+                                    path = path.Substring(0, path.IndexOf('"'));
+                            }
+                            else if (path.Contains(' '))
+                            {
+                                cmd = path.Substring(0, path.LastIndexOf(' ') + 1);
+                                path = path.Substring(path.LastIndexOf(' ') + 1);
+                            }
 
-                            setCMD(history[historyInd]);
-                        }
-                        break;
-                    case Keys.Down:
-                        if (history.Count > 0)
-                        {
-                            historyInd++;
-                            if (historyInd == history.Count)
-                                historyInd = 0;
+                            setCMD(cmd + getFilteredPaths(path, e.Shift));
+                            break;
+                        case Keys.Up:
+                            if (history.Count > 0)
+                            {
+                                historyInd--;
+                                if (historyInd == -1)
+                                    historyInd = history.Count - 1;
 
-                            setCMD(history[historyInd]);
-                        }
-                        break;
-                    default:
-                        e.Handled = false;
-                        e.SuppressKeyPress = false;
-                        break;
-                }
+                                setCMD(history[historyInd]);
+                            }
+                            break;
+                        case Keys.Down:
+                            if (history.Count > 0)
+                            {
+                                historyInd++;
+                                if (historyInd == history.Count)
+                                    historyInd = 0;
+
+                                setCMD(history[historyInd]);
+                            }
+                            break;
+                        default:
+                            e.Handled = false;
+                            e.SuppressKeyPress = false;
+                            break;
+                    }
+                    break;
+            }
+        }
+
+        private void sciPad_KeyDown(object sender, KeyEventArgs e)
+        {
+            this.Opacity = opacityActive;
         }
 
         private void timerDisableTopMost_Tick(object sender, EventArgs e)
@@ -4475,11 +4616,6 @@ namespace Adjutant
         private void trayIcon_DoubleClick(object sender, EventArgs e)
         {
             activateConsole();
-        }
-
-        private void sciPad_KeyDown(object sender, KeyEventArgs e)
-        {
-            this.Opacity = opacityActive;
         }
     }
 }

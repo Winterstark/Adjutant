@@ -83,6 +83,7 @@
     <Compile Include="classHotkey.cs" />
     <Compile Include="classGmail.cs" />
     <Compile Include="classMisc.cs" />
+    <Compile Include="classReddit.cs" />
     <Compile Include="classTwitter.cs" />
     <Compile Include="formMain.cs">
       <SubType>Form</SubType>

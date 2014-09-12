@@ -49,7 +49,7 @@ namespace Adjutant
         {
             BackgroundWorker mailCheckWorker = new BackgroundWorker();
             mailCheckWorker.DoWork += new DoWorkEventHandler(mailCheckWorker_DoWork);
-            mailCheckWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(mailCheckWorker_completedEvent);
+            mailCheckWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(mailCheckWorker_CompletedEvent);
 
             mailCheckWorker.RunWorkerAsync(action);
         }
@@ -138,7 +138,7 @@ namespace Adjutant
                         newEmails.Add(newEmail);
                     }
                 }
-
+                
                 reader.Close();
                 webStream.Close();
                 response.Close();
@@ -152,7 +152,7 @@ namespace Adjutant
             }
         }
 
-        private void mailCheckWorker_completedEvent(object sender, RunWorkerCompletedEventArgs e)
+        private void mailCheckWorker_CompletedEvent(object sender, RunWorkerCompletedEventArgs e)
         {
             Tuple<int, List<string[]>, MailCheckAction> result = (Tuple<int, List<string[]>, MailCheckAction>)e.Result;
 

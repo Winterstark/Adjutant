@@ -70,6 +70,17 @@ namespace Adjutant
             changed |= compareValueToTag(picTodoItemColor);
             changed |= compareValueToTag(picTodoDoneColor);
 
+            changed |= compareValueToTag(txtUser);
+            changed |= compareValueToTag(txtPass);
+            changed |= compareValueToTag(chkMailCountOnFocus);
+            changed |= compareValueToTag(chkMailCountOnNewMail);
+            changed |= compareValueToTag(numMailCheckPeriod);
+            changed |= compareValueToTag(txtMailSound);
+            changed |= compareValueToTag(numMailSoundThreshold);
+            changed |= compareValueToTag(picMailCountColor);
+            changed |= compareValueToTag(picMailHeaderColor);
+            changed |= compareValueToTag(picMailSummaryColor);
+
             changed |= compareValueToTag(chkTwCountOnNewTweet);
             changed |= compareValueToTag(chkTwCountOnFocus);
             changed |= compareValueToTag(numTwCountMinPeriod);
@@ -84,16 +95,8 @@ namespace Adjutant
             changed |= compareValueToTag(picTwTimestampColor);
             changed |= compareValueToTag(picTwCountColor);
 
-            changed |= compareValueToTag(txtUser);
-            changed |= compareValueToTag(txtPass);
-            changed |= compareValueToTag(chkMailCountOnFocus);
-            changed |= compareValueToTag(chkMailCountOnNewMail);
-            changed |= compareValueToTag(numMailCheckPeriod);
-            changed |= compareValueToTag(txtMailSound);
-            changed |= compareValueToTag(numMailSoundThreshold);
-            changed |= compareValueToTag(picMailCountColor);
-            changed |= compareValueToTag(picMailHeaderColor);
-            changed |= compareValueToTag(picMailSummaryColor);
+            changed |= compareValueToTag(picRedditLinkColor);
+            changed |= compareValueToTag(picRedditMiscColor);
 
             buttSave.Visible = changed;
         }
@@ -495,6 +498,26 @@ namespace Adjutant
                 rkApp.DeleteValue("Adjutant", true);
                 MessageBox.Show("Adjutant no longer runs at Windows startup.");
             }
+        }
+
+        private void buttPickRedditLinkColor_Click(object sender, EventArgs e)
+        {
+            pickColor(picRedditLinkColor);
+        }
+
+        private void picRedditLinkColor_Click(object sender, EventArgs e)
+        {
+            pickColor(picRedditLinkColor);
+        }
+
+        private void buttPickRedditMiscColor_Click(object sender, EventArgs e)
+        {
+            pickColor(picRedditMiscColor);
+        }
+
+        private void picRedditMiscColor_Click(object sender, EventArgs e)
+        {
+            pickColor(picRedditMiscColor);
         }
     }
 }

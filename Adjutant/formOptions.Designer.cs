@@ -108,6 +108,33 @@
             this.buttPickTodoMiscColor = new System.Windows.Forms.Button();
             this.label32 = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
+            this.tabMail = new System.Windows.Forms.TabPage();
+            this.label55 = new System.Windows.Forms.Label();
+            this.numMailSoundThreshold = new System.Windows.Forms.NumericUpDown();
+            this.buttMailSoundBrowse = new System.Windows.Forms.Button();
+            this.txtMailSound = new System.Windows.Forms.TextBox();
+            this.label52 = new System.Windows.Forms.Label();
+            this.label53 = new System.Windows.Forms.Label();
+            this.label49 = new System.Windows.Forms.Label();
+            this.label45 = new System.Windows.Forms.Label();
+            this.numMailCheckPeriod = new System.Windows.Forms.NumericUpDown();
+            this.label46 = new System.Windows.Forms.Label();
+            this.picMailSummaryColor = new System.Windows.Forms.PictureBox();
+            this.buttPickMailSummaryColor = new System.Windows.Forms.Button();
+            this.picMailHeaderColor = new System.Windows.Forms.PictureBox();
+            this.buttPickMailHeaderColor = new System.Windows.Forms.Button();
+            this.label48 = new System.Windows.Forms.Label();
+            this.picMailCountColor = new System.Windows.Forms.PictureBox();
+            this.label47 = new System.Windows.Forms.Label();
+            this.buttPickMailCountColor = new System.Windows.Forms.Button();
+            this.label44 = new System.Windows.Forms.Label();
+            this.chkMailCountOnFocus = new System.Windows.Forms.CheckBox();
+            this.chkMailCountOnNewMail = new System.Windows.Forms.CheckBox();
+            this.label43 = new System.Windows.Forms.Label();
+            this.txtPass = new System.Windows.Forms.TextBox();
+            this.txtUser = new System.Windows.Forms.TextBox();
+            this.label42 = new System.Windows.Forms.Label();
+            this.label41 = new System.Windows.Forms.Label();
             this.tabTwitter = new System.Windows.Forms.TabPage();
             this.chkTwDisplayPictures = new System.Windows.Forms.CheckBox();
             this.chkTwDisplayInstagrams = new System.Windows.Forms.CheckBox();
@@ -142,33 +169,14 @@
             this.label51 = new System.Windows.Forms.Label();
             this.label50 = new System.Windows.Forms.Label();
             this.label21 = new System.Windows.Forms.Label();
-            this.tabMail = new System.Windows.Forms.TabPage();
-            this.label55 = new System.Windows.Forms.Label();
-            this.numMailSoundThreshold = new System.Windows.Forms.NumericUpDown();
-            this.buttMailSoundBrowse = new System.Windows.Forms.Button();
-            this.txtMailSound = new System.Windows.Forms.TextBox();
-            this.label52 = new System.Windows.Forms.Label();
-            this.label53 = new System.Windows.Forms.Label();
-            this.label49 = new System.Windows.Forms.Label();
-            this.label45 = new System.Windows.Forms.Label();
-            this.numMailCheckPeriod = new System.Windows.Forms.NumericUpDown();
-            this.label46 = new System.Windows.Forms.Label();
-            this.picMailSummaryColor = new System.Windows.Forms.PictureBox();
-            this.buttPickMailSummaryColor = new System.Windows.Forms.Button();
-            this.picMailHeaderColor = new System.Windows.Forms.PictureBox();
-            this.buttPickMailHeaderColor = new System.Windows.Forms.Button();
-            this.label48 = new System.Windows.Forms.Label();
-            this.picMailCountColor = new System.Windows.Forms.PictureBox();
-            this.label47 = new System.Windows.Forms.Label();
-            this.buttPickMailCountColor = new System.Windows.Forms.Button();
-            this.label44 = new System.Windows.Forms.Label();
-            this.chkMailCountOnFocus = new System.Windows.Forms.CheckBox();
-            this.chkMailCountOnNewMail = new System.Windows.Forms.CheckBox();
-            this.label43 = new System.Windows.Forms.Label();
-            this.txtPass = new System.Windows.Forms.TextBox();
-            this.txtUser = new System.Windows.Forms.TextBox();
-            this.label42 = new System.Windows.Forms.Label();
-            this.label41 = new System.Windows.Forms.Label();
+            this.tabReddit = new System.Windows.Forms.TabPage();
+            this.picRedditMiscColor = new System.Windows.Forms.PictureBox();
+            this.buttPickRedditMiscColor = new System.Windows.Forms.Button();
+            this.label58 = new System.Windows.Forms.Label();
+            this.picRedditLinkColor = new System.Windows.Forms.PictureBox();
+            this.buttPickRedditLinkColor = new System.Windows.Forms.Button();
+            this.label56 = new System.Windows.Forms.Label();
+            this.label57 = new System.Windows.Forms.Label();
             this.buttSave = new System.Windows.Forms.Button();
             this.diagColor = new System.Windows.Forms.ColorDialog();
             this.diagFont = new System.Windows.Forms.FontDialog();
@@ -199,6 +207,12 @@
             ((System.ComponentModel.ISupportInitialize)(this.picTodoDoneColor)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picTodoItemColor)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picTodoMiscColor)).BeginInit();
+            this.tabMail.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numMailSoundThreshold)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numMailCheckPeriod)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picMailSummaryColor)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picMailHeaderColor)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picMailCountColor)).BeginInit();
             this.tabTwitter.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numTwSoundThreshold)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picTwLinkColor)).BeginInit();
@@ -208,12 +222,9 @@
             ((System.ComponentModel.ISupportInitialize)(this.picTwMiscColor)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picTwUsernameColor)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numTwCountMinPeriod)).BeginInit();
-            this.tabMail.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numMailSoundThreshold)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numMailCheckPeriod)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.picMailSummaryColor)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.picMailHeaderColor)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.picMailCountColor)).BeginInit();
+            this.tabReddit.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picRedditMiscColor)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picRedditLinkColor)).BeginInit();
             this.SuspendLayout();
             // 
             // tabs
@@ -222,8 +233,9 @@
             this.tabs.Controls.Add(this.tabFont);
             this.tabs.Controls.Add(this.tabConsole);
             this.tabs.Controls.Add(this.tabTodo);
-            this.tabs.Controls.Add(this.tabTwitter);
             this.tabs.Controls.Add(this.tabMail);
+            this.tabs.Controls.Add(this.tabTwitter);
+            this.tabs.Controls.Add(this.tabReddit);
             this.tabs.Location = new System.Drawing.Point(12, 12);
             this.tabs.Name = "tabs";
             this.tabs.SelectedIndex = 0;
@@ -1083,6 +1095,280 @@
             this.label18.TabIndex = 0;
             this.label18.Text = "Directory for todo files:";
             // 
+            // tabMail
+            // 
+            this.tabMail.Controls.Add(this.label55);
+            this.tabMail.Controls.Add(this.numMailSoundThreshold);
+            this.tabMail.Controls.Add(this.buttMailSoundBrowse);
+            this.tabMail.Controls.Add(this.txtMailSound);
+            this.tabMail.Controls.Add(this.label52);
+            this.tabMail.Controls.Add(this.label53);
+            this.tabMail.Controls.Add(this.label49);
+            this.tabMail.Controls.Add(this.label45);
+            this.tabMail.Controls.Add(this.numMailCheckPeriod);
+            this.tabMail.Controls.Add(this.label46);
+            this.tabMail.Controls.Add(this.picMailSummaryColor);
+            this.tabMail.Controls.Add(this.buttPickMailSummaryColor);
+            this.tabMail.Controls.Add(this.picMailHeaderColor);
+            this.tabMail.Controls.Add(this.buttPickMailHeaderColor);
+            this.tabMail.Controls.Add(this.label48);
+            this.tabMail.Controls.Add(this.picMailCountColor);
+            this.tabMail.Controls.Add(this.label47);
+            this.tabMail.Controls.Add(this.buttPickMailCountColor);
+            this.tabMail.Controls.Add(this.label44);
+            this.tabMail.Controls.Add(this.chkMailCountOnFocus);
+            this.tabMail.Controls.Add(this.chkMailCountOnNewMail);
+            this.tabMail.Controls.Add(this.label43);
+            this.tabMail.Controls.Add(this.txtPass);
+            this.tabMail.Controls.Add(this.txtUser);
+            this.tabMail.Controls.Add(this.label42);
+            this.tabMail.Controls.Add(this.label41);
+            this.tabMail.Location = new System.Drawing.Point(4, 22);
+            this.tabMail.Name = "tabMail";
+            this.tabMail.Padding = new System.Windows.Forms.Padding(3);
+            this.tabMail.Size = new System.Drawing.Size(476, 397);
+            this.tabMail.TabIndex = 5;
+            this.tabMail.Text = "Gmail";
+            this.tabMail.UseVisualStyleBackColor = true;
+            // 
+            // label55
+            // 
+            this.label55.AutoSize = true;
+            this.label55.Location = new System.Drawing.Point(229, 182);
+            this.label55.Name = "label55";
+            this.label55.Size = new System.Drawing.Size(127, 13);
+            this.label55.TabIndex = 45;
+            this.label55.Text = "Set to 0 to disable sound.";
+            // 
+            // numMailSoundThreshold
+            // 
+            this.numMailSoundThreshold.Location = new System.Drawing.Point(375, 159);
+            this.numMailSoundThreshold.Name = "numMailSoundThreshold";
+            this.numMailSoundThreshold.Size = new System.Drawing.Size(73, 20);
+            this.numMailSoundThreshold.TabIndex = 8;
+            this.numMailSoundThreshold.ValueChanged += new System.EventHandler(this.checkForChanges);
+            // 
+            // buttMailSoundBrowse
+            // 
+            this.buttMailSoundBrowse.Location = new System.Drawing.Point(416, 130);
+            this.buttMailSoundBrowse.Name = "buttMailSoundBrowse";
+            this.buttMailSoundBrowse.Size = new System.Drawing.Size(32, 23);
+            this.buttMailSoundBrowse.TabIndex = 7;
+            this.buttMailSoundBrowse.Text = "...";
+            this.buttMailSoundBrowse.UseVisualStyleBackColor = true;
+            this.buttMailSoundBrowse.Click += new System.EventHandler(this.buttMailSoundBrowse_Click);
+            // 
+            // txtMailSound
+            // 
+            this.txtMailSound.Location = new System.Drawing.Point(247, 132);
+            this.txtMailSound.Name = "txtMailSound";
+            this.txtMailSound.Size = new System.Drawing.Size(163, 20);
+            this.txtMailSound.TabIndex = 6;
+            this.txtMailSound.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
+            // 
+            // label52
+            // 
+            this.label52.AutoSize = true;
+            this.label52.Location = new System.Drawing.Point(229, 161);
+            this.label52.Name = "label52";
+            this.label52.Size = new System.Drawing.Size(140, 13);
+            this.label52.TabIndex = 40;
+            this.label52.Text = "After this many emails arrive:";
+            // 
+            // label53
+            // 
+            this.label53.AutoSize = true;
+            this.label53.Location = new System.Drawing.Point(227, 108);
+            this.label53.Name = "label53";
+            this.label53.Size = new System.Drawing.Size(116, 13);
+            this.label53.TabIndex = 41;
+            this.label53.Text = "Play sound notification:";
+            // 
+            // label49
+            // 
+            this.label49.AutoSize = true;
+            this.label49.Location = new System.Drawing.Point(35, 250);
+            this.label49.Name = "label49";
+            this.label49.Size = new System.Drawing.Size(62, 13);
+            this.label49.TabIndex = 23;
+            this.label49.Text = "Text colors:";
+            // 
+            // label45
+            // 
+            this.label45.AutoSize = true;
+            this.label45.Location = new System.Drawing.Point(189, 207);
+            this.label45.Name = "label45";
+            this.label45.Size = new System.Drawing.Size(43, 13);
+            this.label45.TabIndex = 22;
+            this.label45.Text = "minutes";
+            // 
+            // numMailCheckPeriod
+            // 
+            this.numMailCheckPeriod.Location = new System.Drawing.Point(106, 205);
+            this.numMailCheckPeriod.Name = "numMailCheckPeriod";
+            this.numMailCheckPeriod.Size = new System.Drawing.Size(77, 20);
+            this.numMailCheckPeriod.TabIndex = 9;
+            this.numMailCheckPeriod.ValueChanged += new System.EventHandler(this.checkForChanges);
+            // 
+            // label46
+            // 
+            this.label46.AutoSize = true;
+            this.label46.Location = new System.Drawing.Point(36, 207);
+            this.label46.Name = "label46";
+            this.label46.Size = new System.Drawing.Size(67, 13);
+            this.label46.TabIndex = 20;
+            this.label46.Text = "Check every";
+            // 
+            // picMailSummaryColor
+            // 
+            this.picMailSummaryColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.picMailSummaryColor.Location = new System.Drawing.Point(103, 330);
+            this.picMailSummaryColor.Name = "picMailSummaryColor";
+            this.picMailSummaryColor.Size = new System.Drawing.Size(186, 23);
+            this.picMailSummaryColor.TabIndex = 19;
+            this.picMailSummaryColor.TabStop = false;
+            // 
+            // buttPickMailSummaryColor
+            // 
+            this.buttPickMailSummaryColor.Location = new System.Drawing.Point(304, 330);
+            this.buttPickMailSummaryColor.Name = "buttPickMailSummaryColor";
+            this.buttPickMailSummaryColor.Size = new System.Drawing.Size(87, 23);
+            this.buttPickMailSummaryColor.TabIndex = 12;
+            this.buttPickMailSummaryColor.Text = "Pick...";
+            this.buttPickMailSummaryColor.UseVisualStyleBackColor = true;
+            this.buttPickMailSummaryColor.Click += new System.EventHandler(this.buttPickMailSummaryColor_Click);
+            // 
+            // picMailHeaderColor
+            // 
+            this.picMailHeaderColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.picMailHeaderColor.Location = new System.Drawing.Point(103, 301);
+            this.picMailHeaderColor.Name = "picMailHeaderColor";
+            this.picMailHeaderColor.Size = new System.Drawing.Size(186, 23);
+            this.picMailHeaderColor.TabIndex = 19;
+            this.picMailHeaderColor.TabStop = false;
+            // 
+            // buttPickMailHeaderColor
+            // 
+            this.buttPickMailHeaderColor.Location = new System.Drawing.Point(304, 301);
+            this.buttPickMailHeaderColor.Name = "buttPickMailHeaderColor";
+            this.buttPickMailHeaderColor.Size = new System.Drawing.Size(87, 23);
+            this.buttPickMailHeaderColor.TabIndex = 11;
+            this.buttPickMailHeaderColor.Text = "Pick...";
+            this.buttPickMailHeaderColor.UseVisualStyleBackColor = true;
+            this.buttPickMailHeaderColor.Click += new System.EventHandler(this.buttPickMailHeaderColor_Click);
+            // 
+            // label48
+            // 
+            this.label48.AutoSize = true;
+            this.label48.Location = new System.Drawing.Point(24, 335);
+            this.label48.Name = "label48";
+            this.label48.Size = new System.Drawing.Size(73, 13);
+            this.label48.TabIndex = 17;
+            this.label48.Text = "Mail summary:";
+            // 
+            // picMailCountColor
+            // 
+            this.picMailCountColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.picMailCountColor.Location = new System.Drawing.Point(103, 272);
+            this.picMailCountColor.Name = "picMailCountColor";
+            this.picMailCountColor.Size = new System.Drawing.Size(186, 23);
+            this.picMailCountColor.TabIndex = 19;
+            this.picMailCountColor.TabStop = false;
+            // 
+            // label47
+            // 
+            this.label47.AutoSize = true;
+            this.label47.Location = new System.Drawing.Point(32, 306);
+            this.label47.Name = "label47";
+            this.label47.Size = new System.Drawing.Size(65, 13);
+            this.label47.TabIndex = 17;
+            this.label47.Text = "Mail header:";
+            // 
+            // buttPickMailCountColor
+            // 
+            this.buttPickMailCountColor.Location = new System.Drawing.Point(304, 272);
+            this.buttPickMailCountColor.Name = "buttPickMailCountColor";
+            this.buttPickMailCountColor.Size = new System.Drawing.Size(87, 23);
+            this.buttPickMailCountColor.TabIndex = 10;
+            this.buttPickMailCountColor.Text = "Pick...";
+            this.buttPickMailCountColor.UseVisualStyleBackColor = true;
+            this.buttPickMailCountColor.Click += new System.EventHandler(this.buttPickMailCountColor_Click);
+            // 
+            // label44
+            // 
+            this.label44.AutoSize = true;
+            this.label44.Location = new System.Drawing.Point(38, 277);
+            this.label44.Name = "label44";
+            this.label44.Size = new System.Drawing.Size(59, 13);
+            this.label44.TabIndex = 17;
+            this.label44.Text = "Mail count:";
+            // 
+            // chkMailCountOnFocus
+            // 
+            this.chkMailCountOnFocus.AutoSize = true;
+            this.chkMailCountOnFocus.Location = new System.Drawing.Point(47, 157);
+            this.chkMailCountOnFocus.Name = "chkMailCountOnFocus";
+            this.chkMailCountOnFocus.Size = new System.Drawing.Size(140, 17);
+            this.chkMailCountOnFocus.TabIndex = 5;
+            this.chkMailCountOnFocus.Text = "Adjutant gets user focus";
+            this.chkMailCountOnFocus.UseVisualStyleBackColor = true;
+            this.chkMailCountOnFocus.CheckedChanged += new System.EventHandler(this.checkForChanges);
+            // 
+            // chkMailCountOnNewMail
+            // 
+            this.chkMailCountOnNewMail.AutoSize = true;
+            this.chkMailCountOnNewMail.Location = new System.Drawing.Point(47, 134);
+            this.chkMailCountOnNewMail.Name = "chkMailCountOnNewMail";
+            this.chkMailCountOnNewMail.Size = new System.Drawing.Size(103, 17);
+            this.chkMailCountOnNewMail.TabIndex = 4;
+            this.chkMailCountOnNewMail.Text = "New mail arrives";
+            this.chkMailCountOnNewMail.UseVisualStyleBackColor = true;
+            this.chkMailCountOnNewMail.CheckedChanged += new System.EventHandler(this.checkForChanges);
+            // 
+            // label43
+            // 
+            this.label43.AutoSize = true;
+            this.label43.Location = new System.Drawing.Point(32, 108);
+            this.label43.Name = "label43";
+            this.label43.Size = new System.Drawing.Size(164, 13);
+            this.label43.TabIndex = 3;
+            this.label43.Text = "Show new mail notification when:";
+            // 
+            // txtPass
+            // 
+            this.txtPass.Location = new System.Drawing.Point(106, 64);
+            this.txtPass.Name = "txtPass";
+            this.txtPass.PasswordChar = '●';
+            this.txtPass.Size = new System.Drawing.Size(186, 20);
+            this.txtPass.TabIndex = 3;
+            this.txtPass.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
+            // 
+            // txtUser
+            // 
+            this.txtUser.Location = new System.Drawing.Point(106, 38);
+            this.txtUser.Name = "txtUser";
+            this.txtUser.Size = new System.Drawing.Size(186, 20);
+            this.txtUser.TabIndex = 2;
+            this.txtUser.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
+            // 
+            // label42
+            // 
+            this.label42.AutoSize = true;
+            this.label42.Location = new System.Drawing.Point(44, 67);
+            this.label42.Name = "label42";
+            this.label42.Size = new System.Drawing.Size(56, 13);
+            this.label42.TabIndex = 0;
+            this.label42.Text = "Password:";
+            // 
+            // label41
+            // 
+            this.label41.AutoSize = true;
+            this.label41.Location = new System.Drawing.Point(42, 41);
+            this.label41.Name = "label41";
+            this.label41.Size = new System.Drawing.Size(58, 13);
+            this.label41.TabIndex = 0;
+            this.label41.Text = "Username:";
+            // 
             // tabTwitter
             // 
             this.tabTwitter.Controls.Add(this.chkTwDisplayPictures);
@@ -1440,279 +1726,89 @@
             this.label21.TabIndex = 0;
             this.label21.Text = "Show new tweet count when:";
             // 
-            // tabMail
+            // tabReddit
             // 
-            this.tabMail.Controls.Add(this.label55);
-            this.tabMail.Controls.Add(this.numMailSoundThreshold);
-            this.tabMail.Controls.Add(this.buttMailSoundBrowse);
-            this.tabMail.Controls.Add(this.txtMailSound);
-            this.tabMail.Controls.Add(this.label52);
-            this.tabMail.Controls.Add(this.label53);
-            this.tabMail.Controls.Add(this.label49);
-            this.tabMail.Controls.Add(this.label45);
-            this.tabMail.Controls.Add(this.numMailCheckPeriod);
-            this.tabMail.Controls.Add(this.label46);
-            this.tabMail.Controls.Add(this.picMailSummaryColor);
-            this.tabMail.Controls.Add(this.buttPickMailSummaryColor);
-            this.tabMail.Controls.Add(this.picMailHeaderColor);
-            this.tabMail.Controls.Add(this.buttPickMailHeaderColor);
-            this.tabMail.Controls.Add(this.label48);
-            this.tabMail.Controls.Add(this.picMailCountColor);
-            this.tabMail.Controls.Add(this.label47);
-            this.tabMail.Controls.Add(this.buttPickMailCountColor);
-            this.tabMail.Controls.Add(this.label44);
-            this.tabMail.Controls.Add(this.chkMailCountOnFocus);
-            this.tabMail.Controls.Add(this.chkMailCountOnNewMail);
-            this.tabMail.Controls.Add(this.label43);
-            this.tabMail.Controls.Add(this.txtPass);
-            this.tabMail.Controls.Add(this.txtUser);
-            this.tabMail.Controls.Add(this.label42);
-            this.tabMail.Controls.Add(this.label41);
-            this.tabMail.Location = new System.Drawing.Point(4, 22);
-            this.tabMail.Name = "tabMail";
-            this.tabMail.Padding = new System.Windows.Forms.Padding(3);
-            this.tabMail.Size = new System.Drawing.Size(476, 397);
-            this.tabMail.TabIndex = 5;
-            this.tabMail.Text = "Gmail";
-            this.tabMail.UseVisualStyleBackColor = true;
+            this.tabReddit.Controls.Add(this.picRedditMiscColor);
+            this.tabReddit.Controls.Add(this.buttPickRedditMiscColor);
+            this.tabReddit.Controls.Add(this.label58);
+            this.tabReddit.Controls.Add(this.picRedditLinkColor);
+            this.tabReddit.Controls.Add(this.buttPickRedditLinkColor);
+            this.tabReddit.Controls.Add(this.label56);
+            this.tabReddit.Controls.Add(this.label57);
+            this.tabReddit.Location = new System.Drawing.Point(4, 22);
+            this.tabReddit.Name = "tabReddit";
+            this.tabReddit.Padding = new System.Windows.Forms.Padding(3);
+            this.tabReddit.Size = new System.Drawing.Size(476, 397);
+            this.tabReddit.TabIndex = 6;
+            this.tabReddit.Text = "Reddit";
+            this.tabReddit.UseVisualStyleBackColor = true;
             // 
-            // label55
+            // picRedditMiscColor
             // 
-            this.label55.AutoSize = true;
-            this.label55.Location = new System.Drawing.Point(229, 182);
-            this.label55.Name = "label55";
-            this.label55.Size = new System.Drawing.Size(127, 13);
-            this.label55.TabIndex = 45;
-            this.label55.Text = "Set to 0 to disable sound.";
+            this.picRedditMiscColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.picRedditMiscColor.Location = new System.Drawing.Point(143, 147);
+            this.picRedditMiscColor.Name = "picRedditMiscColor";
+            this.picRedditMiscColor.Size = new System.Drawing.Size(186, 23);
+            this.picRedditMiscColor.TabIndex = 23;
+            this.picRedditMiscColor.TabStop = false;
+            this.picRedditMiscColor.Click += new System.EventHandler(this.picRedditMiscColor_Click);
             // 
-            // numMailSoundThreshold
+            // buttPickRedditMiscColor
             // 
-            this.numMailSoundThreshold.Location = new System.Drawing.Point(375, 159);
-            this.numMailSoundThreshold.Name = "numMailSoundThreshold";
-            this.numMailSoundThreshold.Size = new System.Drawing.Size(73, 20);
-            this.numMailSoundThreshold.TabIndex = 8;
-            this.numMailSoundThreshold.ValueChanged += new System.EventHandler(this.checkForChanges);
+            this.buttPickRedditMiscColor.Location = new System.Drawing.Point(344, 147);
+            this.buttPickRedditMiscColor.Name = "buttPickRedditMiscColor";
+            this.buttPickRedditMiscColor.Size = new System.Drawing.Size(87, 23);
+            this.buttPickRedditMiscColor.TabIndex = 22;
+            this.buttPickRedditMiscColor.Text = "Pick...";
+            this.buttPickRedditMiscColor.UseVisualStyleBackColor = true;
+            this.buttPickRedditMiscColor.Click += new System.EventHandler(this.buttPickRedditMiscColor_Click);
             // 
-            // buttMailSoundBrowse
+            // label58
             // 
-            this.buttMailSoundBrowse.Location = new System.Drawing.Point(416, 130);
-            this.buttMailSoundBrowse.Name = "buttMailSoundBrowse";
-            this.buttMailSoundBrowse.Size = new System.Drawing.Size(32, 23);
-            this.buttMailSoundBrowse.TabIndex = 7;
-            this.buttMailSoundBrowse.Text = "...";
-            this.buttMailSoundBrowse.UseVisualStyleBackColor = true;
-            this.buttMailSoundBrowse.Click += new System.EventHandler(this.buttMailSoundBrowse_Click);
+            this.label58.AutoSize = true;
+            this.label58.Location = new System.Drawing.Point(79, 152);
+            this.label58.Name = "label58";
+            this.label58.Size = new System.Drawing.Size(55, 13);
+            this.label58.TabIndex = 21;
+            this.label58.Text = "Misc. text:";
             // 
-            // txtMailSound
+            // picRedditLinkColor
             // 
-            this.txtMailSound.Location = new System.Drawing.Point(247, 132);
-            this.txtMailSound.Name = "txtMailSound";
-            this.txtMailSound.Size = new System.Drawing.Size(163, 20);
-            this.txtMailSound.TabIndex = 6;
-            this.txtMailSound.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
+            this.picRedditLinkColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.picRedditLinkColor.Location = new System.Drawing.Point(143, 118);
+            this.picRedditLinkColor.Name = "picRedditLinkColor";
+            this.picRedditLinkColor.Size = new System.Drawing.Size(186, 23);
+            this.picRedditLinkColor.TabIndex = 20;
+            this.picRedditLinkColor.TabStop = false;
+            this.picRedditLinkColor.Click += new System.EventHandler(this.picRedditLinkColor_Click);
             // 
-            // label52
+            // buttPickRedditLinkColor
             // 
-            this.label52.AutoSize = true;
-            this.label52.Location = new System.Drawing.Point(229, 161);
-            this.label52.Name = "label52";
-            this.label52.Size = new System.Drawing.Size(140, 13);
-            this.label52.TabIndex = 40;
-            this.label52.Text = "After this many emails arrive:";
+            this.buttPickRedditLinkColor.Location = new System.Drawing.Point(344, 118);
+            this.buttPickRedditLinkColor.Name = "buttPickRedditLinkColor";
+            this.buttPickRedditLinkColor.Size = new System.Drawing.Size(87, 23);
+            this.buttPickRedditLinkColor.TabIndex = 19;
+            this.buttPickRedditLinkColor.Text = "Pick...";
+            this.buttPickRedditLinkColor.UseVisualStyleBackColor = true;
+            this.buttPickRedditLinkColor.Click += new System.EventHandler(this.buttPickRedditLinkColor_Click);
             // 
-            // label53
+            // label56
             // 
-            this.label53.AutoSize = true;
-            this.label53.Location = new System.Drawing.Point(227, 108);
-            this.label53.Name = "label53";
-            this.label53.Size = new System.Drawing.Size(116, 13);
-            this.label53.TabIndex = 41;
-            this.label53.Text = "Play sound notification:";
+            this.label56.AutoSize = true;
+            this.label56.Location = new System.Drawing.Point(20, 123);
+            this.label56.Name = "label56";
+            this.label56.Size = new System.Drawing.Size(114, 13);
+            this.label56.TabIndex = 18;
+            this.label56.Text = "Usernames, titles, etc.:";
             // 
-            // label49
+            // label57
             // 
-            this.label49.AutoSize = true;
-            this.label49.Location = new System.Drawing.Point(35, 250);
-            this.label49.Name = "label49";
-            this.label49.Size = new System.Drawing.Size(62, 13);
-            this.label49.TabIndex = 23;
-            this.label49.Text = "Text colors:";
-            // 
-            // label45
-            // 
-            this.label45.AutoSize = true;
-            this.label45.Location = new System.Drawing.Point(189, 207);
-            this.label45.Name = "label45";
-            this.label45.Size = new System.Drawing.Size(43, 13);
-            this.label45.TabIndex = 22;
-            this.label45.Text = "minutes";
-            // 
-            // numMailCheckPeriod
-            // 
-            this.numMailCheckPeriod.Location = new System.Drawing.Point(106, 205);
-            this.numMailCheckPeriod.Name = "numMailCheckPeriod";
-            this.numMailCheckPeriod.Size = new System.Drawing.Size(77, 20);
-            this.numMailCheckPeriod.TabIndex = 9;
-            this.numMailCheckPeriod.ValueChanged += new System.EventHandler(this.checkForChanges);
-            // 
-            // label46
-            // 
-            this.label46.AutoSize = true;
-            this.label46.Location = new System.Drawing.Point(36, 207);
-            this.label46.Name = "label46";
-            this.label46.Size = new System.Drawing.Size(67, 13);
-            this.label46.TabIndex = 20;
-            this.label46.Text = "Check every";
-            // 
-            // picMailSummaryColor
-            // 
-            this.picMailSummaryColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.picMailSummaryColor.Location = new System.Drawing.Point(103, 330);
-            this.picMailSummaryColor.Name = "picMailSummaryColor";
-            this.picMailSummaryColor.Size = new System.Drawing.Size(186, 23);
-            this.picMailSummaryColor.TabIndex = 19;
-            this.picMailSummaryColor.TabStop = false;
-            // 
-            // buttPickMailSummaryColor
-            // 
-            this.buttPickMailSummaryColor.Location = new System.Drawing.Point(304, 330);
-            this.buttPickMailSummaryColor.Name = "buttPickMailSummaryColor";
-            this.buttPickMailSummaryColor.Size = new System.Drawing.Size(87, 23);
-            this.buttPickMailSummaryColor.TabIndex = 12;
-            this.buttPickMailSummaryColor.Text = "Pick...";
-            this.buttPickMailSummaryColor.UseVisualStyleBackColor = true;
-            this.buttPickMailSummaryColor.Click += new System.EventHandler(this.buttPickMailSummaryColor_Click);
-            // 
-            // picMailHeaderColor
-            // 
-            this.picMailHeaderColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.picMailHeaderColor.Location = new System.Drawing.Point(103, 301);
-            this.picMailHeaderColor.Name = "picMailHeaderColor";
-            this.picMailHeaderColor.Size = new System.Drawing.Size(186, 23);
-            this.picMailHeaderColor.TabIndex = 19;
-            this.picMailHeaderColor.TabStop = false;
-            // 
-            // buttPickMailHeaderColor
-            // 
-            this.buttPickMailHeaderColor.Location = new System.Drawing.Point(304, 301);
-            this.buttPickMailHeaderColor.Name = "buttPickMailHeaderColor";
-            this.buttPickMailHeaderColor.Size = new System.Drawing.Size(87, 23);
-            this.buttPickMailHeaderColor.TabIndex = 11;
-            this.buttPickMailHeaderColor.Text = "Pick...";
-            this.buttPickMailHeaderColor.UseVisualStyleBackColor = true;
-            this.buttPickMailHeaderColor.Click += new System.EventHandler(this.buttPickMailHeaderColor_Click);
-            // 
-            // label48
-            // 
-            this.label48.AutoSize = true;
-            this.label48.Location = new System.Drawing.Point(24, 335);
-            this.label48.Name = "label48";
-            this.label48.Size = new System.Drawing.Size(73, 13);
-            this.label48.TabIndex = 17;
-            this.label48.Text = "Mail summary:";
-            // 
-            // picMailCountColor
-            // 
-            this.picMailCountColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.picMailCountColor.Location = new System.Drawing.Point(103, 272);
-            this.picMailCountColor.Name = "picMailCountColor";
-            this.picMailCountColor.Size = new System.Drawing.Size(186, 23);
-            this.picMailCountColor.TabIndex = 19;
-            this.picMailCountColor.TabStop = false;
-            // 
-            // label47
-            // 
-            this.label47.AutoSize = true;
-            this.label47.Location = new System.Drawing.Point(32, 306);
-            this.label47.Name = "label47";
-            this.label47.Size = new System.Drawing.Size(65, 13);
-            this.label47.TabIndex = 17;
-            this.label47.Text = "Mail header:";
-            // 
-            // buttPickMailCountColor
-            // 
-            this.buttPickMailCountColor.Location = new System.Drawing.Point(304, 272);
-            this.buttPickMailCountColor.Name = "buttPickMailCountColor";
-            this.buttPickMailCountColor.Size = new System.Drawing.Size(87, 23);
-            this.buttPickMailCountColor.TabIndex = 10;
-            this.buttPickMailCountColor.Text = "Pick...";
-            this.buttPickMailCountColor.UseVisualStyleBackColor = true;
-            this.buttPickMailCountColor.Click += new System.EventHandler(this.buttPickMailCountColor_Click);
-            // 
-            // label44
-            // 
-            this.label44.AutoSize = true;
-            this.label44.Location = new System.Drawing.Point(38, 277);
-            this.label44.Name = "label44";
-            this.label44.Size = new System.Drawing.Size(59, 13);
-            this.label44.TabIndex = 17;
-            this.label44.Text = "Mail count:";
-            // 
-            // chkMailCountOnFocus
-            // 
-            this.chkMailCountOnFocus.AutoSize = true;
-            this.chkMailCountOnFocus.Location = new System.Drawing.Point(47, 157);
-            this.chkMailCountOnFocus.Name = "chkMailCountOnFocus";
-            this.chkMailCountOnFocus.Size = new System.Drawing.Size(140, 17);
-            this.chkMailCountOnFocus.TabIndex = 5;
-            this.chkMailCountOnFocus.Text = "Adjutant gets user focus";
-            this.chkMailCountOnFocus.UseVisualStyleBackColor = true;
-            this.chkMailCountOnFocus.CheckedChanged += new System.EventHandler(this.checkForChanges);
-            // 
-            // chkMailCountOnNewMail
-            // 
-            this.chkMailCountOnNewMail.AutoSize = true;
-            this.chkMailCountOnNewMail.Location = new System.Drawing.Point(47, 134);
-            this.chkMailCountOnNewMail.Name = "chkMailCountOnNewMail";
-            this.chkMailCountOnNewMail.Size = new System.Drawing.Size(103, 17);
-            this.chkMailCountOnNewMail.TabIndex = 4;
-            this.chkMailCountOnNewMail.Text = "New mail arrives";
-            this.chkMailCountOnNewMail.UseVisualStyleBackColor = true;
-            this.chkMailCountOnNewMail.CheckedChanged += new System.EventHandler(this.checkForChanges);
-            // 
-            // label43
-            // 
-            this.label43.AutoSize = true;
-            this.label43.Location = new System.Drawing.Point(32, 108);
-            this.label43.Name = "label43";
-            this.label43.Size = new System.Drawing.Size(164, 13);
-            this.label43.TabIndex = 3;
-            this.label43.Text = "Show new mail notification when:";
-            // 
-            // txtPass
-            // 
-            this.txtPass.Location = new System.Drawing.Point(106, 64);
-            this.txtPass.Name = "txtPass";
-            this.txtPass.PasswordChar = '●';
-            this.txtPass.Size = new System.Drawing.Size(186, 20);
-            this.txtPass.TabIndex = 3;
-            this.txtPass.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
-            // 
-            // txtUser
-            // 
-            this.txtUser.Location = new System.Drawing.Point(106, 38);
-            this.txtUser.Name = "txtUser";
-            this.txtUser.Size = new System.Drawing.Size(186, 20);
-            this.txtUser.TabIndex = 2;
-            this.txtUser.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
-            // 
-            // label42
-            // 
-            this.label42.AutoSize = true;
-            this.label42.Location = new System.Drawing.Point(44, 67);
-            this.label42.Name = "label42";
-            this.label42.Size = new System.Drawing.Size(56, 13);
-            this.label42.TabIndex = 0;
-            this.label42.Text = "Password:";
-            // 
-            // label41
-            // 
-            this.label41.AutoSize = true;
-            this.label41.Location = new System.Drawing.Point(42, 41);
-            this.label41.Name = "label41";
-            this.label41.Size = new System.Drawing.Size(58, 13);
-            this.label41.TabIndex = 0;
-            this.label41.Text = "Username:";
+            this.label57.AutoSize = true;
+            this.label57.Location = new System.Drawing.Point(23, 97);
+            this.label57.Name = "label57";
+            this.label57.Size = new System.Drawing.Size(62, 13);
+            this.label57.TabIndex = 17;
+            this.label57.Text = "Text colors:";
             // 
             // buttSave
             // 
@@ -1771,6 +1867,13 @@
             ((System.ComponentModel.ISupportInitialize)(this.picTodoDoneColor)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picTodoItemColor)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picTodoMiscColor)).EndInit();
+            this.tabMail.ResumeLayout(false);
+            this.tabMail.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numMailSoundThreshold)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numMailCheckPeriod)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picMailSummaryColor)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picMailHeaderColor)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picMailCountColor)).EndInit();
             this.tabTwitter.ResumeLayout(false);
             this.tabTwitter.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numTwSoundThreshold)).EndInit();
@@ -1781,13 +1884,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.picTwMiscColor)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picTwUsernameColor)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numTwCountMinPeriod)).EndInit();
-            this.tabMail.ResumeLayout(false);
-            this.tabMail.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numMailSoundThreshold)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numMailCheckPeriod)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.picMailSummaryColor)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.picMailHeaderColor)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.picMailCountColor)).EndInit();
+            this.tabReddit.ResumeLayout(false);
+            this.tabReddit.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picRedditMiscColor)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picRedditLinkColor)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -1939,5 +2039,13 @@
         private System.Windows.Forms.CheckBox chkRunAtStartup;
         public System.Windows.Forms.CheckBox chkTwDisplayInstagrams;
         public System.Windows.Forms.CheckBox chkTwDisplayPictures;
+        private System.Windows.Forms.TabPage tabReddit;
+        public System.Windows.Forms.PictureBox picRedditMiscColor;
+        private System.Windows.Forms.Button buttPickRedditMiscColor;
+        private System.Windows.Forms.Label label58;
+        public System.Windows.Forms.PictureBox picRedditLinkColor;
+        private System.Windows.Forms.Button buttPickRedditLinkColor;
+        private System.Windows.Forms.Label label56;
+        private System.Windows.Forms.Label label57;
     }
 }

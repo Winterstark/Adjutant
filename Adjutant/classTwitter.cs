@@ -493,16 +493,6 @@ namespace Adjutant
         int getNextDelimiter(string response, int lb)
         {
             return Misc.GetNextDelimiter(response, lb, ',', '}');
-
-            //int commaInd = response.IndexOf(',', lb);
-            //int bracketInd = response.IndexOf('}', lb);
-
-            //if (commaInd == -1)
-            //    return bracketInd;
-            //else if (bracketInd == -1)
-            //    return commaInd;
-            //else
-            //    return Math.Min(commaInd, bracketInd);
         }
 
         public bool AnyNewTweets()
