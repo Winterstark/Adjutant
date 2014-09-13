@@ -177,6 +177,24 @@
             this.buttPickRedditLinkColor = new System.Windows.Forms.Button();
             this.label56 = new System.Windows.Forms.Label();
             this.label57 = new System.Windows.Forms.Label();
+            this.tabLauncher = new System.Windows.Forms.TabPage();
+            this.lblLauncherIndexCount = new System.Windows.Forms.Label();
+            this.buttLauncherRescan = new System.Windows.Forms.Button();
+            this.label65 = new System.Windows.Forms.Label();
+            this.numLauncherScanPeriod = new System.Windows.Forms.NumericUpDown();
+            this.label64 = new System.Windows.Forms.Label();
+            this.buttLauncherRemoveDir = new System.Windows.Forms.Button();
+            this.buttLauncherAddDir = new System.Windows.Forms.Button();
+            this.label63 = new System.Windows.Forms.Label();
+            this.txtLauncherFileFilter = new System.Windows.Forms.TextBox();
+            this.label62 = new System.Windows.Forms.Label();
+            this.lstLauncherDirs = new System.Windows.Forms.ListBox();
+            this.numLauncherMaxSuggestions = new System.Windows.Forms.NumericUpDown();
+            this.label61 = new System.Windows.Forms.Label();
+            this.chkLauncherAutohide = new System.Windows.Forms.CheckBox();
+            this.label59 = new System.Windows.Forms.Label();
+            this.txtLauncherHotkey = new System.Windows.Forms.TextBox();
+            this.label60 = new System.Windows.Forms.Label();
             this.buttSave = new System.Windows.Forms.Button();
             this.diagColor = new System.Windows.Forms.ColorDialog();
             this.diagFont = new System.Windows.Forms.FontDialog();
@@ -225,6 +243,9 @@
             this.tabReddit.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picRedditMiscColor)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRedditLinkColor)).BeginInit();
+            this.tabLauncher.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numLauncherScanPeriod)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numLauncherMaxSuggestions)).BeginInit();
             this.SuspendLayout();
             // 
             // tabs
@@ -236,6 +257,7 @@
             this.tabs.Controls.Add(this.tabMail);
             this.tabs.Controls.Add(this.tabTwitter);
             this.tabs.Controls.Add(this.tabReddit);
+            this.tabs.Controls.Add(this.tabLauncher);
             this.tabs.Location = new System.Drawing.Point(12, 12);
             this.tabs.Name = "tabs";
             this.tabs.SelectedIndex = 0;
@@ -1746,7 +1768,7 @@
             // picRedditMiscColor
             // 
             this.picRedditMiscColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.picRedditMiscColor.Location = new System.Drawing.Point(143, 147);
+            this.picRedditMiscColor.Location = new System.Drawing.Point(147, 99);
             this.picRedditMiscColor.Name = "picRedditMiscColor";
             this.picRedditMiscColor.Size = new System.Drawing.Size(186, 23);
             this.picRedditMiscColor.TabIndex = 23;
@@ -1755,7 +1777,7 @@
             // 
             // buttPickRedditMiscColor
             // 
-            this.buttPickRedditMiscColor.Location = new System.Drawing.Point(344, 147);
+            this.buttPickRedditMiscColor.Location = new System.Drawing.Point(348, 99);
             this.buttPickRedditMiscColor.Name = "buttPickRedditMiscColor";
             this.buttPickRedditMiscColor.Size = new System.Drawing.Size(87, 23);
             this.buttPickRedditMiscColor.TabIndex = 22;
@@ -1766,7 +1788,7 @@
             // label58
             // 
             this.label58.AutoSize = true;
-            this.label58.Location = new System.Drawing.Point(79, 152);
+            this.label58.Location = new System.Drawing.Point(83, 104);
             this.label58.Name = "label58";
             this.label58.Size = new System.Drawing.Size(55, 13);
             this.label58.TabIndex = 21;
@@ -1775,7 +1797,7 @@
             // picRedditLinkColor
             // 
             this.picRedditLinkColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.picRedditLinkColor.Location = new System.Drawing.Point(143, 118);
+            this.picRedditLinkColor.Location = new System.Drawing.Point(147, 70);
             this.picRedditLinkColor.Name = "picRedditLinkColor";
             this.picRedditLinkColor.Size = new System.Drawing.Size(186, 23);
             this.picRedditLinkColor.TabIndex = 20;
@@ -1784,7 +1806,7 @@
             // 
             // buttPickRedditLinkColor
             // 
-            this.buttPickRedditLinkColor.Location = new System.Drawing.Point(344, 118);
+            this.buttPickRedditLinkColor.Location = new System.Drawing.Point(348, 70);
             this.buttPickRedditLinkColor.Name = "buttPickRedditLinkColor";
             this.buttPickRedditLinkColor.Size = new System.Drawing.Size(87, 23);
             this.buttPickRedditLinkColor.TabIndex = 19;
@@ -1795,7 +1817,7 @@
             // label56
             // 
             this.label56.AutoSize = true;
-            this.label56.Location = new System.Drawing.Point(20, 123);
+            this.label56.Location = new System.Drawing.Point(24, 75);
             this.label56.Name = "label56";
             this.label56.Size = new System.Drawing.Size(114, 13);
             this.label56.TabIndex = 18;
@@ -1804,11 +1826,221 @@
             // label57
             // 
             this.label57.AutoSize = true;
-            this.label57.Location = new System.Drawing.Point(23, 97);
+            this.label57.Location = new System.Drawing.Point(27, 49);
             this.label57.Name = "label57";
             this.label57.Size = new System.Drawing.Size(62, 13);
             this.label57.TabIndex = 17;
             this.label57.Text = "Text colors:";
+            // 
+            // tabLauncher
+            // 
+            this.tabLauncher.Controls.Add(this.lblLauncherIndexCount);
+            this.tabLauncher.Controls.Add(this.buttLauncherRescan);
+            this.tabLauncher.Controls.Add(this.label65);
+            this.tabLauncher.Controls.Add(this.numLauncherScanPeriod);
+            this.tabLauncher.Controls.Add(this.label64);
+            this.tabLauncher.Controls.Add(this.buttLauncherRemoveDir);
+            this.tabLauncher.Controls.Add(this.buttLauncherAddDir);
+            this.tabLauncher.Controls.Add(this.label63);
+            this.tabLauncher.Controls.Add(this.txtLauncherFileFilter);
+            this.tabLauncher.Controls.Add(this.label62);
+            this.tabLauncher.Controls.Add(this.lstLauncherDirs);
+            this.tabLauncher.Controls.Add(this.numLauncherMaxSuggestions);
+            this.tabLauncher.Controls.Add(this.label61);
+            this.tabLauncher.Controls.Add(this.chkLauncherAutohide);
+            this.tabLauncher.Controls.Add(this.label59);
+            this.tabLauncher.Controls.Add(this.txtLauncherHotkey);
+            this.tabLauncher.Controls.Add(this.label60);
+            this.tabLauncher.Location = new System.Drawing.Point(4, 22);
+            this.tabLauncher.Name = "tabLauncher";
+            this.tabLauncher.Padding = new System.Windows.Forms.Padding(3);
+            this.tabLauncher.Size = new System.Drawing.Size(476, 397);
+            this.tabLauncher.TabIndex = 7;
+            this.tabLauncher.Text = "Launcher";
+            this.tabLauncher.UseVisualStyleBackColor = true;
+            // 
+            // lblLauncherIndexCount
+            // 
+            this.lblLauncherIndexCount.AutoSize = true;
+            this.lblLauncherIndexCount.Location = new System.Drawing.Point(61, 350);
+            this.lblLauncherIndexCount.Name = "lblLauncherIndexCount";
+            this.lblLauncherIndexCount.Size = new System.Drawing.Size(0, 13);
+            this.lblLauncherIndexCount.TabIndex = 25;
+            // 
+            // buttLauncherRescan
+            // 
+            this.buttLauncherRescan.Location = new System.Drawing.Point(343, 310);
+            this.buttLauncherRescan.Name = "buttLauncherRescan";
+            this.buttLauncherRescan.Size = new System.Drawing.Size(97, 23);
+            this.buttLauncherRescan.TabIndex = 24;
+            this.buttLauncherRescan.Text = "Rescan now";
+            this.buttLauncherRescan.UseVisualStyleBackColor = true;
+            this.buttLauncherRescan.Click += new System.EventHandler(this.buttLauncherRescan_Click);
+            // 
+            // label65
+            // 
+            this.label65.AutoSize = true;
+            this.label65.Location = new System.Drawing.Point(266, 315);
+            this.label65.Name = "label65";
+            this.label65.Size = new System.Drawing.Size(43, 13);
+            this.label65.TabIndex = 23;
+            this.label65.Text = "minutes";
+            // 
+            // numLauncherScanPeriod
+            // 
+            this.numLauncherScanPeriod.Location = new System.Drawing.Point(182, 313);
+            this.numLauncherScanPeriod.Maximum = new decimal(new int[] {
+            1440,
+            0,
+            0,
+            0});
+            this.numLauncherScanPeriod.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numLauncherScanPeriod.Name = "numLauncherScanPeriod";
+            this.numLauncherScanPeriod.Size = new System.Drawing.Size(78, 20);
+            this.numLauncherScanPeriod.TabIndex = 22;
+            this.numLauncherScanPeriod.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numLauncherScanPeriod.ValueChanged += new System.EventHandler(this.checkForChanges);
+            // 
+            // label64
+            // 
+            this.label64.AutoSize = true;
+            this.label64.Location = new System.Drawing.Point(61, 315);
+            this.label64.Name = "label64";
+            this.label64.Size = new System.Drawing.Size(115, 13);
+            this.label64.TabIndex = 21;
+            this.label64.Text = "Scan directories every:";
+            // 
+            // buttLauncherRemoveDir
+            // 
+            this.buttLauncherRemoveDir.Location = new System.Drawing.Point(343, 177);
+            this.buttLauncherRemoveDir.Name = "buttLauncherRemoveDir";
+            this.buttLauncherRemoveDir.Size = new System.Drawing.Size(97, 43);
+            this.buttLauncherRemoveDir.TabIndex = 20;
+            this.buttLauncherRemoveDir.Text = "Remove directory";
+            this.buttLauncherRemoveDir.UseVisualStyleBackColor = true;
+            this.buttLauncherRemoveDir.Click += new System.EventHandler(this.buttLauncherRemoveDir_Click);
+            // 
+            // buttLauncherAddDir
+            // 
+            this.buttLauncherAddDir.Location = new System.Drawing.Point(343, 128);
+            this.buttLauncherAddDir.Name = "buttLauncherAddDir";
+            this.buttLauncherAddDir.Size = new System.Drawing.Size(97, 43);
+            this.buttLauncherAddDir.TabIndex = 19;
+            this.buttLauncherAddDir.Text = "Add directory";
+            this.buttLauncherAddDir.UseVisualStyleBackColor = true;
+            this.buttLauncherAddDir.Click += new System.EventHandler(this.buttLauncherAddDir_Click);
+            // 
+            // label63
+            // 
+            this.label63.AutoSize = true;
+            this.label63.Location = new System.Drawing.Point(61, 265);
+            this.label63.Name = "label63";
+            this.label63.Size = new System.Drawing.Size(263, 13);
+            this.label63.TabIndex = 18;
+            this.label63.Text = "Separate filters with a comma (e.g. \"*.lnk, *.txt, *.mp3\")";
+            // 
+            // txtLauncherFileFilter
+            // 
+            this.txtLauncherFileFilter.Location = new System.Drawing.Point(101, 242);
+            this.txtLauncherFileFilter.Name = "txtLauncherFileFilter";
+            this.txtLauncherFileFilter.Size = new System.Drawing.Size(223, 20);
+            this.txtLauncherFileFilter.TabIndex = 17;
+            this.txtLauncherFileFilter.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
+            // 
+            // label62
+            // 
+            this.label62.AutoSize = true;
+            this.label62.Location = new System.Drawing.Point(42, 245);
+            this.label62.Name = "label62";
+            this.label62.Size = new System.Drawing.Size(53, 13);
+            this.label62.TabIndex = 16;
+            this.label62.Text = "File filters:";
+            // 
+            // lstLauncherDirs
+            // 
+            this.lstLauncherDirs.FormattingEnabled = true;
+            this.lstLauncherDirs.Location = new System.Drawing.Point(43, 128);
+            this.lstLauncherDirs.Name = "lstLauncherDirs";
+            this.lstLauncherDirs.Size = new System.Drawing.Size(281, 108);
+            this.lstLauncherDirs.TabIndex = 15;
+            this.lstLauncherDirs.SelectedIndexChanged += new System.EventHandler(this.lstLauncherDirs_SelectedIndexChanged);
+            // 
+            // numLauncherMaxSuggestions
+            // 
+            this.numLauncherMaxSuggestions.Location = new System.Drawing.Point(188, 52);
+            this.numLauncherMaxSuggestions.Maximum = new decimal(new int[] {
+            50,
+            0,
+            0,
+            0});
+            this.numLauncherMaxSuggestions.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numLauncherMaxSuggestions.Name = "numLauncherMaxSuggestions";
+            this.numLauncherMaxSuggestions.Size = new System.Drawing.Size(78, 20);
+            this.numLauncherMaxSuggestions.TabIndex = 14;
+            this.numLauncherMaxSuggestions.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numLauncherMaxSuggestions.ValueChanged += new System.EventHandler(this.checkForChanges);
+            // 
+            // label61
+            // 
+            this.label61.AutoSize = true;
+            this.label61.Location = new System.Drawing.Point(40, 54);
+            this.label61.Name = "label61";
+            this.label61.Size = new System.Drawing.Size(142, 13);
+            this.label61.TabIndex = 13;
+            this.label61.Text = "Max. number of suggestions:";
+            // 
+            // chkLauncherAutohide
+            // 
+            this.chkLauncherAutohide.AutoSize = true;
+            this.chkLauncherAutohide.Location = new System.Drawing.Point(188, 78);
+            this.chkLauncherAutohide.Name = "chkLauncherAutohide";
+            this.chkLauncherAutohide.Size = new System.Drawing.Size(217, 17);
+            this.chkLauncherAutohide.TabIndex = 12;
+            this.chkLauncherAutohide.Text = "Hide Adjutant after launching application";
+            this.chkLauncherAutohide.UseVisualStyleBackColor = true;
+            this.chkLauncherAutohide.CheckedChanged += new System.EventHandler(this.checkForChanges);
+            // 
+            // label59
+            // 
+            this.label59.AutoSize = true;
+            this.label59.Location = new System.Drawing.Point(42, 112);
+            this.label59.Name = "label59";
+            this.label59.Size = new System.Drawing.Size(86, 13);
+            this.label59.TabIndex = 11;
+            this.label59.Text = "Scan directories:";
+            // 
+            // txtLauncherHotkey
+            // 
+            this.txtLauncherHotkey.Location = new System.Drawing.Point(188, 26);
+            this.txtLauncherHotkey.Name = "txtLauncherHotkey";
+            this.txtLauncherHotkey.Size = new System.Drawing.Size(217, 20);
+            this.txtLauncherHotkey.TabIndex = 10;
+            this.txtLauncherHotkey.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtHotkey_KeyDown);
+            // 
+            // label60
+            // 
+            this.label60.AutoSize = true;
+            this.label60.Location = new System.Drawing.Point(92, 29);
+            this.label60.Name = "label60";
+            this.label60.Size = new System.Drawing.Size(90, 13);
+            this.label60.TabIndex = 9;
+            this.label60.Text = "Launcher hotkey:";
             // 
             // buttSave
             // 
@@ -1888,6 +2120,10 @@
             this.tabReddit.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picRedditMiscColor)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picRedditLinkColor)).EndInit();
+            this.tabLauncher.ResumeLayout(false);
+            this.tabLauncher.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numLauncherScanPeriod)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numLauncherMaxSuggestions)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -2047,5 +2283,23 @@
         private System.Windows.Forms.Button buttPickRedditLinkColor;
         private System.Windows.Forms.Label label56;
         private System.Windows.Forms.Label label57;
+        public System.Windows.Forms.TextBox txtLauncherHotkey;
+        private System.Windows.Forms.Label label60;
+        private System.Windows.Forms.Label label59;
+        private System.Windows.Forms.Button buttLauncherRemoveDir;
+        private System.Windows.Forms.Button buttLauncherAddDir;
+        private System.Windows.Forms.Label label63;
+        private System.Windows.Forms.TextBox txtLauncherFileFilter;
+        private System.Windows.Forms.Label label62;
+        public System.Windows.Forms.NumericUpDown numLauncherMaxSuggestions;
+        private System.Windows.Forms.Label label61;
+        private System.Windows.Forms.Label label65;
+        public System.Windows.Forms.NumericUpDown numLauncherScanPeriod;
+        private System.Windows.Forms.Label label64;
+        private System.Windows.Forms.Button buttLauncherRescan;
+        public System.Windows.Forms.TabPage tabLauncher;
+        public System.Windows.Forms.CheckBox chkLauncherAutohide;
+        public System.Windows.Forms.ListBox lstLauncherDirs;
+        public System.Windows.Forms.Label lblLauncherIndexCount;
     }
 }

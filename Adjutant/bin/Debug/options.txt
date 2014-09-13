@@ -49,7 +49,7 @@ mail_summary_color=-5526623
 //twitter
 token=18160045-m6CI9FSXK5zhItM7QWJixujVJRR7aP0Io4v2hIGEg
 secret=7q763i5QxPn1oBE9OgNIqMrTJaqEjwASdcIdvT4Jj8
-last_tweet=510380104204447744
+last_tweet=510745016269279232
 update_on_new_tweet=True
 update_on_focus=True
 min_tweet_period=30
@@ -74,6 +74,13 @@ pad_height=556
 pad_word_wrap=True
 pad_line_numbers=True
 pad_languages=.py>C:\Windows\py.exe
+
+//launcher
+launcher_hotkey=ALT+À
+launcher_max_suggestions=6
+launcher_autohide=True
+launcher_scan_period=10
+launcher_scan_dirs=C:\ProgramData\Microsoft\Windows\Start Menu>*.lnk
 
 //other
 user=Winterstark

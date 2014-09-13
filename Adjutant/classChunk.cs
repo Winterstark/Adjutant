@@ -125,6 +125,18 @@ namespace Adjutant
             }
         }
 
+        public Chunk(Image img, string link)
+        {
+            this.img = img;
+            this.link = link;
+            text = "";
+
+            checkImgWidth();
+            imgW = bounds.Width;
+            imgH = bounds.Height;
+            dlProgress = -1;
+        }
+
         public override string ToString()
         {
             return text;

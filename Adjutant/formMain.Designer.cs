@@ -115,6 +115,7 @@
             this.txtCMD.TabIndex = 1;
             this.txtCMD.TabStop = false;
             this.txtCMD.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtCMD_KeyDown);
+            this.txtCMD.KeyUp += new System.Windows.Forms.KeyEventHandler(this.txtCMD_KeyUp);
             this.txtCMD.MouseDown += new System.Windows.Forms.MouseEventHandler(this.UIElement_MouseDown);
             this.txtCMD.MouseMove += new System.Windows.Forms.MouseEventHandler(this.UIElement_MouseMove);
             this.txtCMD.MouseUp += new System.Windows.Forms.MouseEventHandler(this.UIElement_MouseUp);

@@ -14,8 +14,11 @@ namespace Adjutant
 {
     public partial class formOptions : Form
     {
-        public formMain main;
-        public bool starting;
+        public formMain Main;
+        public bool Starting;
+
+        public Dictionary<string, string> LauncherScanDirs;
+        public string LauncherScanDirsOriginal;
 
 
         private void checkForChanges(object sender, EventArgs e)
@@ -31,7 +34,7 @@ namespace Adjutant
 
         void checkForChanges()
         {
-            if (starting)
+            if (Starting)
                 return;
 
             bool changed = false;
@@ -97,6 +100,14 @@ namespace Adjutant
 
             changed |= compareValueToTag(picRedditLinkColor);
             changed |= compareValueToTag(picRedditMiscColor);
+
+            changed |= compareValueToTag(txtLauncherHotkey);
+            changed |= compareValueToTag(numLauncherMaxSuggestions);
+            changed |= compareValueToTag(chkLauncherAutohide);
+            changed |= compareValueToTag(numLauncherScanPeriod);
+            changed |= GetLauncherScanDirs() != LauncherScanDirsOriginal;
+            if (lstLauncherDirs.SelectedIndex != -1)
+                changed |= txtLauncherFileFilter.Text != LauncherScanDirs[lstLauncherDirs.Text];
 
             buttSave.Visible = changed;
         }
@@ -175,6 +186,16 @@ namespace Adjutant
                 lblFontPreview.BackColor = Color.Black;
             else
                 lblFontPreview.BackColor = Color.White;
+        }
+
+        public string GetLauncherScanDirs()
+        {
+            string launcherScanDirs = "";
+
+            foreach (var scanDir in LauncherScanDirs)
+                launcherScanDirs += (launcherScanDirs != "" ? "/" : "") + scanDir.Key + ">" + scanDir.Value;
+
+            return launcherScanDirs;
         }
 
 
@@ -312,7 +333,10 @@ namespace Adjutant
                 MessageBox.Show("Please enter an existing folder path.", "Todo directory does not exist!", MessageBoxButtons.OK, MessageBoxIcon.Error);
             else
             {
-                main.UpdateOptions(this);
+                if (lstLauncherDirs.SelectedIndex != -1)
+                    LauncherScanDirs[lstLauncherDirs.Text] = txtLauncherFileFilter.Text;
+
+                Main.UpdateOptions(this);
                 this.Close();
             }
         }
@@ -444,9 +468,11 @@ namespace Adjutant
 
         private void txtHotkey_KeyDown(object sender, KeyEventArgs e)
         {
+            TextBox txtSender = (TextBox)sender;
+
             if (e.KeyCode != Keys.ControlKey && e.KeyCode != Keys.Menu && e.KeyCode != Keys.ShiftKey)
             {
-                txtHotkey.Text = Hotkey.HotkeyToString(e.KeyValue, e.Control, e.Alt, e.Shift);
+                txtSender.Text = Hotkey.HotkeyToString(e.KeyValue, e.Control, e.Alt, e.Shift);
                 e.SuppressKeyPress = true;
 
                 checkForChanges();
@@ -518,6 +544,43 @@ namespace Adjutant
         private void picRedditMiscColor_Click(object sender, EventArgs e)
         {
             pickColor(picRedditMiscColor);
+        }
+
+        private void lstLauncherDirs_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (lstLauncherDirs.SelectedIndex != -1)
+            {
+                txtLauncherFileFilter.Text = LauncherScanDirs[lstLauncherDirs.Text];
+                buttLauncherRemoveDir.Enabled = true;
+            }
+            else
+            {
+                buttLauncherRemoveDir.Enabled = false;
+            }
+        }
+
+        private void buttLauncherAddDir_Click(object sender, EventArgs e)
+        {
+            if (folderDiag.ShowDialog() != System.Windows.Forms.DialogResult.Cancel)
+            {
+                string dir = folderDiag.SelectedPath;
+
+                lstLauncherDirs.Items.Add(dir);
+                LauncherScanDirs.Add(dir, "*.lnk");
+                lstLauncherDirs.SelectedIndex = lstLauncherDirs.Items.Count - 1;
+
+                checkForChanges();
+            }
+        }
+
+        private void buttLauncherRemoveDir_Click(object sender, EventArgs e)
+        {
+            checkForChanges();
+        }
+
+        private void buttLauncherRescan_Click(object sender, EventArgs e)
+        {
+            Main.RescanDirs();
         }
     }
 }

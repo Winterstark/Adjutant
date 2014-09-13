@@ -19,10 +19,10 @@ namespace Adjutant
         public static int MOD_SHIFT = 0x4;
         public static int MOD_WIN = 0x8;
         public static int WM_HOTKEY = 0x312;
-        private static int keyId;
+        private static int keyId, launcherKeyId;
 
 
-        public static void RegisterHotKey(Form f, int hotkey, bool ctrl, bool alt, bool shift)
+        public static void RegisterHotKey(Form f, int hotkey, bool ctrl, bool alt, bool shift, bool launcher)
         {
             int modifiers = 0;
 
@@ -33,15 +33,26 @@ namespace Adjutant
             if (shift)
                 modifiers = modifiers | MOD_SHIFT;
 
-            keyId = f.GetHashCode(); // this should be a key unique ID, modify this if you want more than one hotkey
-            RegisterHotKey((IntPtr)f.Handle, keyId, modifiers, hotkey);
+            if (!launcher)
+            {
+                keyId = f.GetHashCode();
+                RegisterHotKey((IntPtr)f.Handle, keyId, modifiers, hotkey);
+            }
+            else
+            {
+                launcherKeyId = f.GetHashCode() + 1;
+                RegisterHotKey((IntPtr)f.Handle, launcherKeyId, modifiers, hotkey);
+            }
         }
         
-        public static void UnregisterHotKey(Form f)
+        public static void UnregisterHotKey(Form f, bool launcher)
         {
             try
             {
-                UnregisterHotKey(f.Handle, keyId); // modify this if you want more than one hotkey
+                if (!launcher)
+                    UnregisterHotKey(f.Handle, keyId);
+                else
+                    UnregisterHotKey(f.Handle, launcherKeyId);
             }
             catch (Exception ex)
             {

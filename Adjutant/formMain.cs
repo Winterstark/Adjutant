@@ -40,7 +40,7 @@ namespace Adjutant
         [DllImport("WinMM.dll")]
         static extern bool PlaySound(string fname, int Mod, int flag);
 
-        enum InputMode { Default, AwaitingUsername, Tutorial, ProcessRedirect, Twitter, TwitterPIN, Reddit };
+        enum InputMode { Default, AwaitingUsername, Tutorial, ProcessRedirect, Twitter, TwitterPIN, Reddit, Launcher };
         enum OutputMode { Default, Selection, Pad };
         enum HideStyle { Disappear, Fade, ScrollUp, ScrollDown, ScrollLeft, ScrollRight };
         InputMode inputMode;
@@ -77,6 +77,13 @@ namespace Adjutant
         string padFilePath, padFileContents;
         int padW, padH; //console size when in Pad mode
         bool padResizingW, padResizingH;
+
+        //Launcher fields
+        List<Chunk> launcherChunks = new List<Chunk>();
+        List<string> launcherIndex = new List<string>();
+        string launcherScanDirs, launcherPrevSearch;
+        int launcherHotkey, launcherMaxSuggestions, launcherScanPeriod, launcherSelection;
+        bool launcherAutohide, launcherHotkeyCtrl, launcherHotkeyAlt, launcherHotkeyShift;
 
         int consoleW, consoleH; //console size to return to
         #endregion
@@ -256,27 +263,49 @@ namespace Adjutant
         {
             gfx.Clear(this.BackColor);
 
-            if (chunks.Count > 0)
+            if (inputMode == InputMode.Launcher)
             {
-                int x = 0, y = yOffset, h = 0;
-                int chInd = chunkOffset;
+                if (launcherChunks.Count > 0)
+                {
+                    //set starting chunk so that the selected item will be displayed
+                    int chunkH = launcherChunks[0].GetHeight();
+                    int nMaxChunks = txtCMD.Top / chunkH;
+                    int chInd = 2 * Math.Max(launcherSelection - nMaxChunks + 1, 0);
 
-                while (chInd < lastChunk && y < txtCMD.Top)
-                    chunks[chInd++].Draw(gfx, txtCMD.Font, ref x, ref y, ref h);
-                chunks[lastChunk].Draw(gfx, txtCMD.Font, ref x, ref y, ref h, lastChunkChar);
+                    //draw launcher chunks
+                    int x = 0, y = yOffset, h = 0;
 
-                //expand image chunks
-                for (int i = 0; i < expandingChunks.Count; i++)
-                    //expand only chunks that have been printed
-                    if (getChunkIndex(expandingChunks[i]) <= lastChunk)
+                    while (chInd < launcherChunks.Count && y < txtCMD.Top)
                     {
-                        expandingChunks[i].ExpandImage();
-                        updateImage(expandingChunks[i]);
+                        if (chInd % 2 == 0 && chInd / 2 == launcherSelection) //draw selection rectangle
+                            gfx.DrawRectangle(new Pen(txtCMD.ForeColor, 1), x, y, this.Width - 1, launcherChunks[chInd].GetHeight());
 
-                        if (!expandingChunks[i].IsImgExpanding())
-                            expandingChunks.RemoveAt(i--);
+                        launcherChunks[chInd++].Draw(gfx, txtCMD.Font, ref x, ref y, ref h);
                     }
+                }
             }
+            else
+                if (chunks.Count > 0)
+                {
+                    int x = 0, y = yOffset, h = 0;
+                    int chInd = chunkOffset;
+
+                    while (chInd < lastChunk && y < txtCMD.Top)
+                        chunks[chInd++].Draw(gfx, txtCMD.Font, ref x, ref y, ref h);
+                    chunks[lastChunk].Draw(gfx, txtCMD.Font, ref x, ref y, ref h, lastChunkChar);
+
+                    //expand image chunks
+                    for (int i = 0; i < expandingChunks.Count; i++)
+                        //expand only chunks that have been printed
+                        if (getChunkIndex(expandingChunks[i]) <= lastChunk)
+                        {
+                            expandingChunks[i].ExpandImage();
+                            updateImage(expandingChunks[i]);
+
+                            if (!expandingChunks[i].IsImgExpanding())
+                                expandingChunks.RemoveAt(i--);
+                        }
+                }
         }
 
         int measureWidth(string txt)
@@ -334,7 +363,7 @@ namespace Adjutant
                             break;
                         case "global_hotkey":
                             Hotkey.StringToHotkey(args[1], out hotkey, out hotkeyCtrl, out hotkeyAlt, out hotkeyShift);
-                            Hotkey.RegisterHotKey(this, hotkey, hotkeyCtrl, hotkeyAlt, hotkeyShift);
+                            Hotkey.RegisterHotKey(this, hotkey, hotkeyCtrl, hotkeyAlt, hotkeyShift, false);
                             break;
                         case "hide_delay":
                             autoHideDelay = int.Parse(args[1]);
@@ -520,6 +549,22 @@ namespace Adjutant
                                 padLanguages.Add(kvPair[0], kvPair[1]);
                             }
                             break;
+                        case "launcher_hotkey":
+                            Hotkey.StringToHotkey(args[1], out launcherHotkey, out launcherHotkeyCtrl, out launcherHotkeyAlt, out launcherHotkeyShift);
+                            Hotkey.RegisterHotKey(this, launcherHotkey, launcherHotkeyCtrl, launcherHotkeyAlt, launcherHotkeyShift, true);
+                            break;
+                        case "launcher_max_suggestions":
+                            launcherMaxSuggestions = int.Parse(args[1]);
+                            break;
+                        case "launcher_autohide":
+                            launcherAutohide = bool.Parse(args[1]);
+                            break;
+                        case "launcher_scan_period":
+                             launcherScanPeriod = int.Parse(args[1]);
+                            break;
+                        case "launcher_scan_dirs":
+                            launcherScanDirs = args[1];
+                            break;
                         case "user":
                             user = args[1];
                             break;
@@ -669,6 +714,14 @@ namespace Adjutant
             file.WriteLine("pad_languages=" + langs);
             file.WriteLine();
 
+            file.WriteLine("//launcher");
+            file.WriteLine("launcher_hotkey=" + Hotkey.HotkeyToString(launcherHotkey, launcherHotkeyCtrl, launcherHotkeyAlt, launcherHotkeyShift));
+            file.WriteLine("launcher_max_suggestions=" + launcherMaxSuggestions);
+            file.WriteLine("launcher_autohide=" + launcherAutohide);
+            file.WriteLine("launcher_scan_period=" + launcherScanPeriod);
+            file.WriteLine("launcher_scan_dirs=" + launcherScanDirs);
+            file.WriteLine();
+
             file.WriteLine("//other");
             file.WriteLine("user=" + user);
 
@@ -689,13 +742,27 @@ namespace Adjutant
             {
                 options = new formOptions();
 
-                options.main = this;
-                options.starting = true;
+                options.Main = this;
+                options.Starting = true;
 
                 //load font list
                 options.comboFont.Items.Clear();
                 foreach (FontFamily font in System.Drawing.FontFamily.Families)
                     options.comboFont.Items.Add(font.Name);
+
+                //build launcher scan dirs dictionary
+                options.LauncherScanDirsOriginal = launcherScanDirs;
+                options.LauncherScanDirs = new Dictionary<string, string>();
+                List<string> dirList = new List<string>();
+
+                foreach (string scanDir in launcherScanDirs.Split('/'))
+                    if (scanDir != "")
+                    {
+                        string[] dirOptions = scanDir.Split('>');
+                        options.LauncherScanDirs.Add(dirOptions[0], dirOptions[1]);
+
+                        dirList.Add(dirOptions[0]);
+                    }
 
                 //set constraints
                 options.numX.Minimum = 0;
@@ -772,6 +839,11 @@ namespace Adjutant
                 options.picRedditLinkColor.Tag = redditLinkColor;
                 options.picRedditMiscColor.Tag = redditMiscColor;
 
+                options.txtLauncherHotkey.Tag = Hotkey.HotkeyToString(launcherHotkey, launcherHotkeyCtrl, launcherHotkeyAlt, launcherHotkeyShift);
+                options.numLauncherMaxSuggestions.Tag = launcherMaxSuggestions;
+                options.chkLauncherAutohide.Tag = launcherAutohide;
+                options.numLauncherScanPeriod.Tag = launcherScanPeriod;
+
                 //set current values
                 options.numX.Value = x;
                 options.numY.Value = y;
@@ -835,7 +907,13 @@ namespace Adjutant
                 options.picRedditLinkColor.BackColor = redditLinkColor;
                 options.picRedditMiscColor.BackColor = redditMiscColor;
 
-                options.starting = false;
+                options.txtLauncherHotkey.Text = Hotkey.HotkeyToString(launcherHotkey, launcherHotkeyCtrl, launcherHotkeyAlt, launcherHotkeyShift);
+                options.numLauncherMaxSuggestions.Value = launcherMaxSuggestions;
+                options.chkLauncherAutohide.Checked = launcherAutohide;
+                options.numLauncherScanPeriod.Value = launcherScanPeriod;
+                options.lstLauncherDirs.Items.AddRange(dirList.ToArray());
+
+                options.Starting = false;
 
                 options.Show();
             }
@@ -853,6 +931,8 @@ namespace Adjutant
                 foreach (string file in Directory.GetFiles(todoDir))
                     File.Copy(file, dest + Path.GetFileName(file));
             }
+
+            int prevHotkey = hotkey, prevLauncherHotkey = launcherHotkey;
 
             //assign new options
             x = (int)options.numX.Value;
@@ -939,13 +1019,29 @@ namespace Adjutant
             redditLinkColor = options.picRedditLinkColor.BackColor;
             redditMiscColor = options.picRedditMiscColor.BackColor;
 
+            Hotkey.StringToHotkey(options.txtLauncherHotkey.Text, out launcherHotkey, out launcherHotkeyCtrl, out launcherHotkeyAlt, out launcherHotkeyShift);
+            launcherMaxSuggestions = (int)options.numLauncherMaxSuggestions.Value;
+            launcherAutohide = options.chkLauncherAutohide.Checked;
+            launcherScanPeriod = (int)options.numLauncherScanPeriod.Value;
+            launcherScanDirs = options.GetLauncherScanDirs();
+
             //apply changes & save
             Chunk.Font = txtCMD.Font;
             Chunk.PrintAtOnce = printAtOnce;
             Chunk.InstantOutput = timerPrint.Interval == ZERO_DELAY;
             Chunk.ErrorColor = errorColor;
 
-            Hotkey.RegisterHotKey(this, hotkey, hotkeyCtrl, hotkeyAlt, hotkeyShift);
+            if (hotkey != prevHotkey)
+            {
+                Hotkey.UnregisterHotKey(this, false);
+                Hotkey.RegisterHotKey(this, hotkey, hotkeyCtrl, hotkeyAlt, hotkeyShift, false);
+            }
+
+            if (launcherHotkey != prevLauncherHotkey)
+            {
+                Hotkey.UnregisterHotKey(this, true);
+                Hotkey.RegisterHotKey(this, launcherHotkey, launcherHotkeyCtrl, launcherHotkeyAlt, launcherHotkeyShift, true);
+            }
 
             Twitter.DisplayPictures = twDisplayPictures;
             Twitter.DisplayInstagrams = twDisplayInstagrams;
@@ -1041,6 +1137,9 @@ namespace Adjutant
 
             switch (inputMode)
             {
+                case InputMode.Launcher:
+                    newPrompt = "Launch>";
+                    break;
                 case InputMode.Reddit:
                     newPrompt = "Reddit>";
                     break;
@@ -1932,7 +2031,7 @@ namespace Adjutant
             }
             else
                 print(""); //newline
-        } 
+        }
         #endregion
 
         void flush()
@@ -3525,6 +3624,171 @@ namespace Adjutant
         }
         #endregion
 
+        #region Launcher Module
+        public void RescanDirs()
+        {
+            launcherIndex.Clear();
+
+            foreach (string scanDir in launcherScanDirs.Split('/'))
+                if (scanDir != "")
+                {
+                    string[] dirOptions = scanDir.Split('>');
+
+                    if (Directory.Exists(dirOptions[0]) && dirOptions[1] != "")
+                        foreach (string filter in dirOptions[1].Split(','))
+                        {
+                            string actualFilter = filter;
+                            while (actualFilter.Length > 0 && actualFilter[0] == ' ')
+                                actualFilter = actualFilter.Substring(1);
+
+                            launcherIndex.AddRange(Directory.GetFiles(dirOptions[0], actualFilter, SearchOption.AllDirectories));
+                        }
+                }
+            //u w0t m8
+            if (options != null)
+                options.lblLauncherIndexCount.Text = launcherIndex.Count + " files in index";
+        }
+
+        void showSuggestions()
+        {
+            if (string.IsNullOrWhiteSpace(txtCMD.Text))
+                return;
+            
+            string search = txtCMD.Text.ToLower();
+            //search = "calc";
+            List<string> results = new List<string>();
+
+            //make a copy of the index, so it can be modified during the search
+            List<string> index = new List<string>();
+
+            foreach (string item in launcherIndex)
+                index.Add(item);
+
+            //first find filenames with exact substring
+            results = index.FindAll(i => i.ToLower().Contains(search));
+            index.RemoveAll(i => i.ToLower().Contains(search)); //remove found results from index
+            results = results.OrderBy(r => r.Length).ToList(); //sort results by number of extra chars
+
+            if (results.Count < launcherMaxSuggestions)
+            {
+                //then find filenames that have all of the search string's letters, in order
+                List<Tuple<string, int>> moreResults = new List<Tuple<string, int>>();
+
+                for (int i = 0; i < index.Count; i++)
+                {
+                    string item = Path.GetFileName(index[i]).ToLower();
+                    int charInd = 0, extraChars = 0;
+
+                    for (int j = 0; j < item.Length && charInd < search.Length; j++)
+                        if (item[j] == search[charInd])
+                            charInd++;
+                        else
+                            extraChars++;
+
+                    if (charInd == search.Length) //found matches
+                    {
+                        moreResults.Add(new Tuple<string, int>(index[i], extraChars));
+                        index.RemoveAt(i);
+                        i--;
+                    }
+                }
+
+                //sort results by number of extra chars between matched letters
+                results.AddRange(moreResults.OrderBy(r => r.Item2).Select(i => i.Item1));
+
+                if (results.Count < launcherMaxSuggestions)
+                {
+                    //finally find filenames that have all of the search string's letters, in any order
+                    moreResults = new List<Tuple<string, int>>();
+
+                    for (int i = 0; i < index.Count; i++)
+                    {
+                        string item = Path.GetFileName(index[i]).ToLower();
+                        int searchCharInd = 0, itemCharInd = 0, nextItemCharInd, nTurns = 0;
+                        bool goingRight = true;
+
+                        for (int j = 0; j < search.Length; j++)
+                        {
+                            if (goingRight)
+                            {
+                                nextItemCharInd = item.IndexOf(search[searchCharInd], itemCharInd);
+
+                                if (nextItemCharInd == -1)
+                                {
+                                    //turn
+                                    goingRight = false;
+                                    nTurns++;
+                                    nextItemCharInd = item.LastIndexOf(search[searchCharInd], itemCharInd);
+                                }
+                            }
+                            else
+                            {
+                                nextItemCharInd = item.LastIndexOf(search[searchCharInd], itemCharInd);
+
+                                if (nextItemCharInd == -1)
+                                {
+                                    //turn
+                                    goingRight = true;
+                                    nTurns++;
+                                    nextItemCharInd = item.IndexOf(search[searchCharInd], itemCharInd);
+                                }
+                            }
+
+                            if (nextItemCharInd != -1)
+                            {
+                                itemCharInd = nextItemCharInd;
+                                item = item.Remove(itemCharInd, 1);
+
+                                searchCharInd++;
+                            }
+                            else
+                                break; //not a match
+                        }
+
+                        if (searchCharInd == search.Length) //found matches
+                        {
+                            moreResults.Add(new Tuple<string, int>(index[i], nTurns));
+                            index.RemoveAt(i);
+                            i--;
+                        }
+                    }
+
+                    results.AddRange(moreResults.OrderBy(r => r.Item2).Select(i => i.Item1)); //sort results by number of turns
+                }
+            }
+
+            //remove results if too many
+            if (results.Count > launcherMaxSuggestions)
+            {
+                int n = results.Count - launcherMaxSuggestions;
+                results.RemoveRange(results.Count - n, n);
+            }
+            
+            if (launcherChunks.Count > 0)
+            {
+                //clear previous results
+                foreach (Chunk chunk in launcherChunks)
+                    chunk.DisposeResources();
+
+                launcherChunks.Clear();
+            }
+
+            //print results
+            foreach (string path in results)
+            {
+                //print icon
+                launcherChunks.Add(new Chunk(Icon.ExtractAssociatedIcon(path).ToBitmap(), path));
+
+                //print filename
+                string filename = Path.GetFileName(path);
+                launcherChunks.Add(new Chunk(filename, path, txtCMD.ForeColor, false, true, true, measureWidth(filename), lineH));
+            }
+
+            launcherSelection = 0;
+            launcherPrevSearch = txtCMD.Text;
+        }
+        #endregion
+
 
         public formMain()
         {
@@ -3549,7 +3813,19 @@ namespace Adjutant
 
             //activation hotkey
             if (m.Msg == Hotkey.WM_HOTKEY)
-                activateConsole();
+            {
+                if ((int)m.WParam == this.GetHashCode())
+                    activateConsole();
+                else
+                {
+                    //launcher hotkey
+                    if (hidden)
+                        activateConsole();
+
+                    inputMode = InputMode.Launcher;
+                    setPrompt();
+                }
+            }
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -3717,7 +3993,10 @@ namespace Adjutant
             greeting();
             todoLoad();
 
-            //init modules
+            //init launcher module
+            RescanDirs();
+
+            //init net modules
             if (!RUN_WITHOUT_TWITTER_AND_GMAIL)
             {
                 twitterInit();
@@ -3819,7 +4098,8 @@ namespace Adjutant
         private void formMain_FormClosing(object sender, FormClosingEventArgs e)
         {
             saveOptions();
-            Hotkey.UnregisterHotKey(this);
+            Hotkey.UnregisterHotKey(this, false);
+            Hotkey.UnregisterHotKey(this, true);
         }
 
         private void formMain_DragEnter(object sender, DragEventArgs e)
@@ -4282,6 +4562,9 @@ namespace Adjutant
                             break;
                     }
                     break;
+                case InputMode.Launcher:
+                    e.SuppressKeyPress = false;
+                    break;
                 default:
                     switch (e.KeyCode)
                     {
@@ -4359,6 +4642,43 @@ namespace Adjutant
                     }
                     break;
             }
+        }
+
+        private void txtCMD_KeyUp(object sender, KeyEventArgs e)
+        {
+            //this code is here instead of in txtCMD_KeyDown because it needs to run after txtCMD.Text has received the new key
+            if (inputMode == InputMode.Launcher)
+                switch (e.KeyCode)
+                {
+                    case Keys.Up:
+                        if (launcherSelection > 0)
+                            launcherSelection--;
+                        break;
+                    case Keys.Down:
+                        if (launcherSelection < launcherChunks.Count / 2 - 1)
+                            launcherSelection++;
+                        break;
+                    case Keys.Enter:
+                        //run file
+                        string path = launcherChunks[launcherSelection * 2 + 1].GetLink();
+                        Process.Start(path);
+
+                        //exit Launcher mode
+                        inputMode = InputMode.Default;
+                        setPrompt();
+
+                        if (launcherAutohide)
+                            activateConsole();
+                        break;
+                    case Keys.Escape:
+                        inputMode = InputMode.Default;
+                        setPrompt();
+                        break;
+                    default:
+                        if (txtCMD.Text != launcherPrevSearch)
+                            showSuggestions();
+                        break;
+                }
         }
 
         private void sciPad_KeyDown(object sender, KeyEventArgs e)
