@@ -87,7 +87,7 @@ namespace Adjutant
 
         //Weather fields
         bool weatherMetric, weatherShowOnStart;
-        string weatherLocation, weatherLang;
+        string weatherLocation, weatherLang, weatherWebcam;
 
         int consoleW, consoleH; //console size to return to
         #endregion
@@ -583,6 +583,9 @@ namespace Adjutant
                         case "weather_lang":
                             weatherLang = args[1];
                             break;
+                        case "weather_webcam":
+                            weatherWebcam = args[1];
+                            break;
                         case "user":
                             user = args[1];
                             break;
@@ -745,6 +748,7 @@ namespace Adjutant
             file.WriteLine("weather_metric=" + weatherMetric);
             file.WriteLine("weather_show_on_start=" + weatherShowOnStart);
             file.WriteLine("weather_lang=" + weatherLang);
+            file.WriteLine("weather_webcam=" + weatherWebcam);
             file.WriteLine();
 
             file.WriteLine("//other");
@@ -870,6 +874,7 @@ namespace Adjutant
                 options.numLauncherScanPeriod.Tag = launcherScanPeriod;
 
                 options.txtWeatherLocation.Tag = weatherLocation;
+                options.txtWeatherWebcam.Tag = weatherWebcam;
                 options.rdbWeatherMetric.Tag = weatherMetric;
                 options.chkWeatherShowOnStart.Tag = weatherShowOnStart;
                 options.comboWeatherLang.Tag = weatherLang;
@@ -944,6 +949,7 @@ namespace Adjutant
                 options.lstLauncherDirs.Items.AddRange(dirList.ToArray());
 
                 options.txtWeatherLocation.Text = weatherLocation;
+                options.txtWeatherWebcam.Text = weatherWebcam;
                 if (weatherMetric)
                     options.rdbWeatherMetric.Checked = true;
                 else
@@ -1068,6 +1074,7 @@ namespace Adjutant
             launcherScanPeriod = (int)options.numLauncherScanPeriod.Value;
             launcherScanDirs = options.GetLauncherScanDirs();
 
+            weatherWebcam = options.txtWeatherWebcam.Text;
             weatherLocation = options.txtWeatherLocation.Text;
             weatherMetric = options.rdbWeatherMetric.Checked;
             weatherShowOnStart = options.chkWeatherShowOnStart.Checked;
@@ -3891,7 +3898,7 @@ namespace Adjutant
                         nDays = Math.Min(nDays, 16);
                 }
 
-                print((hourly ? "Hourly weather" : "Weather") + " forecast for the next " + (nDays > 1 ? nDays + " days" : " 24 hours") + " in " + weatherLocation + ":");
+                print((hourly ? "Hourly weather" : "Weather") + " forecast for the next " + (nDays > 1 ? nDays + " days" : "24 hours") + " in " + weatherLocation + ":");
                 foreach (var report in Weather.GetForecast(weatherLocation, weatherLang, weatherMetric, nDays, hourly))
                     printWeatherReport(report, true);
             }
@@ -3899,6 +3906,16 @@ namespace Adjutant
 
         void showCurrentWeather()
         {
+            if (weatherWebcam != "")
+            {
+                string webcamImage = Weather.GetWebcamImage(weatherWebcam);
+
+                if (webcamImage != "")
+                    print("<image=" + webcamImage + ">");
+                else
+                    printError("Error while downloading webcam image.", Weather.Exception);
+            }
+
             printWeatherReport(Weather.GetCurrentData(weatherLocation, weatherLang, weatherMetric), false);
         }
 
@@ -3908,29 +3925,37 @@ namespace Adjutant
             if (!forecast)
                 weatherURL = "http://www.openweathermap.com/find?q=" + weatherLocation;
 
-            string msg = "";
-            if (forecast)
-                msg = report.timestamp;
+            //build header
+            string header, body = "";
+            if (!forecast)
+                header = weatherLocation;
+            else
+                header = report.timestamp;
 
+            //print weather icons
             for (int i = 0; i < report.descs.Length; i++)
             {
                 if (i < report.icons.Length)
                     print("<image=" + Application.StartupPath + "\\ui\\weather icons\\" + report.icons[i] + ".png>", weatherURL, false, txtCMD.ForeColor);
-                msg += (msg != "" ? " / " : "") + report.descs[i];
+                body += (body != "" ? " / " : "") + report.descs[i];
             }
 
+            //build body
             if (report.temp != -1)
-                msg += (msg != "" ? " / " : "") + Math.Round(report.temp, 1) + (true ? " °C" : " °F");
+                body += (body != "" ? " / " : "") + Math.Round(report.temp, 1) + (weatherMetric ? " °C" : " °F");
             else
-                msg += (msg != "" ? " / " : "") + Math.Round(report.tempMin, 1) + " — " + Math.Round(report.tempMax, 1) + (true ? " °C" : " °F");
+                body += (body != "" ? " / " : "") + Math.Round(report.tempMin, 1) + " — " + Math.Round(report.tempMax, 1) + (weatherMetric ? " °C" : " °F");
             if (report.wind != -1)
-                msg += (msg != "" ? " / " : "") + report.windDesc + " (" + Math.Round(report.wind, 1) + " m/s)";
+                body += (body != "" ? " / " : "") + report.windDesc + " (" + Math.Round(report.wind, 1) + (weatherMetric ? " m/s" : " mph");
             if (report.rain != -1)
-                msg += (msg != "" ? " / " : "") + Math.Round(report.rain, 1) + " mm precipitation (" + report.rainPeriod + ")";
+                body += (body != "" ? " / " : "") + Math.Round(report.rain, 1) + " mm precipitation (" + report.rainPeriod + ")";
 
-            msg = msg.Substring(0, 1).ToUpper() + msg.Substring(1); //uppercase first letter
+            body = body.Substring(0, 1).ToUpper() + body.Substring(1); //uppercase first letter
+            
+            //print weather header & body
+            print(header, weatherURL, txtCMD.ForeColor);
+            print(body);
 
-            print(msg, weatherURL, txtCMD.ForeColor);
             chunks[chunks.Count - 1].InsertDefinitiveNewline();
         }
         #endregion
@@ -4139,16 +4164,7 @@ namespace Adjutant
             greeting();
 
             if (weatherShowOnStart)
-            {
-                if (true)
-                {
-                    string webcamImage = Weather.GetWebcamImage("http://www.webcams.travel/webcam/1317388318-Weather-Stadt-Krk-Krk");
-                    if (webcamImage != "")
-                        print("<image=" + webcamImage + ">");
-                }
-
                 showCurrentWeather();
-            }
 
             todoLoad();
             RescanDirs(); //init launcher module

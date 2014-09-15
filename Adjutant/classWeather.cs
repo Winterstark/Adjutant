@@ -18,7 +18,7 @@ namespace Adjutant
             public string timestamp, windDesc, rainPeriod;
             public double temp, tempMin, tempMax, wind, rain;
 
-            public Report(string time, string descList, string iconList, string temp, string tempMin, string tempMax, string wind, string rain, string rainPeriod, bool hourly)
+            public Report(string time, string descList, string iconList, string temp, string tempMin, string tempMax, string wind, string rain, string rainPeriod, bool hourly, bool metric)
             {
                 if (time == "")
                     timestamp = "Now";
@@ -78,6 +78,8 @@ namespace Adjutant
 
                 //set wind description
                 double kph = this.wind * 3.6;
+                if (!metric)
+                    kph *= 1.60934;
 
                 if (kph < 1)
                     windDesc = "calm";
@@ -108,12 +110,14 @@ namespace Adjutant
             }
         }
 
+        public static Exception Exception;
+
 
         public static Report GetCurrentData(string location, string language, bool metric)
         {
             string url = constructWeathermapURL("http://api.openweathermap.org/data/2.5/weather?q=", location, language, metric, 0);
             string resp = new WebClient().DownloadString(url);
-            return buildReport(resp, false);
+            return buildReport(resp, false, metric);
         }
 
         public static Report[] GetForecast(string location, string language, bool metric, int nDays, bool hourly)
@@ -128,28 +132,40 @@ namespace Adjutant
             resp = resp.Substring(resp.IndexOf("\"list\":[{") + 9);
 
             string[] segments = resp.Split(new string[] { "},{" }, StringSplitOptions.RemoveEmptyEntries);
-            Report[] reports = new Report[segments.Length];
+            
+            int n = segments.Length;
+            if (hourly)
+                n = Math.Min(n, 8 * nDays + 1);
 
-            for (int i = 0; i < segments.Length; i++)
-                reports[i] = buildReport(segments[i], hourly);
+            Report[] reports = new Report[n];
+            for (int i = 0; i < n; i++)
+                reports[i] = buildReport(segments[i], hourly, metric);
 
             return reports;
         }
         
         public static string GetWebcamImage(string webcamsTravelURL)
         {
-            string page = new WebClient().DownloadString(webcamsTravelURL);
-
-            int lb = page.IndexOf("http://images.webcams.travel/thumbnail/");
-            if (lb == -1)
-                return "";
-            else
+            try
             {
-                int ub = page.IndexOf('"', lb);
-                if (ub == -1)
+                string page = new WebClient().DownloadString(webcamsTravelURL);
+
+                int lb = page.IndexOf("http://images.webcams.travel/thumbnail/");
+                if (lb == -1)
                     return "";
                 else
-                    return page.Substring(lb, ub - lb).Replace("/thumbnail/", "/webcam/");
+                {
+                    int ub = page.IndexOf('"', lb);
+                    if (ub == -1)
+                        return "";
+                    else
+                        return page.Substring(lb, ub - lb).Replace("/thumbnail/", "/webcam/");
+                }
+            }
+            catch (Exception exc)
+            {
+                Exception = exc;
+                return "";
             }
         }
 
@@ -166,7 +182,7 @@ namespace Adjutant
             return baseURL + location + (nDays != 0 ? "&cnt=" + nDays : "") + language + units + "&APPID=" + WEATHERMAP_API_KEY;
         }
 
-        static Report buildReport(string resp, bool hourly)
+        static Report buildReport(string resp, bool hourly, bool metric)
         {
             //extract rain values
             string rainValues = getValue(resp, "rain"), rain = "", rainPeriod = "";
@@ -203,7 +219,8 @@ namespace Adjutant
                 getValue(resp, "speed"),
                 rain,
                 rainPeriod,
-                hourly);
+                hourly,
+                metric);
         }
 
         static string getValue(string post, string value)

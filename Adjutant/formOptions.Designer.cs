@@ -195,21 +195,24 @@
             this.label59 = new System.Windows.Forms.Label();
             this.txtLauncherHotkey = new System.Windows.Forms.TextBox();
             this.label60 = new System.Windows.Forms.Label();
+            this.tabWeather = new System.Windows.Forms.TabPage();
+            this.buttWeatherSearch = new System.Windows.Forms.Button();
+            this.txtWeatherLocation = new System.Windows.Forms.TextBox();
+            this.label69 = new System.Windows.Forms.Label();
+            this.comboWeatherLang = new System.Windows.Forms.ComboBox();
+            this.label67 = new System.Windows.Forms.Label();
+            this.label66 = new System.Windows.Forms.Label();
+            this.rdbWeatherImperial = new System.Windows.Forms.RadioButton();
+            this.rdbWeatherMetric = new System.Windows.Forms.RadioButton();
+            this.chkWeatherShowOnStart = new System.Windows.Forms.CheckBox();
             this.buttSave = new System.Windows.Forms.Button();
             this.diagColor = new System.Windows.Forms.ColorDialog();
             this.diagFont = new System.Windows.Forms.FontDialog();
             this.folderDiag = new System.Windows.Forms.FolderBrowserDialog();
             this.fileDiag = new System.Windows.Forms.OpenFileDialog();
-            this.tabWeather = new System.Windows.Forms.TabPage();
-            this.chkWeatherShowOnStart = new System.Windows.Forms.CheckBox();
-            this.rdbWeatherMetric = new System.Windows.Forms.RadioButton();
-            this.rdbWeatherImperial = new System.Windows.Forms.RadioButton();
-            this.label66 = new System.Windows.Forms.Label();
-            this.label67 = new System.Windows.Forms.Label();
-            this.comboWeatherLang = new System.Windows.Forms.ComboBox();
-            this.label69 = new System.Windows.Forms.Label();
-            this.txtWeatherLocation = new System.Windows.Forms.TextBox();
-            this.buttWeatherSearch = new System.Windows.Forms.Button();
+            this.label68 = new System.Windows.Forms.Label();
+            this.buttWeatherWebcamBrowse = new System.Windows.Forms.Button();
+            this.txtWeatherWebcam = new System.Windows.Forms.TextBox();
             this.tabs.SuspendLayout();
             this.tabWindow.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numAutoHideDelay)).BeginInit();
@@ -2054,23 +2057,11 @@
             this.label60.TabIndex = 9;
             this.label60.Text = "Launcher hotkey:";
             // 
-            // buttSave
-            // 
-            this.buttSave.Location = new System.Drawing.Point(12, 441);
-            this.buttSave.Name = "buttSave";
-            this.buttSave.Size = new System.Drawing.Size(484, 47);
-            this.buttSave.TabIndex = 15;
-            this.buttSave.Text = "Save changes";
-            this.buttSave.UseVisualStyleBackColor = true;
-            this.buttSave.Visible = false;
-            this.buttSave.Click += new System.EventHandler(this.buttSave_Click);
-            // 
-            // folderDiag
-            // 
-            this.folderDiag.RootFolder = System.Environment.SpecialFolder.MyComputer;
-            // 
             // tabWeather
             // 
+            this.tabWeather.Controls.Add(this.buttWeatherWebcamBrowse);
+            this.tabWeather.Controls.Add(this.txtWeatherWebcam);
+            this.tabWeather.Controls.Add(this.label68);
             this.tabWeather.Controls.Add(this.buttWeatherSearch);
             this.tabWeather.Controls.Add(this.txtWeatherLocation);
             this.tabWeather.Controls.Add(this.label69);
@@ -2088,57 +2079,32 @@
             this.tabWeather.Text = "Weather";
             this.tabWeather.UseVisualStyleBackColor = true;
             // 
-            // chkWeatherShowOnStart
+            // buttWeatherSearch
             // 
-            this.chkWeatherShowOnStart.AutoSize = true;
-            this.chkWeatherShowOnStart.Location = new System.Drawing.Point(143, 215);
-            this.chkWeatherShowOnStart.Name = "chkWeatherShowOnStart";
-            this.chkWeatherShowOnStart.Size = new System.Drawing.Size(223, 17);
-            this.chkWeatherShowOnStart.TabIndex = 13;
-            this.chkWeatherShowOnStart.Text = "Show weather report when Adjutant starts";
-            this.chkWeatherShowOnStart.UseVisualStyleBackColor = true;
-            this.chkWeatherShowOnStart.CheckedChanged += new System.EventHandler(this.checkForChanges);
+            this.buttWeatherSearch.Location = new System.Drawing.Point(340, 43);
+            this.buttWeatherSearch.Name = "buttWeatherSearch";
+            this.buttWeatherSearch.Size = new System.Drawing.Size(110, 39);
+            this.buttWeatherSearch.TabIndex = 22;
+            this.buttWeatherSearch.Text = "Search OpenWeatherMap";
+            this.buttWeatherSearch.UseVisualStyleBackColor = true;
+            this.buttWeatherSearch.Click += new System.EventHandler(this.buttWeatherSearch_Click);
             // 
-            // rdbWeatherMetric
+            // txtWeatherLocation
             // 
-            this.rdbWeatherMetric.AutoSize = true;
-            this.rdbWeatherMetric.Location = new System.Drawing.Point(143, 156);
-            this.rdbWeatherMetric.Name = "rdbWeatherMetric";
-            this.rdbWeatherMetric.Size = new System.Drawing.Size(54, 17);
-            this.rdbWeatherMetric.TabIndex = 14;
-            this.rdbWeatherMetric.TabStop = true;
-            this.rdbWeatherMetric.Text = "Metric";
-            this.rdbWeatherMetric.UseVisualStyleBackColor = true;
-            this.rdbWeatherMetric.CheckedChanged += new System.EventHandler(this.checkForChanges);
+            this.txtWeatherLocation.Location = new System.Drawing.Point(111, 53);
+            this.txtWeatherLocation.Name = "txtWeatherLocation";
+            this.txtWeatherLocation.Size = new System.Drawing.Size(223, 20);
+            this.txtWeatherLocation.TabIndex = 21;
+            this.txtWeatherLocation.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
             // 
-            // rdbWeatherImperial
+            // label69
             // 
-            this.rdbWeatherImperial.AutoSize = true;
-            this.rdbWeatherImperial.Location = new System.Drawing.Point(214, 156);
-            this.rdbWeatherImperial.Name = "rdbWeatherImperial";
-            this.rdbWeatherImperial.Size = new System.Drawing.Size(61, 17);
-            this.rdbWeatherImperial.TabIndex = 15;
-            this.rdbWeatherImperial.TabStop = true;
-            this.rdbWeatherImperial.Text = "Imperial";
-            this.rdbWeatherImperial.UseVisualStyleBackColor = true;
-            // 
-            // label66
-            // 
-            this.label66.AutoSize = true;
-            this.label66.Location = new System.Drawing.Point(83, 158);
-            this.label66.Name = "label66";
-            this.label66.Size = new System.Drawing.Size(34, 13);
-            this.label66.TabIndex = 16;
-            this.label66.Text = "Units:";
-            // 
-            // label67
-            // 
-            this.label67.Location = new System.Drawing.Point(46, 268);
-            this.label67.Name = "label67";
-            this.label67.Size = new System.Drawing.Size(71, 31);
-            this.label67.TabIndex = 17;
-            this.label67.Text = "Description language:";
-            this.label67.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.label69.AutoSize = true;
+            this.label69.Location = new System.Drawing.Point(54, 56);
+            this.label69.Name = "label69";
+            this.label69.Size = new System.Drawing.Size(51, 13);
+            this.label69.TabIndex = 20;
+            this.label69.Text = "Location:";
             // 
             // comboWeatherLang
             // 
@@ -2164,38 +2130,105 @@
             "Swedish/sv",
             "Turkish/tr",
             "Ukrainian/uk"});
-            this.comboWeatherLang.Location = new System.Drawing.Point(143, 274);
+            this.comboWeatherLang.Location = new System.Drawing.Point(111, 287);
             this.comboWeatherLang.Name = "comboWeatherLang";
             this.comboWeatherLang.Size = new System.Drawing.Size(223, 21);
             this.comboWeatherLang.TabIndex = 18;
             this.comboWeatherLang.SelectedIndexChanged += new System.EventHandler(this.checkForChanges);
             // 
-            // label69
+            // label67
             // 
-            this.label69.AutoSize = true;
-            this.label69.Location = new System.Drawing.Point(71, 55);
-            this.label69.Name = "label69";
-            this.label69.Size = new System.Drawing.Size(51, 13);
-            this.label69.TabIndex = 20;
-            this.label69.Text = "Location:";
+            this.label67.Location = new System.Drawing.Point(34, 281);
+            this.label67.Name = "label67";
+            this.label67.Size = new System.Drawing.Size(71, 31);
+            this.label67.TabIndex = 17;
+            this.label67.Text = "Description language:";
+            this.label67.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
-            // txtWeatherLocation
+            // label66
             // 
-            this.txtWeatherLocation.Location = new System.Drawing.Point(143, 55);
-            this.txtWeatherLocation.Name = "txtWeatherLocation";
-            this.txtWeatherLocation.Size = new System.Drawing.Size(223, 20);
-            this.txtWeatherLocation.TabIndex = 21;
-            this.txtWeatherLocation.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
+            this.label66.AutoSize = true;
+            this.label66.Location = new System.Drawing.Point(71, 175);
+            this.label66.Name = "label66";
+            this.label66.Size = new System.Drawing.Size(34, 13);
+            this.label66.TabIndex = 16;
+            this.label66.Text = "Units:";
             // 
-            // buttWeatherSearch
+            // rdbWeatherImperial
             // 
-            this.buttWeatherSearch.Location = new System.Drawing.Point(184, 81);
-            this.buttWeatherSearch.Name = "buttWeatherSearch";
-            this.buttWeatherSearch.Size = new System.Drawing.Size(140, 23);
-            this.buttWeatherSearch.TabIndex = 22;
-            this.buttWeatherSearch.Text = "Search OpenWeatherMap";
-            this.buttWeatherSearch.UseVisualStyleBackColor = true;
-            this.buttWeatherSearch.Click += new System.EventHandler(this.buttWeatherSearch_Click);
+            this.rdbWeatherImperial.AutoSize = true;
+            this.rdbWeatherImperial.Location = new System.Drawing.Point(186, 173);
+            this.rdbWeatherImperial.Name = "rdbWeatherImperial";
+            this.rdbWeatherImperial.Size = new System.Drawing.Size(61, 17);
+            this.rdbWeatherImperial.TabIndex = 15;
+            this.rdbWeatherImperial.TabStop = true;
+            this.rdbWeatherImperial.Text = "Imperial";
+            this.rdbWeatherImperial.UseVisualStyleBackColor = true;
+            // 
+            // rdbWeatherMetric
+            // 
+            this.rdbWeatherMetric.AutoSize = true;
+            this.rdbWeatherMetric.Location = new System.Drawing.Point(111, 173);
+            this.rdbWeatherMetric.Name = "rdbWeatherMetric";
+            this.rdbWeatherMetric.Size = new System.Drawing.Size(54, 17);
+            this.rdbWeatherMetric.TabIndex = 14;
+            this.rdbWeatherMetric.TabStop = true;
+            this.rdbWeatherMetric.Text = "Metric";
+            this.rdbWeatherMetric.UseVisualStyleBackColor = true;
+            this.rdbWeatherMetric.CheckedChanged += new System.EventHandler(this.checkForChanges);
+            // 
+            // chkWeatherShowOnStart
+            // 
+            this.chkWeatherShowOnStart.AutoSize = true;
+            this.chkWeatherShowOnStart.Location = new System.Drawing.Point(111, 230);
+            this.chkWeatherShowOnStart.Name = "chkWeatherShowOnStart";
+            this.chkWeatherShowOnStart.Size = new System.Drawing.Size(223, 17);
+            this.chkWeatherShowOnStart.TabIndex = 13;
+            this.chkWeatherShowOnStart.Text = "Show weather report when Adjutant starts";
+            this.chkWeatherShowOnStart.UseVisualStyleBackColor = true;
+            this.chkWeatherShowOnStart.CheckedChanged += new System.EventHandler(this.checkForChanges);
+            // 
+            // buttSave
+            // 
+            this.buttSave.Location = new System.Drawing.Point(12, 441);
+            this.buttSave.Name = "buttSave";
+            this.buttSave.Size = new System.Drawing.Size(484, 47);
+            this.buttSave.TabIndex = 15;
+            this.buttSave.Text = "Save changes";
+            this.buttSave.UseVisualStyleBackColor = true;
+            this.buttSave.Visible = false;
+            this.buttSave.Click += new System.EventHandler(this.buttSave_Click);
+            // 
+            // folderDiag
+            // 
+            this.folderDiag.RootFolder = System.Environment.SpecialFolder.MyComputer;
+            // 
+            // label68
+            // 
+            this.label68.AutoSize = true;
+            this.label68.Location = new System.Drawing.Point(27, 116);
+            this.label68.Name = "label68";
+            this.label68.Size = new System.Drawing.Size(78, 13);
+            this.label68.TabIndex = 23;
+            this.label68.Text = "Webcam URL:";
+            // 
+            // buttWeatherWebcamBrowse
+            // 
+            this.buttWeatherWebcamBrowse.Location = new System.Drawing.Point(340, 103);
+            this.buttWeatherWebcamBrowse.Name = "buttWeatherWebcamBrowse";
+            this.buttWeatherWebcamBrowse.Size = new System.Drawing.Size(110, 39);
+            this.buttWeatherWebcamBrowse.TabIndex = 25;
+            this.buttWeatherWebcamBrowse.Text = "Browse OpenWeatherMap";
+            this.buttWeatherWebcamBrowse.UseVisualStyleBackColor = true;
+            this.buttWeatherWebcamBrowse.Click += new System.EventHandler(this.buttWeatherWebcamBrowse_Click);
+            // 
+            // txtWeatherWebcam
+            // 
+            this.txtWeatherWebcam.Location = new System.Drawing.Point(111, 113);
+            this.txtWeatherWebcam.Name = "txtWeatherWebcam";
+            this.txtWeatherWebcam.Size = new System.Drawing.Size(223, 20);
+            this.txtWeatherWebcam.TabIndex = 24;
+            this.txtWeatherWebcam.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
             // 
             // formOptions
             // 
@@ -2453,5 +2486,8 @@
         private System.Windows.Forms.Button buttWeatherSearch;
         private System.Windows.Forms.Label label69;
         public System.Windows.Forms.TextBox txtWeatherLocation;
+        private System.Windows.Forms.Button buttWeatherWebcamBrowse;
+        public System.Windows.Forms.TextBox txtWeatherWebcam;
+        private System.Windows.Forms.Label label68;
     }
 }

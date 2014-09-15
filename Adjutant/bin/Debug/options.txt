@@ -84,9 +84,10 @@ launcher_scan_dirs=C:\ProgramData\Microsoft\Windows\Start Menu>*.lnk
 
 //weather
 weather_location=Krk
-weather_metric=True
+weather_metric=False
 weather_show_on_start=True
 weather_lang=en
+weather_webcam=http://www.webcams.travel/webcam/1317388318-Weather-Stadt-Krk-Krk
 
 //other
 user=Winterstark

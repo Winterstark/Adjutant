@@ -110,6 +110,7 @@ namespace Adjutant
                 changed |= txtLauncherFileFilter.Text != LauncherScanDirs[lstLauncherDirs.Text];
 
             changed |= compareValueToTag(txtWeatherLocation);
+            changed |= compareValueToTag(txtWeatherWebcam);
             changed |= rdbWeatherMetric.Checked != (bool)rdbWeatherMetric.Tag;
             changed |= compareValueToTag(chkWeatherShowOnStart);
             changed |= comboWeatherLang.Text.Substring(comboWeatherLang.Text.IndexOf('/') + 1) != (string)comboWeatherLang.Tag;
@@ -591,6 +592,11 @@ namespace Adjutant
         private void buttWeatherSearch_Click(object sender, EventArgs e)
         {
             System.Diagnostics.Process.Start("http://www.openweathermap.com/find?q=" + txtWeatherLocation);
+        }
+
+        private void buttWeatherWebcamBrowse_Click(object sender, EventArgs e)
+        {
+            System.Diagnostics.Process.Start("http://www.webcams.travel/");
         }
     }
 }
