@@ -275,6 +275,7 @@ namespace Adjutant
                     int chunkH = launcherChunks[0].GetHeight();
                     int nMaxChunks = txtCMD.Top / chunkH;
                     int chInd = 2 * Math.Max(launcherSelection - nMaxChunks + 1, 0);
+                    int prevChunkRight = 0, prevChunkH = 0;
 
                     //draw launcher chunks
                     int x = 0, y = yOffset, h = 0;
@@ -284,7 +285,7 @@ namespace Adjutant
                         if (chInd % 2 == 0 && chInd / 2 == launcherSelection) //draw selection rectangle
                             gfx.DrawRectangle(new Pen(txtCMD.ForeColor, 1), x, y, this.Width - 1, launcherChunks[chInd].GetHeight());
 
-                        launcherChunks[chInd++].Draw(gfx, txtCMD.Font, ref x, ref y, ref h);
+                        launcherChunks[chInd++].Draw(gfx, txtCMD.Font, ref x, ref y, ref h, ref prevChunkRight, ref prevChunkH);
                     }
                 }
             }
@@ -293,10 +294,11 @@ namespace Adjutant
                 {
                     int x = 0, y = yOffset, h = 0;
                     int chInd = chunkOffset;
+                    int prevChunkRight = 0, prevChunkH = 0;
 
                     while (chInd < lastChunk && y < txtCMD.Top)
-                        chunks[chInd++].Draw(gfx, txtCMD.Font, ref x, ref y, ref h);
-                    chunks[lastChunk].Draw(gfx, txtCMD.Font, ref x, ref y, ref h, lastChunkChar);
+                        chunks[chInd++].Draw(gfx, txtCMD.Font, ref x, ref y, ref h, ref prevChunkRight, ref prevChunkH);
+                    chunks[lastChunk].Draw(gfx, txtCMD.Font, ref x, ref y, ref h, ref prevChunkRight, ref prevChunkH, lastChunkChar);
 
                     //expand image chunks
                     for (int i = 0; i < expandingChunks.Count; i++)
@@ -3929,6 +3931,7 @@ namespace Adjutant
             msg = msg.Substring(0, 1).ToUpper() + msg.Substring(1); //uppercase first letter
 
             print(msg, weatherURL, txtCMD.ForeColor);
+            chunks[chunks.Count - 1].InsertDefinitiveNewline();
         }
         #endregion
 

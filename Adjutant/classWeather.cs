@@ -118,11 +118,6 @@ namespace Adjutant
 
         public static Report[] GetForecast(string location, string language, bool metric, int nDays, bool hourly)
         {
-            if (hourly)
-                nDays = Math.Min(nDays, 5);
-            else
-                nDays = Math.Min(nDays, 16);
-
             string url;
             if (!hourly)
                 url = constructWeathermapURL("http://api.openweathermap.org/data/2.5/forecast/daily?q=", location, language, metric, nDays);
@@ -130,18 +125,12 @@ namespace Adjutant
                 url = constructWeathermapURL("http://api.openweathermap.org/data/2.5/forecast?q=", location, language, metric, 0);
             
             string resp = new WebClient().DownloadString(url);
-            resp = resp.Substring(resp.IndexOf("\"weather\":[{"));
+            resp = resp.Substring(resp.IndexOf("\"list\":[{") + 9);
 
-            string[] segments;
-            if (!hourly)
-                segments = resp.Split(new string[] { "\"weather\":[{" }, StringSplitOptions.RemoveEmptyEntries);
-            else
-                segments = resp.Split(new string[] { "},\"weather\":[{" }, StringSplitOptions.RemoveEmptyEntries);
+            string[] segments = resp.Split(new string[] { "},{" }, StringSplitOptions.RemoveEmptyEntries);
+            Report[] reports = new Report[segments.Length];
 
-            int n = segments.Length - 1; //first segment is a header
-            Report[] reports = new Report[n];
-
-            for (int i = 0; i < n; i++)
+            for (int i = 0; i < segments.Length; i++)
                 reports[i] = buildReport(segments[i], hourly);
 
             return reports;

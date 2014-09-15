@@ -34,7 +34,11 @@ namespace Adjutant
         int prevX; //previous x value used to draw this chunk (used to detect when x changes (or a new image has been downloaded) to see if it'll fit into the console without resizing)
 
         string text, link;
-        bool newline, absNewline, mouseOver, strikeout;
+        bool newline; //flexible newline - if the console window grows in width this chunk can be joined with the next chunk into a single line
+        bool absNewline; //absolute newline - indicates this chunk is always the last chunk in the line
+        bool defNewline;  //definitive newline - the next line will start at x=0, regardless of any large image chunks that precede this chunk
+        bool xNewline;
+        bool mouseOver, strikeout;
         Rectangle bounds;
         SolidBrush brush;
         Image img;
@@ -164,6 +168,13 @@ namespace Adjutant
             absNewline = true;
         }
 
+        public void InsertDefinitiveNewline()
+        {
+            newline = true;
+            absNewline = true;
+            defNewline = true;
+        }
+
         public Color GetColor()
         {
             return brush.Color;
@@ -279,16 +290,16 @@ namespace Adjutant
             return mouseOver = this.link == link && link != "";
         }
 
-        public void Draw(Graphics gfx, Font font, ref int x, ref int y, ref int h)
+        public void Draw(Graphics gfx, Font font, ref int x, ref int y, ref int h, ref int prevChunkRight, ref int prevChunkH)
         {
-            Draw(gfx, font, ref x, ref y, ref h, text.Length);
+            Draw(gfx, font, ref x, ref y, ref h, ref prevChunkH, ref prevChunkRight, text.Length);
         }
 
-        public void Draw(Graphics gfx, Font font, ref int x, ref int y, ref int h, int lastChar)
-       { 
+        public void Draw(Graphics gfx, Font font, ref int x, ref int y, ref int h, ref int prevChunkRight, ref int prevChunkH, int lastChar)
+        {
             bounds.X = x;
             bounds.Y = y;
-            
+
             if (bounds.Height > h)
                 h = bounds.Height;
 
@@ -310,7 +321,7 @@ namespace Adjutant
                 double phase = Math.PI;
                 double wave2 = Math.Sin(angleWave + phase) * radWave;
                 double prevX2 = centerX + (radX + wave2) * Math.Cos(angle), prevY2 = centerY + (radY + wave) * Math.Sin(angle), nextX2, nextY2;
-                
+
                 while (angle <= endAngle)
                 {
                     angle += 0.01;
@@ -318,7 +329,7 @@ namespace Adjutant
 
                     wave = Math.Sin(angleWave) * radWave;
                     wave2 = Math.Sin(angleWave + phase) * radWave;
-                    
+
                     nextX = centerX + (radX + wave) * Math.Cos(angle);
                     nextY = centerY + (radY + wave) * Math.Sin(angle);
                     nextX2 = centerX + (radX + wave2) * Math.Cos(angle);
@@ -326,7 +337,7 @@ namespace Adjutant
 
                     gfx.DrawLine(WavePen2, (int)prevX2, (int)prevY2, (int)nextX2, (int)nextY2);
                     gfx.DrawLine(WavePen, (int)prevX, (int)prevY, (int)nextX, (int)nextY);
-                    
+
                     prevX = nextX;
                     prevY = nextY;
                     prevX2 = nextX2;
@@ -369,13 +380,33 @@ namespace Adjutant
             //advance drawing position
             if (newline)
             {
-                x = 0;
-                y += h;
+                if (prevChunkH > 2 * bounds.Height && !defNewline)
+                {
+                    //the previous chunk was a large image so draw the next line to the right of it
+                    x = prevChunkRight;
+                    y += bounds.Height;
 
-                h = 0;
+                    h = prevChunkH - bounds.Height;
+                    prevChunkH = h;
+                }
+                else
+                {
+                    //proper new line
+                    x = 0;
+                    y += h;
+
+                    h = 0;
+                    prevChunkRight = 0;
+                    prevChunkH = 0;
+                }
             }
             else
+            {
                 x += bounds.Width;
+
+                prevChunkRight = x;
+                prevChunkH = bounds.Height;
+            }
         }
 
         public static List<Chunk> Chunkify(string text, string link, Color color, bool strikeout, int leftMargin, bool newline, bool absNewline)

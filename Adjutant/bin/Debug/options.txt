@@ -1,7 +1,7 @@
 //window
 x=165
 y=0
-width=398
+width=400
 min_height=59
 max_height=551
 global_hotkey=À
