@@ -109,6 +109,11 @@ namespace Adjutant
             if (lstLauncherDirs.SelectedIndex != -1)
                 changed |= txtLauncherFileFilter.Text != LauncherScanDirs[lstLauncherDirs.Text];
 
+            changed |= compareValueToTag(txtWeatherLocation);
+            changed |= rdbWeatherMetric.Checked != (bool)rdbWeatherMetric.Tag;
+            changed |= compareValueToTag(chkWeatherShowOnStart);
+            changed |= comboWeatherLang.Text.Substring(comboWeatherLang.Text.IndexOf('/') + 1) != (string)comboWeatherLang.Tag;
+
             buttSave.Visible = changed;
         }
 
@@ -581,6 +586,11 @@ namespace Adjutant
         private void buttLauncherRescan_Click(object sender, EventArgs e)
         {
             Main.RescanDirs();
+        }
+
+        private void buttWeatherSearch_Click(object sender, EventArgs e)
+        {
+            System.Diagnostics.Process.Start("http://www.openweathermap.com/find?q=" + txtWeatherLocation);
         }
     }
 }

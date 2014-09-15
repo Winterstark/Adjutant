@@ -25,5 +25,10 @@ namespace Adjutant
             else
                 return Math.Min(delimiterInd1, delimiterInd2);
         }
+
+        public static DateTime ConvertFromUnixTime(string time)
+        {
+            return new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc).AddSeconds(double.Parse(time.Replace(".0", ""))).ToLocalTime();
+        }
     }
 }

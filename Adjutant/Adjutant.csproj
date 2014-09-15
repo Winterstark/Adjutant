@@ -85,6 +85,7 @@
     <Compile Include="classMisc.cs" />
     <Compile Include="classReddit.cs" />
     <Compile Include="classTwitter.cs" />
+    <Compile Include="classWeather.cs" />
     <Compile Include="formMain.cs">
       <SubType>Form</SubType>
     </Compile>

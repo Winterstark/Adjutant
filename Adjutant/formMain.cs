@@ -85,6 +85,10 @@ namespace Adjutant
         int launcherHotkey, launcherMaxSuggestions, launcherScanPeriod, launcherSelection;
         bool launcherAutohide, launcherHotkeyCtrl, launcherHotkeyAlt, launcherHotkeyShift;
 
+        //Weather fields
+        bool weatherMetric, weatherShowOnStart;
+        string weatherLocation, weatherLang;
+
         int consoleW, consoleH; //console size to return to
         #endregion
 
@@ -565,6 +569,18 @@ namespace Adjutant
                         case "launcher_scan_dirs":
                             launcherScanDirs = args[1];
                             break;
+                        case "weather_location":
+                            weatherLocation = args[1];
+                            break;
+                        case "weather_metric":
+                            weatherMetric = bool.Parse(args[1]);
+                            break;
+                        case "weather_show_on_start":
+                            weatherShowOnStart = bool.Parse(args[1]);
+                            break;
+                        case "weather_lang":
+                            weatherLang = args[1];
+                            break;
                         case "user":
                             user = args[1];
                             break;
@@ -722,6 +738,13 @@ namespace Adjutant
             file.WriteLine("launcher_scan_dirs=" + launcherScanDirs);
             file.WriteLine();
 
+            file.WriteLine("//weather");
+            file.WriteLine("weather_location=" + weatherLocation);
+            file.WriteLine("weather_metric=" + weatherMetric);
+            file.WriteLine("weather_show_on_start=" + weatherShowOnStart);
+            file.WriteLine("weather_lang=" + weatherLang);
+            file.WriteLine();
+
             file.WriteLine("//other");
             file.WriteLine("user=" + user);
 
@@ -844,6 +867,11 @@ namespace Adjutant
                 options.chkLauncherAutohide.Tag = launcherAutohide;
                 options.numLauncherScanPeriod.Tag = launcherScanPeriod;
 
+                options.txtWeatherLocation.Tag = weatherLocation;
+                options.rdbWeatherMetric.Tag = weatherMetric;
+                options.chkWeatherShowOnStart.Tag = weatherShowOnStart;
+                options.comboWeatherLang.Tag = weatherLang;
+
                 //set current values
                 options.numX.Value = x;
                 options.numY.Value = y;
@@ -912,6 +940,19 @@ namespace Adjutant
                 options.chkLauncherAutohide.Checked = launcherAutohide;
                 options.numLauncherScanPeriod.Value = launcherScanPeriod;
                 options.lstLauncherDirs.Items.AddRange(dirList.ToArray());
+
+                options.txtWeatherLocation.Text = weatherLocation;
+                if (weatherMetric)
+                    options.rdbWeatherMetric.Checked = true;
+                else
+                    options.rdbWeatherImperial.Checked = true;
+                options.chkWeatherShowOnStart.Checked = weatherShowOnStart;
+                for (int i = 0; i < options.comboWeatherLang.Items.Count; i++)
+                    if (options.comboWeatherLang.Items[i].ToString().Contains("/" + weatherLang))
+                    {
+                        options.comboWeatherLang.SelectedIndex = i;
+                        break;
+                    }
 
                 options.Starting = false;
 
@@ -1024,6 +1065,11 @@ namespace Adjutant
             launcherAutohide = options.chkLauncherAutohide.Checked;
             launcherScanPeriod = (int)options.numLauncherScanPeriod.Value;
             launcherScanDirs = options.GetLauncherScanDirs();
+
+            weatherLocation = options.txtWeatherLocation.Text;
+            weatherMetric = options.rdbWeatherMetric.Checked;
+            weatherShowOnStart = options.chkWeatherShowOnStart.Checked;
+            weatherLang = options.comboWeatherLang.Text.Substring(options.comboWeatherLang.Text.IndexOf('/') + 1);
 
             //apply changes & save
             Chunk.Font = txtCMD.Font;
@@ -1449,6 +1495,9 @@ namespace Adjutant
                             case "reddit":
                                 cmdReddit(cmd);
                                 break;
+                            case "weather":
+                                cmdWeather(cmd);
+                                break;
                             case "":
                                 flush();
                                 break;
@@ -1479,7 +1528,7 @@ namespace Adjutant
             if (cmd.Length == 1)
             {
                 print("List of Adjutant commands: " + Environment.NewLine);
-                foreach (string command in new string[] { "about", "calc", "cd", "cls", "custom", "date", "done", "exit", "help", "mail", "pad", "prompt", "reddit", "time", "todo", "tutorial", "twitter", "user" })
+                foreach (string command in new string[] { "about", "calc", "cd", "cls", "custom", "date", "done", "exit", "help", "mail", "pad", "prompt", "reddit", "time", "todo", "tutorial", "twitter", "user", "weather" })
                     print(command, helpColor);
 
                 printHelp("For more information on a specific command, type \"help [COMMAND]\"<pause>");
@@ -1600,10 +1649,30 @@ namespace Adjutant
                         break;
                     case "pad":
                         printHelp("The \"pad\" command turns Adjutant into a simple text editor.<pause>");
-                        //todo
+                        printHelp("\"pad\" opens a blank text editor.<pause>");
+                        printHelp("\"pad [file]\" opens an existing text file.<pause>");
                         break;
                     case "reddit":
-                        //todo
+                        printHelp("Use the \"reddit\" command to browse Reddit submissions from Adjutant.<pause>");
+                        printHelp("The command is currently very limited and only allows you to browse the currently hot posts in a particular subreddit.");
+                        printHelp("Type \"reddit [subreddit]\" to browse submissions.<pause>");
+                        printHelp("You can browse multiple subreddits by typing \"reddit [subreddit1]+[subreddit2]+...\".");
+                        printHelp("While browsing Reddit use the following keyboard shortcuts:");
+                        printHelp("Press \"j\" to to read the next submission.");
+                        printHelp("Press \"k\" to to read the previous submission.");
+                        printHelp("Press \"l\" to open the submitted link.");
+                        printHelp("Press \"c\" to open the comments page.");
+                        printHelp("Press \"u\" to open the OP's profile page.");
+                        printHelp("Press \"r\" to open the subreddit.");
+                        printHelp("Press \"Esc\" to open all mentions and hashtags in the tweet.");
+                        break;
+                    case "weather":
+                        printHelp("The \"weather\" command can be used to display current and future weather conditions for your location.<pause>");
+                        printHelp("Calling the command without parameters (\"weather\") will display current weather status.<pause>");
+                        printHelp("Type \"weather /forecast\" to get the weather forecast for the next five days.<pause>");
+                        printHelp("Type \"weather /hourly\" to get the weather details of every 3-hour period for the next 24 hours.<pause>");
+                        printHelp("You can also specify the number of days for your forecast by including the parameter \"/days=N_DAYS\".<pause>The maximum number of days is 16 for \"/forecast\" and 5 for \"hourly\".");
+                        printHelp("Customize your location and other weather settings in Options.");
                         break;
                     case "prompt":
                         printHelp("Toggles prompt.");
@@ -3789,6 +3858,80 @@ namespace Adjutant
         }
         #endregion
 
+        #region Weather Module
+        void cmdWeather(string[] cmd)
+        {
+            if (cmd.Length == 1)
+                showCurrentWeather();
+            else
+            {
+                bool hourly = false;
+                int nDays = 0;
+
+                foreach (string par in cmd)
+                    if (par.ToLower().Contains("/h"))
+                        hourly = true;
+                    else if (par.ToLower().Contains("/d") && par.Contains('='))
+                        int.TryParse(par.Substring(par.IndexOf('=') + 1), out nDays);
+
+                if (nDays <= 0)
+                {
+                    if (hourly)
+                        nDays = 1;
+                    else
+                        nDays = 5;
+                }
+                else
+                {
+                    if (hourly)
+                        nDays = Math.Min(nDays, 5);
+                    else
+                        nDays = Math.Min(nDays, 16);
+                }
+
+                print((hourly ? "Hourly weather" : "Weather") + " forecast for the next " + (nDays > 1 ? nDays + " days" : " 24 hours") + " in " + weatherLocation + ":");
+                foreach (var report in Weather.GetForecast(weatherLocation, weatherLang, weatherMetric, nDays, hourly))
+                    printWeatherReport(report, true);
+            }
+        }
+
+        void showCurrentWeather()
+        {
+            printWeatherReport(Weather.GetCurrentData(weatherLocation, weatherLang, weatherMetric), false);
+        }
+
+        void printWeatherReport(Weather.Report report, bool forecast)
+        {
+            string weatherURL = "";
+            if (!forecast)
+                weatherURL = "http://www.openweathermap.com/find?q=" + weatherLocation;
+
+            string msg = "";
+            if (forecast)
+                msg = report.timestamp;
+
+            for (int i = 0; i < report.descs.Length; i++)
+            {
+                if (i < report.icons.Length)
+                    print("<image=" + Application.StartupPath + "\\ui\\weather icons\\" + report.icons[i] + ".png>", weatherURL, false, txtCMD.ForeColor);
+                msg += (msg != "" ? " / " : "") + report.descs[i];
+            }
+
+            if (report.temp != -1)
+                msg += (msg != "" ? " / " : "") + Math.Round(report.temp, 1) + (true ? " °C" : " °F");
+            else
+                msg += (msg != "" ? " / " : "") + Math.Round(report.tempMin, 1) + " — " + Math.Round(report.tempMax, 1) + (true ? " °C" : " °F");
+            if (report.wind != -1)
+                msg += (msg != "" ? " / " : "") + report.windDesc + " (" + Math.Round(report.wind, 1) + " m/s)";
+            if (report.rain != -1)
+                msg += (msg != "" ? " / " : "") + Math.Round(report.rain, 1) + " mm precipitation (" + report.rainPeriod + ")";
+
+            msg = msg.Substring(0, 1).ToUpper() + msg.Substring(1); //uppercase first letter
+
+            print(msg, weatherURL, txtCMD.ForeColor);
+        }
+        #endregion
+
 
         public formMain()
         {
@@ -3991,10 +4134,21 @@ namespace Adjutant
             //print intro
             print("Adjutant online.");
             greeting();
-            todoLoad();
 
-            //init launcher module
-            RescanDirs();
+            if (weatherShowOnStart)
+            {
+                if (true)
+                {
+                    string webcamImage = Weather.GetWebcamImage("http://www.webcams.travel/webcam/1317388318-Weather-Stadt-Krk-Krk");
+                    if (webcamImage != "")
+                        print("<image=" + webcamImage + ">");
+                }
+
+                showCurrentWeather();
+            }
+
+            todoLoad();
+            RescanDirs(); //init launcher module
 
             //init net modules
             if (!RUN_WITHOUT_TWITTER_AND_GMAIL)
@@ -4539,6 +4693,12 @@ namespace Adjutant
                             Process.Start("http://www.reddit.com/u/" + lastPost.user);
 
                             if (txtCMD.Text.ToLower() == "u")
+                                txtCMD.Text = "";
+                            break;
+                        case Keys.R:
+                            Process.Start("http://www.reddit.com/r/" + lastPost.subreddit);
+
+                            if (txtCMD.Text.ToLower() == "r")
                                 txtCMD.Text = "";
                             break;
                         case Keys.L:

@@ -26,7 +26,7 @@ namespace Adjutant
                 this.subreddit = "/r/" + subreddit;
                 this.score = int.Parse(score);
                 this.nComments = int.Parse(nComments);
-                this.created = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc).AddSeconds(double.Parse(created.Replace(".0", ""))).ToLocalTime();
+                this.created = Misc.ConvertFromUnixTime(created);
 
                 if (url.Contains("imgur") && !url.Contains("imgur.com/a/"))
                 {
@@ -179,15 +179,14 @@ namespace Adjutant
             }
         }
 
-        protected string getValue(string post, string value)
+        string getValue(string post, string value)
         {
             if (post == "")
                 return "";
 
             int lb = post.IndexOf("\"" + value + "\": ") + value.Length + 4, ub;
-            bool quotes = post[lb] == '"';
 
-            if (quotes)
+            if (post[lb] == '"')
             {
                 lb++;
 
