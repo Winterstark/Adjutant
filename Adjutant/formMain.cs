@@ -1808,6 +1808,11 @@ namespace Adjutant
                     if (chunkInd < 0)
                         break;
 
+                    //if (chunks[chunkInd].GetX() != 0)
+                    //    //this line is drawn to the right of a large image chunk, so ignore and skip it
+                    //    while (chunkInd > 0 && !chunks[chunkInd - 1].IsNewline())
+                    //        chunkInd--;
+
                     //scan through next line to find out its height and starting chunk
                     h = chunks[chunkInd].GetHeight();
 
@@ -1822,7 +1827,8 @@ namespace Adjutant
                     if (sumH + h <= txtCMD.Top)
                     {
                         //this line fits into console window
-                        sumH += h;
+                        if (chunks[chunkInd].GetX() == 0) //ignore lines that start with x!=0 because they are drawn to the right of a large image chun
+                            sumH += h;
                         h = 0;
 
                         chunkOffset = chunkInd;

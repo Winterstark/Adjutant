@@ -37,7 +37,6 @@ namespace Adjutant
         bool newline; //flexible newline - if the console window grows in width this chunk can be joined with the next chunk into a single line
         bool absNewline; //absolute newline - indicates this chunk is always the last chunk in the line
         bool defNewline;  //definitive newline - the next line will start at x=0, regardless of any large image chunks that precede this chunk
-        bool xNewline;
         bool mouseOver, strikeout;
         Rectangle bounds;
         SolidBrush brush;
@@ -214,6 +213,11 @@ namespace Adjutant
                 return bounds.Height;
         }
 
+        public int GetX()
+        {
+            return bounds.X;
+        }
+
         void checkImgWidth()
         {
             bounds.Width = img.Width;
@@ -380,7 +384,7 @@ namespace Adjutant
             //advance drawing position
             if (newline)
             {
-                if (prevChunkH > 2 * bounds.Height && !defNewline)
+                if (prevChunkH > 2 * bounds.Height && prevChunkRight < ConsoleWidth / 2 && !defNewline)
                 {
                     //the previous chunk was a large image so draw the next line to the right of it
                     x = prevChunkRight;
