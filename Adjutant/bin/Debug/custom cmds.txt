@@ -1,2 +1,3 @@
 !wordy=c:\apps\wordy\wordy.exe
 !python=c:\dev\python\python.exe -i
+!addw="C:\apps\wordy\add words.vbs"

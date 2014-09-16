@@ -1,8 +1,8 @@
 //window
-x=165
+x=161
 y=0
 width=400
-min_height=59
+min_height=98
 max_height=551
 global_hotkey=À
 hide_delay=10
@@ -49,7 +49,7 @@ mail_summary_color=-5526623
 //twitter
 token=18160045-m6CI9FSXK5zhItM7QWJixujVJRR7aP0Io4v2hIGEg
 secret=7q763i5QxPn1oBE9OgNIqMrTJaqEjwASdcIdvT4Jj8
-last_tweet=511594402197024768
+last_tweet=511975875580293121
 update_on_new_tweet=True
 update_on_focus=True
 min_tweet_period=30

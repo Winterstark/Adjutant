@@ -214,10 +214,6 @@ namespace Adjutant
         {
             fontPreview();
             
-            //runs at startup?
-            RegistryKey rkApp = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
-            chkRunAtStartup.Checked = rkApp.GetValue("Adjutant") != null;
-
             //tutorial
             Tutorial tutorial = new Tutorial(Application.StartupPath + "\\tutorial\\tutorial_options.txt", this);
         }
@@ -518,6 +514,9 @@ namespace Adjutant
 
         private void chkRunAtStartup_CheckedChanged(object sender, EventArgs e)
         {
+            if (Starting)
+                return;
+
             RegistryKey rkApp = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
 
             if (chkRunAtStartup.Checked)

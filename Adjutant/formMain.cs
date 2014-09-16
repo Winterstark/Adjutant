@@ -23,7 +23,7 @@ namespace Adjutant
         #region Declarations
         const string VERSION = "0.7";
         const string YEAR = "2014";
-        const bool RUN_WITHOUT_TWITTER_AND_GMAIL = true; //useful when debugging and repeatedly restarting Adjutant
+        const bool RUN_WITHOUT_TWITTER_AND_GMAIL = false; //useful when debugging and repeatedly restarting Adjutant
 
         const int ZERO_DELAY = 60001;
         const int SND_ASYNC = 0x0001;
@@ -962,6 +962,10 @@ namespace Adjutant
                         break;
                     }
 
+                //runs at startup?
+                RegistryKey rkApp = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+                options.chkRunAtStartup.Checked = rkApp.GetValue("Adjutant") != null;
+
                 options.Starting = false;
 
                 options.Show();
@@ -1426,7 +1430,17 @@ namespace Adjutant
                                 Application.Exit();
                                 break;
                             case "about":
-                                print("Adjutant v" + VERSION + Environment.NewLine + "(c) " + YEAR + " Stanislav Žužić");
+                                string iconPath = Application.StartupPath + "\\ui\\icon.png";
+                                if (File.Exists(iconPath))
+                                    print("<image=" + iconPath + ">", false);
+                                
+                                print("Adjutant v" + VERSION);
+                                print("Hosted on ", false); print("Github<pause>", "https://github.com/Winterstark/Adjutant", Color.RoyalBlue);
+                                print("Developed by ", false); print("Winterstark<pause>", "https://github.com/Winterstark", false, Color.RoyalBlue);
+                                print("");
+                                print("Pad module uses ", false); print("ScintillaNET", "https://scintillanet.codeplex.com/", Color.RoyalBlue);
+                                print("Adjutant icon by ", false); print("~Softcode", "http://www.deviantart.com/art/Deep-Blue-Console-69538223", Color.RoyalBlue);
+                                print("Download progress from ", false); print("preloaders.net", "http://preloaders.net/", Color.RoyalBlue);
                                 break;
                             case "options":
                                 showOptions();
@@ -1807,11 +1821,6 @@ namespace Adjutant
 
                     if (chunkInd < 0)
                         break;
-
-                    //if (chunks[chunkInd].GetX() != 0)
-                    //    //this line is drawn to the right of a large image chunk, so ignore and skip it
-                    //    while (chunkInd > 0 && !chunks[chunkInd - 1].IsNewline())
-                    //        chunkInd--;
 
                     //scan through next line to find out its height and starting chunk
                     h = chunks[chunkInd].GetHeight();
@@ -2428,7 +2437,7 @@ namespace Adjutant
                     prevY = this.Height;
                     resizeH = true;
                 }
-                else
+                else if (outputMode != OutputMode.Selection)
                 {
                     prevX = mx;
                     prevY = my;
@@ -3952,7 +3961,7 @@ namespace Adjutant
             else
                 body += (body != "" ? " / " : "") + Math.Round(report.tempMin, 1) + " — " + Math.Round(report.tempMax, 1) + (weatherMetric ? " °C" : " °F");
             if (report.wind != -1)
-                body += (body != "" ? " / " : "") + report.windDesc + " (" + Math.Round(report.wind, 1) + (weatherMetric ? " m/s" : " mph");
+                body += (body != "" ? " / " : "") + report.windDesc + " (" + Math.Round(report.wind, 1) + (weatherMetric ? " m/s)" : " mph)");
             if (report.rain != -1)
                 body += (body != "" ? " / " : "") + Math.Round(report.rain, 1) + " mm precipitation (" + report.rainPeriod + ")";
 

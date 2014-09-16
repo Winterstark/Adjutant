@@ -196,6 +196,9 @@
             this.txtLauncherHotkey = new System.Windows.Forms.TextBox();
             this.label60 = new System.Windows.Forms.Label();
             this.tabWeather = new System.Windows.Forms.TabPage();
+            this.buttWeatherWebcamBrowse = new System.Windows.Forms.Button();
+            this.txtWeatherWebcam = new System.Windows.Forms.TextBox();
+            this.label68 = new System.Windows.Forms.Label();
             this.buttWeatherSearch = new System.Windows.Forms.Button();
             this.txtWeatherLocation = new System.Windows.Forms.TextBox();
             this.label69 = new System.Windows.Forms.Label();
@@ -210,9 +213,6 @@
             this.diagFont = new System.Windows.Forms.FontDialog();
             this.folderDiag = new System.Windows.Forms.FolderBrowserDialog();
             this.fileDiag = new System.Windows.Forms.OpenFileDialog();
-            this.label68 = new System.Windows.Forms.Label();
-            this.buttWeatherWebcamBrowse = new System.Windows.Forms.Button();
-            this.txtWeatherWebcam = new System.Windows.Forms.TextBox();
             this.tabs.SuspendLayout();
             this.tabWindow.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numAutoHideDelay)).BeginInit();
@@ -2079,6 +2079,33 @@
             this.tabWeather.Text = "Weather";
             this.tabWeather.UseVisualStyleBackColor = true;
             // 
+            // buttWeatherWebcamBrowse
+            // 
+            this.buttWeatherWebcamBrowse.Location = new System.Drawing.Point(340, 103);
+            this.buttWeatherWebcamBrowse.Name = "buttWeatherWebcamBrowse";
+            this.buttWeatherWebcamBrowse.Size = new System.Drawing.Size(110, 39);
+            this.buttWeatherWebcamBrowse.TabIndex = 25;
+            this.buttWeatherWebcamBrowse.Text = "Browse OpenWeatherMap";
+            this.buttWeatherWebcamBrowse.UseVisualStyleBackColor = true;
+            this.buttWeatherWebcamBrowse.Click += new System.EventHandler(this.buttWeatherWebcamBrowse_Click);
+            // 
+            // txtWeatherWebcam
+            // 
+            this.txtWeatherWebcam.Location = new System.Drawing.Point(111, 113);
+            this.txtWeatherWebcam.Name = "txtWeatherWebcam";
+            this.txtWeatherWebcam.Size = new System.Drawing.Size(223, 20);
+            this.txtWeatherWebcam.TabIndex = 24;
+            this.txtWeatherWebcam.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
+            // 
+            // label68
+            // 
+            this.label68.AutoSize = true;
+            this.label68.Location = new System.Drawing.Point(27, 116);
+            this.label68.Name = "label68";
+            this.label68.Size = new System.Drawing.Size(78, 13);
+            this.label68.TabIndex = 23;
+            this.label68.Text = "Webcam URL:";
+            // 
             // buttWeatherSearch
             // 
             this.buttWeatherSearch.Location = new System.Drawing.Point(340, 43);
@@ -2202,33 +2229,6 @@
             // folderDiag
             // 
             this.folderDiag.RootFolder = System.Environment.SpecialFolder.MyComputer;
-            // 
-            // label68
-            // 
-            this.label68.AutoSize = true;
-            this.label68.Location = new System.Drawing.Point(27, 116);
-            this.label68.Name = "label68";
-            this.label68.Size = new System.Drawing.Size(78, 13);
-            this.label68.TabIndex = 23;
-            this.label68.Text = "Webcam URL:";
-            // 
-            // buttWeatherWebcamBrowse
-            // 
-            this.buttWeatherWebcamBrowse.Location = new System.Drawing.Point(340, 103);
-            this.buttWeatherWebcamBrowse.Name = "buttWeatherWebcamBrowse";
-            this.buttWeatherWebcamBrowse.Size = new System.Drawing.Size(110, 39);
-            this.buttWeatherWebcamBrowse.TabIndex = 25;
-            this.buttWeatherWebcamBrowse.Text = "Browse OpenWeatherMap";
-            this.buttWeatherWebcamBrowse.UseVisualStyleBackColor = true;
-            this.buttWeatherWebcamBrowse.Click += new System.EventHandler(this.buttWeatherWebcamBrowse_Click);
-            // 
-            // txtWeatherWebcam
-            // 
-            this.txtWeatherWebcam.Location = new System.Drawing.Point(111, 113);
-            this.txtWeatherWebcam.Name = "txtWeatherWebcam";
-            this.txtWeatherWebcam.Size = new System.Drawing.Size(223, 20);
-            this.txtWeatherWebcam.TabIndex = 24;
-            this.txtWeatherWebcam.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBoxCheckForChanges);
             // 
             // formOptions
             // 
@@ -2447,7 +2447,6 @@
         public System.Windows.Forms.TextBox txtTwSound;
         public System.Windows.Forms.TextBox txtMailSound;
         private System.Windows.Forms.OpenFileDialog fileDiag;
-        private System.Windows.Forms.CheckBox chkRunAtStartup;
         public System.Windows.Forms.CheckBox chkTwDisplayInstagrams;
         public System.Windows.Forms.CheckBox chkTwDisplayPictures;
         private System.Windows.Forms.TabPage tabReddit;
@@ -2489,5 +2488,6 @@
         private System.Windows.Forms.Button buttWeatherWebcamBrowse;
         public System.Windows.Forms.TextBox txtWeatherWebcam;
         private System.Windows.Forms.Label label68;
+        public System.Windows.Forms.CheckBox chkRunAtStartup;
     }
 }

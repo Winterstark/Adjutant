@@ -386,7 +386,7 @@ namespace Adjutant
             {
                 if (prevChunkH > 2 * bounds.Height && prevChunkRight < ConsoleWidth / 2 && !defNewline)
                 {
-                    //the previous chunk was a large image so draw the next line to the right of it
+                    //a chunk in this line is a large image so draw the next line to the right of it
                     x = prevChunkRight;
                     y += bounds.Height;
 
@@ -408,8 +408,11 @@ namespace Adjutant
             {
                 x += bounds.Width;
 
-                prevChunkRight = x;
-                prevChunkH = bounds.Height;
+                if (bounds.Height > prevChunkH)
+                {
+                    prevChunkH = bounds.Height;
+                    prevChunkRight = x;
+                }
             }
         }
 
