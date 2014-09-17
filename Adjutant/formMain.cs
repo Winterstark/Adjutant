@@ -274,7 +274,7 @@ namespace Adjutant
                     //set starting chunk so that the selected item will be displayed
                     int chunkH = launcherChunks[0].GetHeight();
                     int nMaxChunks = txtCMD.Top / chunkH;
-                    int chInd = 2 * Math.Max(launcherSelection - nMaxChunks + 1, 0);
+                    int chInd = 3 * Math.Max(launcherSelection - nMaxChunks + 1, 0);
                     int prevChunkRight = 0, prevChunkH = 0;
 
                     //draw launcher chunks
@@ -282,7 +282,7 @@ namespace Adjutant
 
                     while (chInd < launcherChunks.Count && y < txtCMD.Top)
                     {
-                        if (chInd % 2 == 0 && chInd / 2 == launcherSelection) //draw selection rectangle
+                        if (chInd % 3 == 0 && chInd / 3 == launcherSelection) //draw selection rectangle
                             gfx.DrawRectangle(new Pen(txtCMD.ForeColor, 1), x, y, this.Width - 1, launcherChunks[chInd].GetHeight());
 
                         launcherChunks[chInd++].Draw(gfx, txtCMD.Font, ref x, ref y, ref h, ref prevChunkRight, ref prevChunkH);
@@ -1438,6 +1438,7 @@ namespace Adjutant
                                 print("Hosted on ", false); print("Github<pause>", "https://github.com/Winterstark/Adjutant", Color.RoyalBlue);
                                 print("Developed by ", false); print("Winterstark<pause>", "https://github.com/Winterstark", false, Color.RoyalBlue);
                                 print("");
+                                print("Weather module uses ", false); print("OpenWeatherMap API", "http://openweathermap.org/", Color.RoyalBlue);
                                 print("Pad module uses ", false); print("ScintillaNET", "https://scintillanet.codeplex.com/", Color.RoyalBlue);
                                 print("Adjutant icon by ", false); print("~Softcode", "http://www.deviantart.com/art/Deep-Blue-Console-69538223", Color.RoyalBlue);
                                 print("Download progress from ", false); print("preloaders.net", "http://preloaders.net/", Color.RoyalBlue);
@@ -3872,9 +3873,10 @@ namespace Adjutant
                 //print icon
                 launcherChunks.Add(new Chunk(Icon.ExtractAssociatedIcon(path).ToBitmap(), path));
 
-                //print filename
+                //print filename & path
                 string filename = Path.GetFileName(path);
                 launcherChunks.Add(new Chunk(filename, path, txtCMD.ForeColor, false, true, true, measureWidth(filename), lineH));
+                launcherChunks.Add(new Chunk(path, path, echoColor, false, true, true, measureWidth(path), lineH));
             }
 
             launcherSelection = 0;

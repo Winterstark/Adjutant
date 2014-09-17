@@ -31,7 +31,7 @@ Usage
 
 After running Adjutant it will appear in your top-left corner of the screen, slightly translucent. It will autohide after several seconds, so if that happens move your mouse cursor near the top-left screen edge and it will reappear; you can also show/hide it using the global hotkey (the tilde key by default) or via the tray icon. This behaviour as well as visual appearance, font, and module settings can all be changed in Options.
 
-![Screenshot: the help system]()
+![Screenshot: the help system](http://i.imgur.com/hXsYQyt.png)
 
 Adjutant has a rudimentary tutorial and a relatively comprehensive help system. Type "help" to get a list of commands, and then "help [command]" to learn more about a specific one. This readme will only introduce you to Adjutant's capabilities - use the help command to find out more.
 
@@ -47,9 +47,7 @@ If autohide is enabled, after a specific time the console will hide itself using
 * Fade out
 * Scroll up/down/left/right
 
-![Screenshot: scrolling up]()
-
-![Screenshot: fading out]()
+![Screenshot: scrolling up]() [Screenshot: fading out]()
 
 ### Console text appearance
 
@@ -62,7 +60,7 @@ Besides the animation settings, you can also modify the following:
 * Console font, style, and size
 * Text color - can be customized for a variety of output types (standard text, error messages, links, etc.)
 
-![Screenshot: Twitter module options]()
+![Screenshot: Twitter module options](http://i.imgur.com/IatvqEO.png)
 
 ### Copying text
 
@@ -72,6 +70,8 @@ Double-click Adjutant to enable console text selection. You can also use the key
 
 The to-do manager consists of two commands ("todo" and "done") with which you add tasks to your list and then mark them as done. A to-do list represents the tasks you plan to do *today*; however, any tasks that you do not complete will be transferred to next day's to-do list.
 
+![Screenshot: to-do manager](http://i.imgur.com/7ysNc9C.png)
+
 In Options you can specify the folder in which to save your to-do lists. If you use Dropbox or a similar cloud-storage service you could specify that folder as a save location so that your to-do lists would be synced.
 
 ### Pad module
@@ -79,6 +79,8 @@ In Options you can specify the folder in which to save your to-do lists. If you 
 The Pad module enables you to use Adjutant as a simple notepad-like text editor.
 
 Note: if you resize the window while in Pad mode, Adjutant will remember your preference and automatically resize the window to that specific size when you enter Pad mode.
+
+![Screenshot: pad module](http://i.imgur.com/ex0WhFo.png)
 
 Pad can also be used to write and run code source files, and supports syntax highlighting for the following languages:
 
@@ -98,29 +100,32 @@ A basic Gmail checker. Your login details are saved using AES encryption.
 
 ### Twitter module
 
+![Screenshot: reading tweets](http://i.imgur.com/TSrL8lf.png)
+
 A Twitter client for reading the tweets in your timeline. Type "help twitter /init" to learn how to authorize Adjutant to read your account's timeline.
 
 ### Reddit module
 
-Asdf
+![Screenshot: browsing Reddit]()
+
+Currently only allows you to browse a particular subreddit's currently "hot" submissions.
 
 ### File launcher
 
-Asdf
+Scans your Windows Start Menu for program shortcuts and allows you to search and launch them quickly and easily. Also allows you to add custom folders to scan. The module is basically a rip-off of [Launchy](http://www.launchy.net/), and being *very* new and *very* limited, you're probably better of using Launchy, for now.
+
+![Screenshot: file launcher](http://i.imgur.com/z13jKxP.png) 
 
 ### Weather module
 
-Asdf
+Shows current weather status for your location, with an optional webcam image, or a weather forecast.
 
-
-Current limitations and future plans
---------------
-
-Asdf
+![Screenshot: current weather information](http://i.imgur.com/15egS9D.png) [Screenshot: weather forecast](http://i.imgur.com/TmaBKXg.png)
 
 
 Credits
 --------------
+* Weather module uses [OpenWeatherMap API](http://openweathermap.org/)
 * Pad module uses the [ScintillaNET control](https://scintillanet.codeplex.com/)
 * Adjutant icon by ~Softcode @ [deviantART](http://www.deviantart.com/art/Deep-Blue-Console-69538223)
 * Download progress GIF uses graphics from [preloaders.net](http://preloaders.net/)
