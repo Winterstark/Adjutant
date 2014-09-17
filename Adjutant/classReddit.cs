@@ -6,6 +6,7 @@ using System.IO;
 using System.Net;
 using System.Web;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace Adjutant
 {
@@ -33,25 +34,29 @@ namespace Adjutant
                     if (url[url.Length - 4] != '.')
                     {
                         //find image extension
-                        if (!url.Contains("gallery"))
-                            url = url.Replace("imgur.com/", "imgur.com/gallery/");
-                        url += ".xml";
+                        if (url.Contains("/gallery/"))
+                            url = url.Replace("/gallery/", "/");
 
-                        string xmlFile = new WebClient().DownloadString(url);
+                        url = "http://api.imgur.com/oembed.json?url=" + url;
 
-                        if (xmlFile.Contains("<ext>"))
+                        string jsonFile = new WebClient().DownloadString(url);
+
+                        if (jsonFile.Contains("\"url\":\""))
                         {
-                            int lb = xmlFile.IndexOf("<ext>") + 5;
-                            int ub = xmlFile.IndexOf("</ext>", lb);
-                            string ext = xmlFile.Substring(lb, ub - lb);
-
-                            url = url.Replace("/gallery/", "/").Replace(".xml", ext);
+                            int lb = jsonFile.IndexOf("\"url\":\"") + 7;
+                            int ub = jsonFile.IndexOf('"', lb);
+                            url =  jsonFile.Substring(lb, ub - lb);
+                            url = Regex.Unescape(url);
                         }
                         else
                         {
                             //no extension data present in xml file
                             url = this.url; //reset url
-                            image = "<image=" + thumbnail + ">"; //use thumbnail
+
+                            if (thumbnail != "")
+                                image = "<image=" + thumbnail + ">"; //use thumbnail
+                            else
+                                image = "";
                             return;
                         }
                     }
