@@ -1,9 +1,9 @@
 Adjutant
 ========
 
-Adjutant is a Command Prompt replacement for Windows, but with a lot of features that make it a sort of personal assistant program. Like the Command Prompt, you can use it to browse your files and run them (with the standard Windows commands such as cd and dir), as well as perform more advanced tasks:
+Adjutant is a Command Prompt replacement for Windows, but with a lot of features that make it more of a personal assistant/organizer. Like the Command Prompt, you can use it to browse your files and run them (with the standard Windows commands such as "cd" and "dir"), as well as perform more advanced tasks:
 
-- Launch applications found in your Start Menu programs
+- Launch applications found in your Start Menu
 - Edit text files
 - Manage your to-do list
 - Check Gmail and Twitter
@@ -12,9 +12,9 @@ Adjutant is a Command Prompt replacement for Windows, but with a lot of features
 
 ![Screenshot: Adjutant demonstration](https://raw.githubusercontent.com/Winterstark/Adjutant/master/Adjutant%20demo.gif)
 
-Besides having multi-colored text output, Adjutant can display text as links to programs and webpages, as well as display pictures and animated GIFs, which make it very convenient to browse text/image content such as Reddit or your Twitter homeline.
+Besides having multi-colored text output, Adjutant can display text as (clickable) links to programs and webpages, as well as display pictures and animated GIFs, which make it very convenient to browse text/image content such as Reddit or your Twitter homeline.
 
-However Adjutant is still in pre-release, which means that you will probably encounter bugs and minor issues. Some of the modules are still in early development and will contain only minimal functionality.
+However, Adjutant is still in pre-release, which means that you will probably encounter bugs and minor issues. Some of the modules are still in early development and will contain only minimal functionality. For example, Gmail, Twitter, and Reddit are currently read-only, but future versions will allow you to write and reply to email, favorite/retweet tweets, upvote/downvote submissions, etc.
 
 
 Installation
@@ -29,17 +29,17 @@ Installation
 Usage
 -------
 
-After running Adjutant it will appear in your top-left corner of the screen, slightly translucent. It will autohide after several seconds, so if that happens move your mouse cursor near the top-left screen edge and it will reappear; you can also show/hide it using the global hotkey (the tilde key by default) or via the tray icon. This behaviour as well as visual appearance, font, and module settings can all be changed in Options.
+After running Adjutant it will appear in your top-left corner of the screen, slightly translucent. The window will autohide after several seconds, so if that happens move your mouse cursor near the top-left screen edge and it will reappear; you can also show/hide it using the global hotkey (the tilde key by default) or using the tray icon. This behaviour, as well as visual appearance, font, and module settings can all be changed in Options.
 
 ![Screenshot: the help system](http://i.imgur.com/hXsYQyt.png)
 
-Adjutant has a rudimentary tutorial and a relatively comprehensive help system. Type "help" to get a list of commands, and then "help [command]" to learn more about a specific one. This readme will only introduce you to Adjutant's capabilities - use the help command to find out more.
+Adjutant has a rudimentary tutorial and a relatively comprehensive help system. Type "help" to get a list of commands, and then "help [command]" to learn more about a specific one. This readme will only introduce you to Adjutant's capabilities — use the "help" command to find out more.
 
 ### Window appearance
 
 Click and drag the console window to move its position. Click and drag the bottom or right edge to resize the window. Note that Adjutant has a minimum and a maximum value for its window height: the min. value is used for a blank console; when the console fills up it begins to increase in height until the max. value is reached. To set the min. value just resize the window; to set the max. value hold Control pressed while resizing. You can also fine-tune these settings in Options.
 
-The window also has two values for opacity - one applies when the window is active (the user is typing something in it), the other when it's passive (not focused by the user).
+The window also has two values for opacity — one applies when the window is active (the user is typing something in it), the other when it's passive (not focused by the user).
 
 If autohide is enabled, after a specific time the console will hide itself using the designated action: 
 
@@ -49,7 +49,7 @@ If autohide is enabled, after a specific time the console will hide itself using
 
 ### Console text appearance
 
-By default, text is printed to the console in blocks of 3 characters at once, with a small delay between the blocks, to create a nice output animation. A particularly large text printout can be flushed instantly by pressing Enter during the output animation. You can also disable the animation in Options and use the standard Command Prompt all-at-once output.
+By default, text is printed to the console in blocks of 3 characters at once, with a small delay between the blocks, to create a nice output animation. You can force the printout to flush the entire text instantly by pressing Enter during the output animation. You can also permanently disable the animation in Options and use the standard Command Prompt all-at-once output.
 
 Besides the animation settings, you can also modify the following:
 
@@ -70,13 +70,13 @@ The to-do manager consists of two commands ("todo" and "done") with which you ad
 
 ![Screenshot: to-do manager](http://i.imgur.com/7ysNc9C.png)
 
-In Options you can specify the folder in which to save your to-do lists. If you use Dropbox or a similar cloud-storage service you could specify that folder as a save location so that your to-do lists would be synced.
+You can specify the folder in which to save your to-do lists; if you use Dropbox or a similar cloud-storage service you could specify that folder as the save location so that your to-do lists automatically sync.allows
 
 ### Pad module
 
-The Pad module enables you to use Adjutant as a simple notepad-like text editor.
+The Pad module allows you to use Adjutant as a simple notepad-like text editor.
 
-Note: if you resize the window while in Pad mode, Adjutant will remember your preference and automatically resize the window to that specific size when you enter Pad mode.
+Note: if you resize the window while in Pad mode, Adjutant will remember your preference and automatically resize the window to that specific size when you enter Pad mode again.
 
 ![Screenshot: pad module](http://i.imgur.com/ex0WhFo.png)
 
@@ -106,19 +106,21 @@ A Twitter client for reading the tweets in your timeline. Type "help twitter /in
 
 ![Screenshot: browsing Reddit](http://i.imgur.com/z7DZfVY.png)
 
-Currently only allows you to browse a particular subreddit's currently "hot" submissions.
+Currently only allows you to browse a particular subreddit's "hot" submissions.
 
 ### File launcher
 
-Scans your Windows Start Menu for program shortcuts and allows you to search and launch them quickly and easily. Also allows you to add custom folders to scan. The module is basically a rip-off of [Launchy](http://www.launchy.net/), and being *very* new and *very* limited, you're probably better of using Launchy, for now.
+Scans your Windows Start Menu (as well as custom locations) for program shortcuts and allows you to search and launch them quickly and easily. This module is basically a rip-off of [Launchy](http://www.launchy.net/), and being *very* new and *very* limited, you're probably better of using Launchy for running apps, for now.
+
+The launcher has a separate global hotkey for activation (default: Alt + tilde key). Deactivate the launcher by pressing Escape.
 
 ![Screenshot: file launcher](http://i.imgur.com/z13jKxP.png) 
 
 ### Weather module
 
-Shows current weather status for your location, with an optional webcam image, or a weather forecast.
+Shows current weather status for your location, with an optional webcam image, or a weather forecast, which is either per day or per a 3-hour period.
 
-![Screenshot: current weather information](http://i.imgur.com/15egS9D.png) [Screenshot: weather forecast](http://i.imgur.com/TmaBKXg.png)
+![Screenshot: weather forecast](http://i.imgur.com/TmaBKXg.png)
 
 
 Credits
