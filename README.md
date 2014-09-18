@@ -10,7 +10,7 @@ Adjutant is a Command Prompt replacement for Windows, but with a lot of features
 - Browse Reddit
 - Get weather information
 
-![Screenshot: Adjutant]()
+![Screenshot: Adjutant demonstration](https://raw.githubusercontent.com/Winterstark/Adjutant/master/Adjutant%20demo.gif)
 
 Besides having multi-colored text output, Adjutant can display text as links to programs and webpages, as well as display pictures and animated GIFs, which make it very convenient to browse text/image content such as Reddit or your Twitter homeline.
 
@@ -46,8 +46,6 @@ If autohide is enabled, after a specific time the console will hide itself using
 * Simply become invisible
 * Fade out
 * Scroll up/down/left/right
-
-![Screenshot: scrolling up]() [Screenshot: fading out]()
 
 ### Console text appearance
 
@@ -106,7 +104,7 @@ A Twitter client for reading the tweets in your timeline. Type "help twitter /in
 
 ### Reddit module
 
-![Screenshot: browsing Reddit]()
+![Screenshot: browsing Reddit](http://i.imgur.com/z7DZfVY.png)
 
 Currently only allows you to browse a particular subreddit's currently "hot" submissions.
 
